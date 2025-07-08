@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌾 MITTI – Rural Homestay Booking Platform
 
-## Getting Started
+**MITTI** is a rural homestay booking platform built as a final year project. The goal is to promote rural tourism by connecting users to unique village-based homestay experiences.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚧 Status
+Project is currently in development phase. MVP features are being built.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📌 MVP Scope
+- Browse rural homestays across India  
+- Search by location, amenities, and available dates  
+- User login/signup using Firebase Authentication  
+- View detailed property information  
+- Booking flow with availability logic and date selection  
+- Basic admin controls for managing listings and users  
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🧰 Tech Stack
+- **Frontend**: Next.js, TypeScript, TailwindCSS
+- **Backend**: Next.js API Routes
+- **Auth**: Firebase Authentication
+- **Database**: Firestore
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📂 Setup Instructions
 
-## Deploy on Vercel
+1. **Clone the repo**
+   ```bash
+   git clone https://github.com/adityapai05/mitti-homestay-app.git
+   cd mitti-homestay-app
+    ````
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. **Install dependencies**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   ```bash
+   npm install
+   ```
+
+3. **Run locally**
+
+   ```bash
+   npm run dev
+   ```
+
+4. **Setup Firebase**
+
+   * Add your Firebase config to `/firebase/config.ts`
+
+
+---
+
+## 📄 License
+This project is licensed under the [MIT License](./LICENSE).  
+You are free to use, modify, and distribute this software with proper attribution.
+
+
