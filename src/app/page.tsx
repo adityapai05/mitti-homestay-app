@@ -2,6 +2,6 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <div>MITTI Coming Soon...</div>
+    <div className="bg-mitti-brown">MITTI Coming Soon...</div>
   );
 }
