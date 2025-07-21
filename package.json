@@ -9,10 +9,19 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@heroui/system": "^2.4.19",
+    "@heroui/theme": "^2.4.19",
+    "@tabler/icons-react": "^3.34.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.23.6",
+    "gsap": "^3.13.0",
     "lucide-react": "^0.525.0",
+    "motion": "^12.23.3",
     "next": "15.3.5",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-intersection-observer": "^9.16.0",
+    "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

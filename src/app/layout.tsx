@@ -11,8 +11,22 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "MITTI",
+  title: "MITTI | Book Authentic Rural Homestays in India",
   description: "Rural Homestay Booking Platform",
+  icons: {
+    icon: [
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon.ico", type: "image/x-icon" },
+    ],
+    apple: "/apple-touch-icon.png",
+    other: [
+      {
+        rel: "android-chrome",
+        url: "/android-chrome-512x512.png",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
