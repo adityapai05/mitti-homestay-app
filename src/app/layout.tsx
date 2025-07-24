@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
+import { Providers } from "./providers";
+import { Toaster } from "sonner";
+import AuthProvider from "@/components/shared/AuthProvider";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -37,9 +40,23 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={poppins.className}>
-        <Navbar />
-        {children}
-        <Footer />
+        <Providers>
+          <Navbar />
+          <AuthProvider />
+          <Toaster
+            richColors
+            position="top-center"
+            theme="light"
+            toastOptions={{
+              className:
+                "bg-mitti-beige border border-mitti-olive text-mitti-dark-brown shadow-xl rounded-xl px-4 py-3",
+              descriptionClassName: "text-sm text-mitti-olive",
+              duration: 3000,
+            }}
+          />
+          {children}
+          <Footer />
+        </Providers>
       </body>
     </html>
   );

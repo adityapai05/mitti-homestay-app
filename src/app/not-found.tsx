@@ -17,7 +17,7 @@ const NotFoundPage = () => {
         </p>
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm font-medium bg-mitti-dark-brown text-white px-4 py-2 rounded-full hover:bg-opacity-90 transition"
+          className="inline-flex items-center gap-2 text-sm font-medium bg-mitti-dark-brown text-white px-4 py-2 rounded-full hover:bg-opacity-90 transition cursor-pointer"
         >
           <ArrowLeft size={18} /> Go back home
         </Link>

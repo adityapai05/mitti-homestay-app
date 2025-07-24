@@ -1,10 +1,22 @@
 "use client";
 
-import { Menu, X } from "lucide-react";
+import { useAuthModal } from "@/hooks/useAuthModal";
+import { useUserStore } from "@/stores/useUserStore";
+import { LogIn, LogOut, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/prebuilt-components/avatar";
+import { Separator } from "@/components/ui/prebuilt-components/separator";
+import { Button } from "@/components/ui/prebuilt-components/button";
+import UserDropdown from "../ui/prebuilt-components/UserDropdown";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase/client";
 
 const navLinks = [
   { href: "/explore", label: "Explore" },
@@ -18,6 +30,8 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const toggleMenu = () => setIsOpen((prev) => !prev);
   const closeMenu = () => setIsOpen(false);
+  const { openModal } = useAuthModal();
+  const user = useUserStore((state) => state.user);
 
   return (
     <nav className="w-full sticky top-0 z-50 bg-mitti-cream text-mitti-dark-brown shadow-sm">
@@ -39,25 +53,29 @@ const Navbar = () => {
               <Link
                 key={link.href}
                 href={link.href}
-                className={` ${
+                className={`${
                   pathname === link.href ? "font-bold" : "font-medium"
-                } hover:underline transition duration-150 `}
+                } hover:underline transition duration-150 cursor-pointer`}
               >
                 {link.label}
               </Link>
             ))}
           </div>
 
-          <div className="flex items-center gap-3">
-            <Link
-              href="/auth"
-              className="bg-mitti-brown text-mitti-beige hidden md:flex font-medium px-4 py-2 rounded hover:bg-opacity-90 transition"
-            >
-              Log In / Sign Up
-            </Link>
+          <div className="hidden md:flex items-center gap-3">
+            {user ? (
+              <UserDropdown  />
+            ) : (
+              <Button
+                onClick={() => openModal("login")}
+                className="bg-mitti-brown text-mitti-beige font-medium cursor-pointer"
+              >
+                <LogIn />
+                Login
+              </Button>
+            )}
           </div>
 
-          {/* Mobile Responsive Navbar */}
           <div className="md:hidden flex items-center">
             <button
               className="p-2"
@@ -69,29 +87,69 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+
       {isOpen && (
-        <div className="md:hidden  bg-mitti-cream text-left border-t p-4 space-y-4">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={closeMenu}
-              className={`block ${
-                pathname === link.href ? "font-bold" : "font-medium"
-              } transition duration-150`}
-            >
-              {link.label}
-            </Link>
-          ))}
-          <div className="pt-4 border-t mt-4">
-            <Link
-              href="/auth"
-              onClick={closeMenu}
-              className="block w-full text-center bg-mitti-brown text-mitti-beige font-medium px-4 py-2 rounded"
-            >
-              Login/Signup
-            </Link>
+        <div className="md:hidden bg-mitti-cream border-t border-mitti-dark-brown/70 px-4 py-6 space-y-4">
+          <div className="space-y-2">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={closeMenu}
+                className={`block ${
+                  pathname === link.href ? "font-bold" : "font-medium"
+                } transition duration-150`}
+              >
+                {link.label}
+              </Link>
+            ))}
+            {user ? (
+              <Link
+                href="/bookings"
+                onClick={closeMenu}
+                className={`block ${
+                  pathname === "/bookings" ? "font-bold" : "font-medium"
+                } transition duration-150`}
+              >My Bookings</Link>
+            ) : (
+              ""
+            )}
           </div>
+
+          <Separator className="bg-mitti-dark-brown/70" />
+
+          {user ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Avatar>
+                  <AvatarImage src={user?.photoURL || "/default-avatar.png"} />
+                </Avatar>
+                <div>
+                  <p className="text-sm font-medium">
+                    {user?.email || user?.phoneNumber}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                className="text-red-600"
+                onClick={() => signOut(auth)}
+              >
+                <LogOut />
+                Logout
+              </Button>
+            </div>
+          ) : (
+            <div>
+              <Button
+                className="w-full bg-mitti-brown text-mitti-beige"
+                onClick={() => openModal("login")}
+              >
+                <LogIn />
+                Login / Signup
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </nav>

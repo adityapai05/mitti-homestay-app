@@ -19,7 +19,7 @@ const CategoryCard = ({
   return (
     <Link
       href={href}
-      className="rounded-xl overflow-hidden bg-white text-left shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 hover:scale-105 w-full sm:w-64 flex flex-col"
+      className="rounded-xl overflow-hidden bg-white text-left shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 hover:scale-105 w-full sm:w-64 flex flex-col cursor-pointer"
     >
       <div className="relative h-48 w-full">
         <Image

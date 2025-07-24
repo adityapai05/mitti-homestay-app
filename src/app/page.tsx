@@ -1,3 +1,4 @@
+import AuthModal from "@/components/auth/AuthModal";
 import CategoriesSection from "@/components/ui/homepage/CategoriesSection";
 import HeroSection from "@/components/ui/homepage/HeroSection";
 import RecommendedSection from "@/components/ui/homepage/RecommendedSection";
@@ -12,6 +13,7 @@ export default function Home() {
       <RecommendedSection />
       <WhyMittiSection />
       <TestimonialsSection />
+      <AuthModal />
     </div>
   );
 }

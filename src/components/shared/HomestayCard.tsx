@@ -18,7 +18,7 @@ const HomestayCard = ({
   imageSrc,
 }: HomestayCardProps) => {
   return (
-    <div className="flex flex-col justify-between h-full rounded-xl overflow-hidden bg-white text-left shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 hover:scale-105 w-full sm:max-w-xs">
+    <div className="flex flex-col justify-between h-full rounded-xl overflow-hidden bg-white text-left shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 hover:scale-105 w-full sm:max-w-xs ">
       <div className="relative h-40 sm:h-48 md:h-56 w-full">
         <Image
           src={imageSrc}
@@ -53,7 +53,7 @@ const HomestayCard = ({
 
         <Link
           href="#"
-          className="block w-full text-center text-white bg-mitti-dark-brown px-4 py-2 rounded-lg font-semibold hover:bg-opacity-90 text-sm sm:text-base"
+          className="block w-full text-center text-white bg-mitti-dark-brown px-4 py-2 rounded-lg font-semibold hover:bg-opacity-90 text-sm sm:text-base cursor-pointer"
         >
           Book Now
         </Link>
