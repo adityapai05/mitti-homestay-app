@@ -1,15 +1,95 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("NEXT_PUBLIC_DATABASE_URL")
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String     @id @default(uuid())
+  firebaseUid String @unique
+  name       String
+  email      String?    @unique
+  phone      String?    @unique
+  image      String?
+  role       Role       @default(USER)
+  isVerified Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  bookings   Booking[]
+  homestays  Homestay[] @relation("HomestayOwner")
+}
+
+model Homestay {
+  id             String     @id @default(uuid())
+  ownerId        String
+  name           String
+  description    String
+  address        String
+  latitude       Float
+  longitude      Float
+  pricePerNight  Decimal
+  beds           Int
+  maxGuests      Int
+  imageUrl       String
+  amenities      String[]
+  rating         Float      @default(0)
+  guideAvailable Boolean
+  guideFee       Decimal?
+  category       Category
+  isVerified     Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  owner          User       @relation("HomestayOwner", fields: [ownerId], references: [id])
+  bookings       Booking[]
+}
+
+model Booking {
+  id         String         @id @default(uuid())
+  userId     String
+  homestayId String
+  checkIn    DateTime
+  checkOut   DateTime
+  guests     Int
+  totalPrice Decimal
+  status     BookingStatus  @default(PENDING)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  user       User           @relation(fields: [userId], references: [id])
+  homestay   Homestay       @relation(fields: [homestayId], references: [id])
+}
+
+enum Category {
+  FARM_STAY
+  ECO_LODGE
+  TRADITIONAL_HOME
+  MOUNTAIN_RETREAT
+  LAKESIDE
+  OTHER
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum Role {
+  USER
+  HOST
+  ADMIN
+}
+
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "./generated/erd/diagram.png"
 }

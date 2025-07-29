@@ -12,7 +12,7 @@ const NewsletterForm = () => {
     setEmail("");
   };
   return (
-    <div className="max-w-6xl mx-auto bg-mitti-cream text-mitti-dark-brown p-6 rounded-2xl flex flex-col justify-between items-center gap-4 mb-10">
+    <div className="max-w-6xl mx-auto bg-mitti-cream text-mitti-dark-brown p-6 rounded-2xl flex flex-col justify-between items-center gap-4 mb-10 ">
       <h3 className="text-xl/6 font-semibold text-center lg:text-left ">
         Get updates on  new <br className="block sm:hidden" /> rural experiences
         and stays

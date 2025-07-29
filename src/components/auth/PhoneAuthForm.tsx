@@ -2,13 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { BsArrowLeft } from "react-icons/bs";
-import { MdOutlineVerified } from "react-icons/md";
 import { sendOtp, confirmOtp } from "@/lib/firebase/authActions";
 import { Input } from "@/components/ui/prebuilt-components/input";
 import { Button } from "@/components/ui/prebuilt-components/button";
 import { toast } from "sonner";
 import { useAuthModal } from "@/hooks/useAuthModal";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/prebuilt-components/input-otp";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "../ui/prebuilt-components/input-otp";
+import { ConfirmationResult } from "firebase/auth";
 
 interface Props {
   onBack: () => void;
@@ -22,7 +26,8 @@ const PhoneAuthForm = ({ onBack }: Props) => {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [confirmationResult, setConfirmationResult] = useState<any>(null);
+  const [confirmationResult, setConfirmationResult] =
+    useState<ConfirmationResult | null>(null);
   const [resendTimer, setResendTimer] = useState(0);
   const recaptchaRef = useRef<HTMLDivElement | null>(null);
 
@@ -38,13 +43,20 @@ const PhoneAuthForm = ({ onBack }: Props) => {
     setLoading(true);
     try {
       const confirmation = await sendOtp(phone);
+
+      if (!confirmation) {
+        throw new Error("Failed to send OTP. Please try again.");
+      }
+
       setConfirmationResult(confirmation);
       setStep("otp");
       setResendTimer(30);
       toast.success("OTP sent successfully");
-    } catch (err: any) {
-      setError(err.message || "Failed to send OTP");
-      toast.error(err.message || "Failed to send OTP");
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to send OTP";
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -54,14 +66,14 @@ const PhoneAuthForm = ({ onBack }: Props) => {
     setError("");
     setLoading(true);
     try {
-      const user = await confirmOtp(otp, confirmationResult);
+      const user = await confirmOtp(otp, confirmationResult!);
       if (user.displayName) {
         setStep("done");
         closeModal();
       } else {
         setStep("name");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError("Invalid OTP. Please try again.");
       toast.error("Invalid OTP. Please try again.");
     } finally {
@@ -73,14 +85,13 @@ const PhoneAuthForm = ({ onBack }: Props) => {
     setError("");
     setLoading(true);
     try {
-      const { updateProfile } = await import("firebase/auth");
-      await updateProfile(
-        (await import("firebase/auth")).getAuth().currentUser!,
-        { displayName: name }
-      );
+      const { updateProfile, getAuth } = await import("firebase/auth");
+      await updateProfile(getAuth().currentUser!, {
+        displayName: name,
+      });
       setStep("done");
       toast.success("Name saved");
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError("Failed to save name.");
       toast.error("Failed to save name");
     } finally {

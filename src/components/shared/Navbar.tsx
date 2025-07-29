@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/prebuilt-components/button";
 import UserDropdown from "../ui/prebuilt-components/UserDropdown";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
+import { toast } from "sonner";
 
 const navLinks = [
   { href: "/explore", label: "Explore" },
@@ -64,7 +65,7 @@ const Navbar = () => {
 
           <div className="hidden md:flex items-center gap-3">
             {user ? (
-              <UserDropdown  />
+              <UserDropdown />
             ) : (
               <Button
                 onClick={() => openModal("login")}
@@ -110,7 +111,9 @@ const Navbar = () => {
                 className={`block ${
                   pathname === "/bookings" ? "font-bold" : "font-medium"
                 } transition duration-150`}
-              >My Bookings</Link>
+              >
+                My Bookings
+              </Link>
             ) : (
               ""
             )}
@@ -133,7 +136,10 @@ const Navbar = () => {
               <Button
                 variant="ghost"
                 className="text-red-600"
-                onClick={() => signOut(auth)}
+                onClick={async () => {
+                  await signOut(auth);
+                  toast.success("Logged out successfully");
+                }}
               >
                 <LogOut />
                 Logout

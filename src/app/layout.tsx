@@ -39,20 +39,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={poppins.className}>
+      <body className={poppins.className} suppressHydrationWarning>
         <Providers>
           <Navbar />
           <AuthProvider />
           <Toaster
             richColors
-            position="top-center"
+            position="bottom-right"
             theme="light"
-            toastOptions={{
-              className:
-                "bg-mitti-beige border border-mitti-olive text-mitti-dark-brown shadow-xl rounded-xl px-4 py-3",
-              descriptionClassName: "text-sm text-mitti-olive",
-              duration: 3000,
-            }}
           />
           {children}
           <Footer />

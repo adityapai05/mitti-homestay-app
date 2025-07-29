@@ -7,7 +7,7 @@ import WhyMittiSection from "@/components/ui/homepage/WhyMittiSection";
 
 export default function Home() {
   return (
-    <div className="bg-mitti-beige">
+    <div className="bg-mitti-beige text-mitti-dark-brown suppressHydrationWarning">
       <HeroSection />
       <CategoriesSection />
       <RecommendedSection />

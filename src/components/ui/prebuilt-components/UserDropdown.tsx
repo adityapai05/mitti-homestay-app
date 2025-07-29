@@ -23,9 +23,11 @@ import Link from "next/link";
 import { useUserStore } from "@/stores/useUserStore";
 import { auth } from "@/lib/firebase/client";
 import { signOut } from "firebase/auth";
+import { toast } from "sonner";
 
 export default function UserDropdown() {
   const user = useUserStore((state) => state.user);
+  console.log("User: ", user);
 
   const displayName =
     user?.displayName || user?.email || user?.phoneNumber || "User";
@@ -102,7 +104,10 @@ export default function UserDropdown() {
         <DropdownMenuSeparator className="bg-mitti-dark-brown/70" />
 
         <DropdownMenuItem
-          onClick={() => signOut(auth)}
+          onClick={async () => {
+            await signOut(auth);
+            toast.success("Logged out successfully");
+          }}
           className="text-red-600 hover:!bg-red-100 cursor-pointer"
         >
           <LogOutIcon size={16} className="opacity-60" />

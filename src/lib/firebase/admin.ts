@@ -1,11 +1,11 @@
 import { getApps, initializeApp, cert } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-
-const serviceAccount = JSON.parse(
-  process.env.NEXT_PUBLC_FIREBASE_ADMIN_SERVICE_ACCOUNT_KEY!
-);
+import { readFileSync } from "fs";
 
 if (!getApps().length) {
+  const serviceAccount = JSON.parse(
+    readFileSync("firebase-service-account.json", "utf-8")
+  );
   initializeApp({
     credential: cert(serviceAccount),
   });

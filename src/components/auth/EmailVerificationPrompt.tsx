@@ -1,13 +1,11 @@
-import { MailCheck, RotateCcw } from "lucide-react";
+import { MailCheck } from "lucide-react";
 
 const EmailVerificationPrompt = ({
   email,
   onBackToLogin,
-  loading,
 }: {
   email: string;
   onBackToLogin: () => void;
-  loading: boolean;
 }) => {
   return (
     <div className="flex flex-col items-center justify-center gap-4 text-center p-6 text-mitti-dark-brown">

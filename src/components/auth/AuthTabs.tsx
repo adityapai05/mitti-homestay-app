@@ -18,12 +18,22 @@ const AuthTabs = () => {
   const [hasShownToast, setHasShownToast] = useState(false);
 
   useEffect(() => {
-    if (user && !hasShownToast) {
+    if (!user || hasShownToast) return;
+
+    const { provider, displayName } = user;
+
+    if (provider === "google") {
       toast.success("Login successful");
       closeModal();
       setHasShownToast(true);
     }
-  }, [user, hasShownToast]);
+    console.log(user)
+    if (provider === "phone" && displayName) {
+      toast.success("Login successful");
+      closeModal();
+      setHasShownToast(true);
+    }
+  }, [user, hasShownToast, closeModal]);
 
   if (showPhoneForm) {
     console.log("Rendering PhoneAuthForm");
