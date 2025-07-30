@@ -5,6 +5,7 @@ import {
   LogOutIcon,
   BookOpenIcon,
   UserPenIcon,
+  LogOut,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/prebuilt-components/button";
@@ -24,10 +25,10 @@ import { useUserStore } from "@/stores/useUserStore";
 import { auth } from "@/lib/firebase/client";
 import { signOut } from "firebase/auth";
 import { toast } from "sonner";
+import { logout } from "@/lib/firebase/authActions";
 
 export default function UserDropdown() {
   const user = useUserStore((state) => state.user);
-  console.log("User: ", user);
 
   const displayName =
     user?.displayName || user?.email || user?.phoneNumber || "User";
@@ -105,12 +106,12 @@ export default function UserDropdown() {
 
         <DropdownMenuItem
           onClick={async () => {
-            await signOut(auth);
+            await logout();
             toast.success("Logged out successfully");
           }}
           className="text-red-600 hover:!bg-red-100 cursor-pointer"
         >
-          <LogOutIcon size={16} className="opacity-60" />
+          <LogOut size={16} className="opacity-60" />
           <span>Logout</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

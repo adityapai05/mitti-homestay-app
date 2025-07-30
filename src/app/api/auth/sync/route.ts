@@ -12,7 +12,6 @@ export const POST = async (req: NextRequest) => {
     const token = authHeader.split(" ")[1];
     const decodedToken = await adminAuth.verifyIdToken(token);
 
-    // ✅ Fetch full user record
     const firebaseUser = await adminAuth.getUser(decodedToken.uid);
 
     const user = await syncUserToDatabase(firebaseUser);

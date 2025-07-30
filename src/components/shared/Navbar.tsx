@@ -18,6 +18,7 @@ import UserDropdown from "../ui/prebuilt-components/UserDropdown";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
 import { toast } from "sonner";
+import { logout } from "@/lib/firebase/authActions";
 
 const navLinks = [
   { href: "/explore", label: "Explore" },
@@ -137,7 +138,7 @@ const Navbar = () => {
                 variant="ghost"
                 className="text-red-600"
                 onClick={async () => {
-                  await signOut(auth);
+                  await logout();
                   toast.success("Logged out successfully");
                 }}
               >
