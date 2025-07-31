@@ -40,7 +40,7 @@ model Homestay {
   imageUrl       String
   amenities      String[]
   rating         Float      @default(0)
-  guideAvailable Boolean
+  guideAvailable Boolean @default(false)
   guideFee       Decimal?
   category       Category
   isVerified     Boolean    @default(false)

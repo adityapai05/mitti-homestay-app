@@ -73,7 +73,7 @@ const Navbar = () => {
                 className="bg-mitti-brown text-mitti-beige font-medium cursor-pointer"
               >
                 <LogIn />
-                Login
+                Login / Signup
               </Button>
             )}
           </div>
