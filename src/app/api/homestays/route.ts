@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
       hasNextPage,
     });
   } catch (error) {
-    console.error("[HOMESTAYS_GET", error);
+    console.error("[GET /homestays]", error);
     return NextResponse.json(
       { error: "Failed to fetch homestays." },
       { status: 500 }

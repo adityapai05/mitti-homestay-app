@@ -6,7 +6,10 @@ export const POST = async (req: NextRequest) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ success: false, error: "Missing or invalid Authorization header" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: "Missing or invalid Authorization header" },
+        { status: 401 }
+      );
     }
 
     const token = authHeader.split(" ")[1];
@@ -17,8 +20,11 @@ export const POST = async (req: NextRequest) => {
     const user = await syncUserToDatabase(firebaseUser);
 
     return NextResponse.json({ success: true, user });
-  } catch (error: any) {
-    console.error("Sync user error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    console.error("[POST auth/sync]", error);
+    return NextResponse.json(
+      { success: false, error: (error as Error).message },
+      { status: 500 }
+    );
   }
 };

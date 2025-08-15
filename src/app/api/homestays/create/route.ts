@@ -32,7 +32,18 @@ const homestaySchema = z.object({
     "LAKESIDE",
     "OTHER",
   ]),
+  checkInTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format (HH:MM)")
+    .optional()
+    .default("14:00"),
+  checkOutTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format (HH:MM)")
+    .optional()
+    .default("11:00"),
 });
+
 
 export async function POST(req: NextRequest) {
   try {
