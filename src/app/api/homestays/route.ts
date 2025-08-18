@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("[GET /homestays]", error);
     return NextResponse.json(
-      { error: "Failed to fetch homestays." },
+      { error: (error as Error).message || "Internal Server Error" },
       { status: 500 }
     );
   }

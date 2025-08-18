@@ -45,7 +45,7 @@ export async function GET(
   } catch (error) {
     console.error("[GET homestays/[id]]", error);
     return NextResponse.json(
-      { error: "Something went wrong." },
+      { error: (error as Error).message || "Internal Server Error" },
       { status: 500 }
     );
   }

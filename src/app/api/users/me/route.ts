@@ -50,7 +50,7 @@ export async function DELETE(req: NextRequest) {
   } catch (error) {
     console.error("[DELETE /api/users/me]", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: (error as Error).message || "Internal Server Error" },
       { status: 500 }
     );
   }
@@ -100,7 +100,7 @@ export async function PATCH(req: NextRequest) {
   } catch (error) {
     console.error("[PATCH /api/users/me]", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: (error as Error).message || "Internal Server Error" },
       { status: 500 }
     );
   }

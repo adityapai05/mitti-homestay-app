@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("[GET /bookings]", error);
     return NextResponse.json(
-      { error: "Something went wrong." },
+      { error: (error as Error).message || "Internal Server Error" },
       { status: 500 }
     );
   }

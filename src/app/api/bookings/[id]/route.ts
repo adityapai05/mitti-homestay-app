@@ -105,7 +105,7 @@ export async function GET(
   } catch (error: unknown) {
     console.error("[GET /bookings/[id]]", error);
     return NextResponse.json(
-      { error: "Something went wrong." },
+      { error: (error as Error).message || "Internal Server Error" },
       { status: 500 }
     );
   }

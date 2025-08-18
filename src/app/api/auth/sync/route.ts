@@ -23,7 +23,7 @@ export const POST = async (req: NextRequest) => {
   } catch (error: unknown) {
     console.error("[POST auth/sync]", error);
     return NextResponse.json(
-      { success: false, error: (error as Error).message },
+      { error: (error as Error).message || "Internal Server Error" },
       { status: 500 }
     );
   }
