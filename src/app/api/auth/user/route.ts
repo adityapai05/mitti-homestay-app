@@ -32,6 +32,28 @@ export async function DELETE(req: NextRequest) {
     const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
     const uid = decoded.uid;
 
+    await prisma.review.deleteMany({
+      where: {
+        homestay: {
+          ownerId: uid,
+        },
+      },
+    });
+
+    await prisma.booking.deleteMany({
+      where: {
+        homestay: {
+          ownerId: uid,
+        },
+      },
+    });
+
+    await prisma.homestay.deleteMany({
+      where: {
+        ownerId: uid,
+      },
+    });
+
     await prisma.user.delete({
       where: { firebaseUid: uid },
     });
@@ -48,7 +70,7 @@ export async function DELETE(req: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("[DELETE /api/users/me]", error);
+    console.error("[DELETE /api/auth/user]", error);
     return NextResponse.json(
       { error: (error as Error).message || "Internal Server Error" },
       { status: 500 }
@@ -98,7 +120,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json(updatedUser);
   } catch (error) {
-    console.error("[PATCH /api/users/me]", error);
+    console.error("[PATCH /api/auth/user]", error);
     return NextResponse.json(
       { error: (error as Error).message || "Internal Server Error" },
       { status: 500 }

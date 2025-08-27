@@ -1,7 +1,6 @@
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
 import { Decimal } from "@prisma/client/runtime/library";
-import { error } from "console";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
 

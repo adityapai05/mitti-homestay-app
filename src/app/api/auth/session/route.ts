@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[POST /session]:", error);
+    console.error("[POST /api/auth/session]:", error);
     return NextResponse.json(
       { error: "Failed to create session" },
       { status: 401 }
