@@ -1,3 +1,4 @@
+"use client";
 import AuthModal from "@/components/auth/AuthModal";
 import CategoriesSection from "@/components/ui/homepage/CategoriesSection";
 import HeroSection from "@/components/ui/homepage/HeroSection";

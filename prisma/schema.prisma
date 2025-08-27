@@ -11,19 +11,20 @@ datasource db {
 }
 
 model User {
-  id         String     @id @default(uuid())
-  firebaseUid String @unique
-  name       String
-  email      String?    @unique
-  phone      String?    @unique
-  image      String?
-  role       Role       @default(USER)
-  isVerified Boolean    @default(false)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  id          String     @id @default(uuid())
+  firebaseUid String     @unique
+  name        String
+  email       String?    @unique
+  phone       String?    @unique
+  image       String?
+  role        Role       @default(USER)
+  isVerified  Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
-  bookings   Booking[]
-  homestays  Homestay[] @relation("HomestayOwner")
+  bookings    Booking[]
+  homestays   Homestay[] @relation("HomestayOwner")
+  reviews     Review[]   // User can write many reviews
 }
 
 model Homestay {
@@ -40,15 +41,18 @@ model Homestay {
   imageUrl       String
   amenities      String[]
   rating         Float      @default(0)
-  guideAvailable Boolean
+  guideAvailable Boolean    @default(false)
   guideFee       Decimal?
+  checkInTime    String     @default("14:00") 
+  checkOutTime   String     @default("11:00") 
   category       Category
   isVerified     Boolean    @default(false)
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
 
-  owner          User       @relation("HomestayOwner", fields: [ownerId], references: [id])
+  owner          User       @relation("HomestayOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   bookings       Booking[]
+  reviews        Review[]   // Homestay can have many reviews
 }
 
 model Booking {
@@ -64,7 +68,22 @@ model Booking {
   updatedAt  DateTime       @updatedAt
 
   user       User           @relation(fields: [userId], references: [id])
-  homestay   Homestay       @relation(fields: [homestayId], references: [id])
+  homestay   Homestay       @relation(fields: [homestayId], references: [id], onDelete: Cascade)
+  review     Review?
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  userId     String
+  homestayId String
+  bookingId  String   @unique
+  rating     Int      // 1 to 5
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id])
+  homestay   Homestay @relation(fields: [homestayId], references: [id], onDelete: Cascade)
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 }
 
 enum Category {

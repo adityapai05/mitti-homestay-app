@@ -7,6 +7,7 @@ import {
   UserCredential,
   AuthError,
   User,
+  signOut,
 } from "firebase/auth";
 import {
   auth,
@@ -14,8 +15,12 @@ import {
   signInWithPhoneNumber,
   RecaptchaVerifier,
 } from "./client";
+import { useUserStore } from "@/stores/useUserStore";
 
-const handleFirebaseError = (error: AuthError, fallbackMessage: string): never => {
+const handleFirebaseError = (
+  error: AuthError,
+  fallbackMessage: string
+): never => {
   const ERROR_MESSAGES: Record<string, string> = {
     // Login-related
     "auth/user-not-found": "No account found with this email.",
@@ -58,9 +63,21 @@ export const signupWithEmail = async (
     if (!userCredential.user.emailVerified) {
       await sendEmailVerification(userCredential.user);
     }
+
+    const idToken = await userCredential.user.getIdToken();
+
+    await fetch("/api/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
+
     return userCredential;
   } catch (error) {
-    handleFirebaseError(error as AuthError, "Failed to create account. Please try again.");
+    handleFirebaseError(
+      error as AuthError,
+      "Failed to create account. Please try again."
+    );
     return undefined as never;
   }
 };
@@ -75,18 +92,42 @@ export const loginWithEmail = async (
       email,
       password
     );
+
+    const idToken = await userCredential.user.getIdToken();
+
+    await fetch("/api/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
+
     return userCredential;
   } catch (error) {
-    throw handleFirebaseError(error as AuthError, "Login failed. Please try again.");
+    throw handleFirebaseError(
+      error as AuthError,
+      "Login failed. Please try again."
+    );
   }
 };
 
 export const signinWithGoogle = async (): Promise<void> => {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
-    console.log("Google Sign In Successful: ", result.user);
+    const userCredential = await signInWithPopup(auth, googleProvider);
+
+    const idToken = await userCredential.user.getIdToken();
+
+    await fetch("/api/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
+
+    console.log("Google Sign In Successful: ", userCredential.user);
   } catch (error) {
-    handleFirebaseError(error as AuthError, "Google Sign-In failed. Please try again.");
+    handleFirebaseError(
+      error as AuthError,
+      "Google Sign-In failed. Please try again."
+    );
   }
 };
 
@@ -134,10 +175,25 @@ export const confirmOtp = async (
   confirmationResult: ConfirmationResult
 ): Promise<User> => {
   try {
-    const result = await confirmationResult.confirm(otp);
-    return result.user;
+    const userCredential = await confirmationResult.confirm(otp);
+
+    const idToken = await userCredential.user.getIdToken();
+
+    await fetch("/api/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
+
+    return userCredential.user;
   } catch (error) {
     handleFirebaseError(error as AuthError, "Invalid OTP. Please try again.");
     return undefined as never;
   }
+};
+
+export const logout = async () => {
+  await signOut(auth);
+  await fetch("/api/session", { method: "DELETE" });
+  useUserStore.getState().setUser(null);
 };
