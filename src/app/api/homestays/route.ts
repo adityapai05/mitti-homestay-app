@@ -13,10 +13,14 @@ export async function GET(req: NextRequest) {
     const type = searchParams.get("type");
     const rating = searchParams.get("rating");
     const amenities = searchParams.getAll("amenities");
-    const cursor = searchParams.get("cursor");
-    const limit = Number(searchParams.get("limit") || 20);
+    const page = Number(searchParams.get("page") || 1);
+    const limit = 8; // Fixed limit of 8 homestays per page
     const isVerified = searchParams.get("isVerified");
     const guideAvailable = searchParams.get("guideAvailable");
+    const destination = searchParams.get("destination");
+    const checkIn = searchParams.get("checkIn");
+    const checkOut = searchParams.get("checkOut");
+    const sort = searchParams.get("sort") || "createdAt-desc";
 
     const where: any = {};
 
@@ -30,32 +34,61 @@ export async function GET(req: NextRequest) {
       if (maxPrice) where.pricePerNight.lte = Number(maxPrice);
     }
     if (type) where.type = type;
-    if (rating) where.rating = Number(rating);
+    if (rating) where.rating = { gte: Number(rating) };
     if (amenities.length > 0) {
       where.amenities = {
-        hasEvery: amenities,
+        hasEvery: [...new Set(amenities)], // Remove duplicates
       };
     }
+    if (destination)
+      where.location = { contains: destination, mode: "insensitive" };
+    if (checkIn && checkOut) {
+      where.bookings = {
+        none: {
+          OR: [{ checkIn: { lte: checkOut }, checkOut: { gte: checkIn } }],
+        },
+      };
+    }
+
+    const orderBy: any = {};
+    switch (sort) {
+      case "price-asc":
+        orderBy.pricePerNight = "asc";
+        break;
+      case "price-desc":
+        orderBy.pricePerNight = "desc";
+        break;
+      case "rating-desc":
+        orderBy.rating = "desc";
+        break;
+      case "createdAt-desc":
+      default:
+        orderBy.createdAt = "desc";
+        break;
+    }
+
+    // Get total count for pagination
+    const totalHomestays = await prisma.homestay.count({ where });
+
+    // Calculate skip based on page number
+    const skip = (page - 1) * limit;
     const homestays = await prisma.homestay.findMany({
       where,
-      orderBy: { createdAt: "desc" },
-      take: limit + 1,
-      ...(cursor && {
-        skip: 1,
-        cursor: { id: cursor },
-      }),
+      orderBy,
+      take: limit,
+      skip,
     });
 
-    const hasNextPage = homestays.length > limit;
-    const paginatedHomestays = hasNextPage
-      ? homestays.slice(0, limit)
-      : homestays;
-    const nextCursor = hasNextPage ? paginatedHomestays[limit - 1] : null;
+    const totalPages = Math.ceil(totalHomestays / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
 
     return NextResponse.json({
-      homestays: paginatedHomestays,
-      nextCursor,
+      homestays,
+      totalPages,
+      currentPage: page,
       hasNextPage,
+      hasPrevPage,
     });
   } catch (error) {
     console.error("[GET /homestays]", error);

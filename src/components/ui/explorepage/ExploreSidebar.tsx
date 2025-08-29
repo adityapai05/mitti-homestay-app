@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import qs from "query-string";
-import { useEffect, useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "../prebuilt-components/button";
 import { Label } from "../prebuilt-components/label";
 import { RadioGroup, RadioGroupItem } from "../prebuilt-components/radio-group";
@@ -11,6 +11,7 @@ import { Slider } from "../prebuilt-components/slider";
 import { Checkbox } from "../prebuilt-components/checkbox";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetTrigger,
 } from "../prebuilt-components/sheet";
@@ -24,7 +25,6 @@ const amenitiesList = [
   "Parking Available",
   "Pet Friendly",
   "Guide Available",
-  //TODO: render list dynamically based on the amenities of the all filtered homestays
 ];
 
 const ExploreSidebar = () => {
@@ -34,29 +34,19 @@ const ExploreSidebar = () => {
   const [type, setType] = useState(searchParams.get("type") || "");
   const [priceRange, setPriceRange] = useState([
     Number(searchParams.get("priceMin")) || 300,
-    Number(searchParams.get("priceMax")) || 1000,
+    Number(searchParams.get("priceMax")) || 5000,
   ]);
   const [amenities, setAmenities] = useState(
-    searchParams.getAll("amenity") || []
+    searchParams.getAll("amenities") || []
   );
   const [rating, setRating] = useState(searchParams.get("rating") || "");
+  const [isApplying, setIsApplying] = useState(false);
 
-  useEffect(() => {
-    const query = qs.stringifyUrl(
-      {
-        url: "/explore",
-        query: {
-          type,
-          priceMin: priceRange[0],
-          priceMax: priceRange[1],
-          rating,
-          amenity: amenities,
-        },
-      },
-      { arrayFormat: "bracket" }
+  const handleAmenityToggle = (item: string) => {
+    setAmenities((prev) =>
+      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
     );
-    router.push(query);
-  }, [type, priceRange, amenities, rating]);
+  };
 
   const handleClearFilters = () => {
     setType("");
@@ -65,63 +55,116 @@ const ExploreSidebar = () => {
     setRating("");
   };
 
-  const handleAmenityToggle = (item: string) => {
-    setAmenities((prev) =>
-      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
+  const handleApplyFilters = useCallback(() => {
+    if (isApplying) return;
+    setIsApplying(true);
+
+    const currentParams = qs.parse(searchParams.toString());
+    const newQuery = {
+      ...currentParams,
+      type,
+      minPrice: priceRange[0],
+      maxPrice: priceRange[1],
+      rating,
+      amenities,
+    };
+
+    const query = qs.stringifyUrl(
+      {
+        url: "/explore",
+        query: newQuery,
+      },
+      { arrayFormat: "bracket" }
     );
-  };
+
+    router.push(query);
+
+    setTimeout(() => setIsApplying(false), 500);
+  }, [type, priceRange, amenities, rating, router, searchParams, isApplying]);
 
   const SidebarContent = (
-    <div className="w-full space-y-6 bg-mitti-dark-brown text-white p-4 rounded-xl shadow-md">
+    <div className="w-full space-y-3 bg-gradient-to-b from-mitti-dark-brown to-mitti-brown text-mitti-cream p-6 rounded-2xl shadow-lg transition-all duration-300">
       <div>
-        <Label className="text-sm mb-2 block text-white">Type of Stay</Label>
-        <RadioGroup value={type} onValueChange={setType} className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="entire" id="entire" />
-            <Label htmlFor="entire" className="text-white">
+        <Label className="text-base font-semibold mb-3 block text-mitti-cream">
+          Type of Stay
+        </Label>
+        <RadioGroup
+          value={type}
+          onValueChange={setType}
+          aria-label="Type of Stay"
+        >
+          <div className="flex items-center space-x-3 rounded-lg p-2 hover:bg-mitti-beige/20 transition-colors">
+            <RadioGroupItem
+              value="entire"
+              id="entire"
+              className="text-mitti-cream border-mitti-cream"
+            />
+            <Label
+              htmlFor="entire"
+              className="text-mitti-cream font-medium cursor-pointer"
+            >
               Entire Home
             </Label>
           </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="private" id="private" />
-            <Label htmlFor="private" className="text-white">
+          <div className="flex items-center space-x-3 rounded-lg p-2 hover:bg-mitti-beige/20 transition-colors">
+            <RadioGroupItem
+              value="private"
+              id="private"
+              className="text-mitti-cream border-mitti-cream"
+            />
+            <Label
+              htmlFor="private"
+              className="text-mitti-cream font-medium cursor-pointer"
+            >
               Private Room
             </Label>
           </div>
         </RadioGroup>
       </div>
 
-      <Separator className="bg-white/20" />
+      <Separator className="bg-mitti-cream/30 h-[1px]" />
 
       <div>
-        <Label className="text-sm mb-2 block text-white">Price Range</Label>
+        <Label className="text-base font-semibold mb-3 block text-mitti-cream">
+          Price Range
+        </Label>
         <Slider
           defaultValue={priceRange}
           min={300}
-          max={1000}
+          max={5000}
           step={10}
           onValueChange={setPriceRange}
-          className=""
+          aria-label="Price Range Slider"
         />
-        <div className="flex justify-between text-sm pt-1">
+        <div className="flex justify-between text-sm pt-2 text-mitti-khaki">
           <span>₹{priceRange[0]}</span>
           <span>₹{priceRange[1]}</span>
         </div>
       </div>
 
-      <Separator className="bg-white/20" />
+      <Separator className="bg-mitti-cream/30 h-[1px]" />
 
       <div>
-        <Label className="text-sm mb-2 block text-white">Amenities</Label>
-        <div className="grid grid-cols-1 gap-2">
+        <Label className="text-base font-semibold mb-3 block text-mitti-cream">
+          Amenities
+        </Label>
+        <div className="grid grid-cols-1 gap-1">
           {amenitiesList.map((item) => (
-            <div className="flex items-center space-x-2" key={item}>
+            <div
+              key={item}
+              className="flex items-center space-x-3 rounded-lg p-2 hover:bg-mitti-beige/20 transition-colors"
+            >
               <Checkbox
                 id={item}
                 checked={amenities.includes(item)}
                 onCheckedChange={() => handleAmenityToggle(item)}
+                className="border-mitti-cream data-[state=checked]:bg-mitti-olive"
+                aria-label={item}
               />
-              <Label htmlFor={item} className="text-white">
+              <Label
+                htmlFor={item}
+                className="text-mitti-cream font-medium cursor-pointer"
+              >
                 {item}
               </Label>
             </div>
@@ -129,62 +172,100 @@ const ExploreSidebar = () => {
         </div>
       </div>
 
-      <Separator className="bg-white/20" />
+      <Separator className="bg-mitti-cream/30 h-[1px]" />
 
       <div>
-        <Label className="text-sm mb-2 block text-white">Rating</Label>
+        <Label className="text-base font-semibold mb-3 block text-mitti-cream">
+          Rating
+        </Label>
         <RadioGroup
           value={rating}
           onValueChange={setRating}
-          className="space-y-2"
+          aria-label="Rating"
         >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="4" id="4" />
-            <Label htmlFor="4" className="text-white">
+          <div className="flex items-center space-x-3 rounded-lg p-2 hover:bg-mitti-beige/20 transition-colors">
+            <RadioGroupItem
+              value="4"
+              id="4"
+              className="text-mitti-cream border-mitti-cream"
+            />
+            <Label
+              htmlFor="4"
+              className="text-mitti-cream font-medium cursor-pointer"
+            >
               4★ & Above
             </Label>
           </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="3" id="3" />
-            <Label htmlFor="3" className="text-white">
+          <div className="flex items-center space-x-3 rounded-lg p-2 hover:bg-mitti-beige/20 transition-colors">
+            <RadioGroupItem
+              value="3"
+              id="3"
+              className="text-mitti-cream border-mitti-cream"
+            />
+            <Label
+              htmlFor="3"
+              className="text-mitti-cream font-medium cursor-pointer"
+            >
               3★ & Above
             </Label>
           </div>
         </RadioGroup>
       </div>
 
-      <Button
-        variant="secondary"
-        className="w-full bg-white text-mitti-dark-brown hover:bg-white/90"
-        onClick={handleClearFilters}
-      >
-        Clear Filters
-      </Button>
+      <div className="flex-col space-y-3">
+        <Button
+          variant="default"
+          className="w-full bg-mitti-olive text-mitti-cream hover:bg-mitti-olive/90 transition-colors font-semibold rounded-lg py-2 cursor-pointer"
+          onClick={handleApplyFilters}
+          disabled={isApplying}
+        >
+          Apply Filters
+        </Button>
+        <Button
+          variant="secondary"
+          className="w-full bg-mitti-cream text-mitti-dark-brown hover:bg-mitti-khaki transition-colors font-semibold rounded-lg py-2 cursor-pointer"
+          onClick={handleClearFilters}
+        >
+          Clear Filters
+        </Button>
+      </div>
     </div>
   );
 
   return (
-    <div className="md:w-64 w-full">
-      <div className="hidden md:block sticky top-4">{SidebarContent}</div>
+    <div className="w-full md:w-70 font-sans">
+      <div className="hidden md:block sticky top-6">{SidebarContent}</div>
 
-      <div className="md:hidden">
+      <div className="md:hidden w-full">
         <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" className="mb-4">
-              <Filter className="w-4 h-4 mr-2" /> Filters
+          <SheetTrigger asChild className="w-full">
+            <Button
+              variant="outline"
+              className="w-full bg-mitti-beige text-mitti-dark-brown border-mitti-brown hover:bg-mitti-khaki transition-colors font-semibold rounded-lg py-2"
+            >
+              <Filter className="size-5 mr-2" /> Filters
             </Button>
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="p-4 overflow-y-auto w-80 bg-mitti-dark-brown text-white"
+            className="p-4 w-80 bg-gradient-to-b from-mitti-dark-brown to-mitti-brown text-mitti-cream border-r-0"
           >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-white">Filters</h2>
-              <Button size="icon" variant="ghost">
-                <X className="w-5 h-5 text-white" />
-              </Button>
+            <div className="flex-col  justify-between items-center">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-mitti-cream">Filters</h2>
+                <SheetClose asChild>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="text-mitti-cream hover:bg-mitti-beige/20 rounded-full cursor-pointer"
+                  >
+                    <X className="w-6 h-6" />
+                  </Button>
+                </SheetClose>
+              </div>
+              {SidebarContent}
             </div>
-            <ScrollArea className="h-[80vh] pr-2">{SidebarContent}</ScrollArea>
+            <ScrollArea className="h-[80vh] pr-4">{SidebarContent}</ScrollArea>
           </SheetContent>
         </Sheet>
       </div>
