@@ -51,7 +51,7 @@ const useFirebaseAuth = () => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [setUser]);
 };
 
 export default useFirebaseAuth;

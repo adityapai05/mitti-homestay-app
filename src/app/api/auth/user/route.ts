@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(user);
 }
 
-export async function DELETE(req: NextRequest) {
+export async function DELETE() {
   try {
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get("__session")?.value;

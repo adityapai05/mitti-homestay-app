@@ -2,7 +2,6 @@
 
 import {
   ChevronDownIcon,
-  LogOutIcon,
   BookOpenIcon,
   UserPenIcon,
   LogOut,
@@ -22,8 +21,6 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useUserStore } from "@/stores/useUserStore";
-import { auth } from "@/lib/firebase/client";
-import { signOut } from "firebase/auth";
 import { toast } from "sonner";
 import { logout } from "@/lib/firebase/authActions";
 

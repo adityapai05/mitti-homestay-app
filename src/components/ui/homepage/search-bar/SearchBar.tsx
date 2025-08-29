@@ -9,7 +9,6 @@ import WhoDropdown from "./WhoDropdown";
 import { useSearchParams, useRouter } from "next/navigation";
 import qs from "query-string";
 import { Button } from "../../prebuilt-components/button";
-import axios from "axios";
 
 interface SearchBarProps {
   mode?: "search" | "edit";

@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
@@ -16,13 +17,13 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const searchParams = url.searchParams;
 
-    const status = searchParams.get("status");
+    // const status = searchParams.get("status");
     const upcoming = searchParams.get("upcoming") === "true";
     const past = searchParams.get("past") === "true";
     const limit = Number(searchParams.get("limit") || 20);
     const page = Number(searchParams.get("page") || 1);
 
-    const where: any = {
+    const where: Prisma.BookingWhereInput = {
       userId: user.id,
     };
 

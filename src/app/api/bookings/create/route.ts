@@ -5,7 +5,7 @@ import z from "zod";
 
 const createBookingSchema = z
   .object({
-    homestayId: z.string().uuid("Invalid homestay ID"),
+    homestayId: z.uuid("Invalid homestay ID"),
     checkIn: z.string().refine((date) => {
       const checkInDate = new Date(date);
       const now = new Date();

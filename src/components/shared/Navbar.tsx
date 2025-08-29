@@ -9,14 +9,11 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   Avatar,
-  AvatarFallback,
   AvatarImage,
 } from "@/components/ui/prebuilt-components/avatar";
 import { Separator } from "@/components/ui/prebuilt-components/separator";
 import { Button } from "@/components/ui/prebuilt-components/button";
 import UserDropdown from "../ui/prebuilt-components/UserDropdown";
-import { signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase/client";
 import { toast } from "sonner";
 import { logout } from "@/lib/firebase/authActions";
 

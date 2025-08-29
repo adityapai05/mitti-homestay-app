@@ -3,6 +3,16 @@ import { prisma } from "@/lib/prisma";
 import { Decimal } from "@prisma/client/runtime/library";
 import { NextRequest, NextResponse } from "next/server";
 
+interface BookingResponse {
+  message: string;
+  booking: Awaited<ReturnType<typeof prisma.booking.findUnique>>;
+  refundInfo?: {
+    refundAmount: Decimal;
+    refundPolicy: "full" | "partial" | "none";
+    processingTime: string;
+  };
+}
+
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -248,6 +258,12 @@ export async function DELETE(
       processingTime: "3-5 business days",
     };
 
+    return NextResponse.json({
+      message: "Booking cancelled successfully.",
+      booking: cancelledBooking,
+      refundInfo,
+    });
+
     // TODO: Send cancellation emails to both user and host
   } catch (error: unknown) {
     console.error("[DELETE /bookings/[id]]", error);
@@ -440,7 +456,7 @@ export async function PUT(
       },
     });
 
-    let response: any = {
+    const response: BookingResponse = {
       message: `Booking status updated to ${newStatus.toLowerCase()}.`,
       booking: updatedBooking,
     };

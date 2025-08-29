@@ -18,7 +18,7 @@ export const syncUserToDatabase = async (firebaseUser: UserRecord) => {
       firebaseUid: firebaseUser.uid,
       email: firebaseUser.email ?? null,
       phone: firebaseUser.phoneNumber ?? null,
-      name: firebaseUser.displayName,
+      name: firebaseUser.displayName ?? "Guest",
       image: firebaseUser.photoURL || null,
       isVerified,
     },

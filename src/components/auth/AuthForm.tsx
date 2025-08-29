@@ -12,6 +12,10 @@ import EmailVerificationPrompt from "./EmailVerificationPrompt";
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { Eye, EyeOff } from "lucide-react";
 
+type AuthFormProps = {
+  type: "login" | "signup";
+};
+
 const signupSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.email("Enter a valid email"),

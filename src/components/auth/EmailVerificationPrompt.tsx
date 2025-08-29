@@ -14,7 +14,7 @@ const EmailVerificationPrompt = ({
       <h2 className="text-xl font-semibold">Verify Your Email</h2>
 
       <p className="text-sm">
-        We've sent a verification link to <strong>{email}</strong>.
+        We have sent a verification link to <strong>{email}</strong>.
         <br />
         Please check your inbox <strong>and spam folder</strong>.
         <br />

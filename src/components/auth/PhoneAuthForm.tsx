@@ -74,8 +74,10 @@ const PhoneAuthForm = ({ onBack }: Props) => {
         setStep("name");
       }
     } catch (err: unknown) {
-      setError("Invalid OTP. Please try again.");
-      toast.error("Invalid OTP. Please try again.");
+      const errorMsg =
+        err instanceof Error ? err.message : "Invalid OTP. Please try again.";
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -92,8 +94,10 @@ const PhoneAuthForm = ({ onBack }: Props) => {
       setStep("done");
       toast.success("Name saved");
     } catch (err: unknown) {
-      setError("Failed to save name.");
-      toast.error("Failed to save name");
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to save name.";
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

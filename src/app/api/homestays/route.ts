@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Category, Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
@@ -22,26 +23,53 @@ export async function GET(req: NextRequest) {
     const checkOut = searchParams.get("checkOut");
     const sort = searchParams.get("sort") || "createdAt-desc";
 
-    const where: any = {};
+    const where: Prisma.HomestayWhereInput = {};
 
     if (isVerified) where.isVerified = isVerified === "true";
     if (guideAvailable) where.guideAvailable = guideAvailable === "true";
-    if (category) where.category = category;
+    if (category) {
+      // Validate category against the Category enum
+      const validCategories = Object.values(Category);
+      if (validCategories.includes(category as Category)) {
+        where.category = { equals: category as Category };
+      } else {
+        return NextResponse.json(
+          {
+            error: `Invalid category. Must be one of: ${validCategories.join(
+              ", "
+            )}`,
+          },
+          { status: 400 }
+        );
+      }
+    }
     if (maxGuests) where.maxGuests = { gte: Number(maxGuests) };
     if (minPrice || maxPrice) {
       where.pricePerNight = {};
       if (minPrice) where.pricePerNight.gte = Number(minPrice);
       if (maxPrice) where.pricePerNight.lte = Number(maxPrice);
     }
-    if (type) where.type = type;
+    if (type) {
+      // Validate type against the Type enum
+      const validTypes = ["ROOM", "HOME"];
+      if (validTypes.includes(type)) {
+        where.type = { equals: type as "ROOM" | "HOME" };
+      } else {
+        return NextResponse.json(
+          { error: "Invalid type. Must be one of: ROOM, HOME" },
+          { status: 400 }
+        );
+      }
+    }
     if (rating) where.rating = { gte: Number(rating) };
     if (amenities.length > 0) {
       where.amenities = {
         hasEvery: [...new Set(amenities)], // Remove duplicates
       };
     }
-    if (destination)
-      where.location = { contains: destination, mode: "insensitive" };
+    if (destination) {
+      where.address = { contains: destination, mode: "insensitive" };
+    }
     if (checkIn && checkOut) {
       where.bookings = {
         none: {
@@ -50,7 +78,7 @@ export async function GET(req: NextRequest) {
       };
     }
 
-    const orderBy: any = {};
+    const orderBy: Prisma.HomestayOrderByWithRelationInput = {};
     switch (sort) {
       case "price-asc":
         orderBy.pricePerNight = "asc";

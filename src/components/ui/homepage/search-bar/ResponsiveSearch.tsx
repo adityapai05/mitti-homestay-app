@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Search } from "lucide-react";
 import dynamic from "next/dynamic";
 import SearchBar from "./SearchBar";
-
 
 const SearchModal = dynamic(() => import("./SearchModal"), { ssr: false });
 
@@ -29,7 +28,9 @@ const ResponsiveSearch = () => {
 
       {/* Desktop View */}
       <div className="hidden sm:block">
-        <SearchBar />
+        <Suspense fallback={<div>Loading search...</div>}>
+          <SearchBar />
+        </Suspense>
       </div>
 
       {isModalOpen && <SearchModal onClose={closeModal} />}

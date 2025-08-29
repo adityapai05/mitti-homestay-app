@@ -21,7 +21,9 @@ const SearchModal = ({
   initialGuests = { adults: 1, children: 0, infants: 0 },
 }: SearchModalProps) => {
   const router = useRouter();
-  const [activeSection, setActiveSection] = useState<"where" | "when" | "who" | null>("where");
+  const [activeSection, setActiveSection] = useState<
+    "where" | "when" | "who" | null
+  >("where");
   const [destination, setDestination] = useState(initialDestination); // Use initial value
   const [checkIn, setCheckIn] = useState(initialCheckIn); // Use initial value
   const [checkOut, setCheckOut] = useState(initialCheckOut); // Use initial value
@@ -30,16 +32,14 @@ const SearchModal = ({
   const MAX_GUESTS = 15;
 
   // Guest count helpers
-  const canIncrement = (type: keyof typeof guests) => totalGuests < MAX_GUESTS;
+  const canIncrement = () => totalGuests < MAX_GUESTS; //can use parameter type: keyof typeof guests if needed
   const canDecrement = (type: keyof typeof guests) => {
     const current = guests[type];
-    if (current === 0) return false;
-    if (type === "adults" && current === 1) return false;
-    return true;
+    return current > 0 && !(type === "adults" && current === 1);
   };
 
   const incrementGuest = (type: keyof typeof guests) => {
-    if (!canIncrement(type)) return;
+    if (!canIncrement()) return;
     setGuests((prev) => ({ ...prev, [type]: prev[type] + 1 }));
   };
 
@@ -81,7 +81,9 @@ const SearchModal = ({
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 animate-fadeIn">
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-mitti-dark-brown">Explore Stays</h2>
+          <h2 className="text-2xl font-bold text-mitti-dark-brown">
+            Explore Stays
+          </h2>
           <button
             onClick={onClose}
             className="p-2 rounded-full bg-mitti-olive hover:bg-mitti-olive/80 transition-colors text-white"
@@ -96,7 +98,9 @@ const SearchModal = ({
             onClick={() => setActiveSection("where")}
             className="bg-mitti-beige/10 p-4 rounded-xl cursor-pointer hover:bg-mitti-beige/20 transition-colors"
           >
-            <p className="text-lg font-semibold text-mitti-dark-brown mb-2">Where</p>
+            <p className="text-lg font-semibold text-mitti-dark-brown mb-2">
+              Where
+            </p>
             {activeSection === "where" ? (
               <input
                 type="text"
@@ -106,7 +110,9 @@ const SearchModal = ({
                 className="w-full bg-white border border-gray-300 rounded-lg p-3 text-base focus:outline-none focus:ring-2 focus:ring-mitti-olive"
               />
             ) : (
-              <p className="text-gray-600">{destination || "Anywhere in Bharat"}</p>
+              <p className="text-gray-600">
+                {destination || "Anywhere in Bharat"}
+              </p>
             )}
           </div>
 
@@ -115,7 +121,9 @@ const SearchModal = ({
             onClick={() => setActiveSection("when")}
             className="bg-mitti-beige/10 p-4 rounded-xl cursor-pointer hover:bg-mitti-beige/20 transition-colors"
           >
-            <p className="text-lg font-semibold text-mitti-dark-brown mb-2">When</p>
+            <p className="text-lg font-semibold text-mitti-dark-brown mb-2">
+              When
+            </p>
             {activeSection === "when" ? (
               <div className="flex gap-3">
                 <input
@@ -132,7 +140,9 @@ const SearchModal = ({
                 />
               </div>
             ) : (
-              <p className="text-gray-600">{checkIn && checkOut ? `${checkIn} - ${checkOut}` : "Add dates"}</p>
+              <p className="text-gray-600">
+                {checkIn && checkOut ? `${checkIn} - ${checkOut}` : "Add dates"}
+              </p>
             )}
           </div>
 
@@ -141,7 +151,9 @@ const SearchModal = ({
             onClick={() => setActiveSection("who")}
             className="bg-mitti-beige/10 p-4 rounded-xl cursor-pointer hover:bg-mitti-beige/20 transition-colors"
           >
-            <p className="text-lg font-semibold text-mitti-dark-brown mb-2">Who</p>
+            <p className="text-lg font-semibold text-mitti-dark-brown mb-2">
+              Who
+            </p>
             {activeSection === "who" ? (
               <div className="space-y-4">
                 {["adults", "children", "infants"].map((type) => (
@@ -149,17 +161,25 @@ const SearchModal = ({
                     <span className="capitalize text-gray-700">{type}</span>
                     <div className="flex items-center gap-3">
                       <button
-                        onClick={(e) => { e.stopPropagation(); decrementGuest(type as keyof typeof guests); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          decrementGuest(type as keyof typeof guests);
+                        }}
                         className="w-8 h-8 bg-mitti-olive/10 rounded-full flex items-center justify-center hover:bg-mitti-olive/20 disabled:opacity-50"
                         disabled={!canDecrement(type as keyof typeof guests)}
                       >
                         <Minus size={18} />
                       </button>
-                      <span className="text-lg font-medium">{guests[type as keyof typeof guests]}</span>
+                      <span className="text-lg font-medium">
+                        {guests[type as keyof typeof guests]}
+                      </span>
                       <button
-                        onClick={(e) => { e.stopPropagation(); incrementGuest(type as keyof typeof guests); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          incrementGuest(type as keyof typeof guests);
+                        }}
                         className="w-8 h-8 bg-mitti-olive/10 rounded-full flex items-center justify-center hover:bg-mitti-olive/20 disabled:opacity-50"
-                        disabled={!canIncrement(type as keyof typeof guests)}
+                        disabled={!canIncrement()}
                       >
                         <Plus size={18} />
                       </button>

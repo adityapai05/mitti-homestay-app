@@ -37,6 +37,7 @@ model Homestay {
   longitude      Float
   pricePerNight  Decimal
   beds           Int
+  type Type @default(ROOM)
   maxGuests      Int
   imageUrl       String
   amenities      String[]
@@ -95,6 +96,10 @@ enum Category {
   OTHER
 }
 
+enum Type {
+  ROOM
+  HOME
+}
 enum BookingStatus {
   PENDING
   CONFIRMED

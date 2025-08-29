@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Edit, Check, Search } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";

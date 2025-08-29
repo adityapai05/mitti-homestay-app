@@ -1,7 +1,6 @@
 import Image from "next/image";
 import NewsletterForm from "./NewsletterForm";
 import Link from "next/link";
-import { Instagram, Linkedin } from "lucide-react";
 
 const Footer = () => {
   return (

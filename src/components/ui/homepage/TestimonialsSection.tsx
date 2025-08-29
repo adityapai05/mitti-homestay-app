@@ -25,7 +25,7 @@ const TestimonialsSection: React.FC = () => {
             Happy Guests
           </h2>
           <p className="text-lg md:text-xl max-w-lg mx-auto md:mx-0">
-            MITTI is more than just a booking platform-it's a bridge to cultural
+            MITTI is more than just a booking platform-it is a bridge to cultural
             discovery, warmth, and connection. See how travelers have
             experienced the real India through our homestays.
           </p>

@@ -1,13 +1,19 @@
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
+
+type ReviewOrderByInput =
+  | { createdAt: "asc" | "desc" }
+  | { rating: "asc" | "desc" };
+
 export async function GET(
   req: NextRequest,
-  { params }: { params: { homestayId: string } }
+  context: { params: Promise<{ homestayId: string }> }
 ) {
   try {
-    const homestayId = params.homestayId;
+    const { homestayId } = await context.params;
     if (!homestayId) {
       return NextResponse.json(
         { error: "Homestay ID is required" },
@@ -34,7 +40,7 @@ export async function GET(
     const rating = searchParams.get("rating");
     const sortBy = searchParams.get("sortBy") || "newest";
 
-    const where: any = {
+    const where: Prisma.ReviewWhereInput = {
       homestayId,
     };
 
@@ -42,7 +48,7 @@ export async function GET(
       where.rating = Number(rating);
     }
 
-    let orderBy: any = { createdAt: "desc" };
+    let orderBy: ReviewOrderByInput = { createdAt: "desc" };
     if (sortBy === "oldest") orderBy = { createdAt: "asc" };
     if (sortBy === "highest") orderBy = { rating: "desc" };
     if (sortBy === "oldest") orderBy = { rating: "asc" };
@@ -145,7 +151,7 @@ const createReviewSchema = z.object({
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { homestayId: string } }
+  context: { params: Promise<{ homestayId: string }> }
 ) {
   try {
     const user = await getCurrentUser();
@@ -157,7 +163,7 @@ export async function POST(
       );
     }
 
-    const homestayId = params.homestayId;
+    const { homestayId } = await context.params;
 
     if (!homestayId) {
       return NextResponse.json(
@@ -171,7 +177,7 @@ export async function POST(
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.format() },
+        { error: z.treeifyError(parsed.error) },
         { status: 400 }
       );
     }

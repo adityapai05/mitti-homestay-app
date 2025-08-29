@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
+import { Category } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
@@ -104,6 +105,24 @@ const updateHomestaySchema = z.object({
     .optional(),
 });
 
+type UpdateHomestayData = Partial<{
+  name: string;
+  description: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  pricePerNight: Decimal;
+  beds: number;
+  maxGuests: number;
+  imageUrl: string;
+  amenities: string[];
+  guideAvailable: boolean;
+  guideFee: Decimal | null;
+  category: Category;
+  checkInTime: string;
+  checkOutTime: string;
+}>;
+
 export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -146,7 +165,18 @@ export async function PUT(
         { status: 400 }
       );
     }
-    const updateData: any = { ...parsed.data };
+    const updateData: UpdateHomestayData = {
+      ...parsed.data,
+      pricePerNight: parsed.data.pricePerNight
+        ? new Decimal(parsed.data.pricePerNight)
+        : undefined,
+      guideFee:
+        parsed.data.guideFee !== undefined
+          ? parsed.data.guideFee
+            ? new Decimal(parsed.data.guideFee)
+            : null
+          : undefined,
+    };
     if (parsed.data.pricePerNight) {
       updateData.pricePerNight = new Decimal(parsed.data.pricePerNight);
     }
