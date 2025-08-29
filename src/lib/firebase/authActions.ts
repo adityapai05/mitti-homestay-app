@@ -16,6 +16,7 @@ import {
   RecaptchaVerifier,
 } from "./client";
 import { useUserStore } from "@/stores/useUserStore";
+import axios from "axios";
 
 const handleFirebaseError = (
   error: AuthError,
@@ -66,11 +67,7 @@ export const signupWithEmail = async (
 
     const idToken = await userCredential.user.getIdToken();
 
-    await fetch("/api/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ idToken }),
-    });
+    await axios.post("/api/auth/session", { idToken });
 
     return userCredential;
   } catch (error) {
@@ -95,11 +92,7 @@ export const loginWithEmail = async (
 
     const idToken = await userCredential.user.getIdToken();
 
-    await fetch("/api/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ idToken }),
-    });
+    await axios.post("/api/auth/session", { idToken });
 
     return userCredential;
   } catch (error) {
@@ -116,11 +109,7 @@ export const signinWithGoogle = async (): Promise<void> => {
 
     const idToken = await userCredential.user.getIdToken();
 
-    await fetch("/api/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ idToken }),
-    });
+    await axios.post("/api/auth/session", { idToken });
 
     console.log("Google Sign In Successful: ", userCredential.user);
   } catch (error) {
@@ -179,11 +168,7 @@ export const confirmOtp = async (
 
     const idToken = await userCredential.user.getIdToken();
 
-    await fetch("/api/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ idToken }),
-    });
+    await axios.post("/api/auth/session", { idToken });
 
     return userCredential.user;
   } catch (error) {
@@ -194,6 +179,6 @@ export const confirmOtp = async (
 
 export const logout = async () => {
   await signOut(auth);
-  await fetch("/api/session", { method: "DELETE" });
+  await axios.delete("/api/auth/session");
   useUserStore.getState().setUser(null);
 };

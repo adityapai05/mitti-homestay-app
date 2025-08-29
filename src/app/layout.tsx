@@ -6,6 +6,7 @@ import Footer from "@/components/shared/Footer";
 import { Providers } from "./providers";
 import { Toaster } from "sonner";
 import AuthProvider from "@/components/shared/AuthProvider";
+import GlobalModals from "@/components/auth/GlobalModals";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -49,6 +50,7 @@ export default function RootLayout({
             theme="light"
           />
           {children}
+          <GlobalModals />
           <Footer />
         </Providers>
       </body>

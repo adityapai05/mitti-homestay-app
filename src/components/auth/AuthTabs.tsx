@@ -11,10 +11,10 @@ import { useUserStore } from "@/stores/useUserStore";
 import { toast } from "sonner";
 
 const AuthTabs = () => {
-  const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
-  const [showPhoneForm, setShowPhoneForm] = useState(false);
+  const { type,  openModal, closeModal } = useAuthModal();
   const { user } = useUserStore();
-  const { closeModal } = useAuthModal();
+  const [showPhoneForm, setShowPhoneForm] = useState(false);
+  const activeTab = type;
   const [hasShownToast, setHasShownToast] = useState(false);
 
   useEffect(() => {
@@ -44,7 +44,7 @@ const AuthTabs = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-center gap-4">
         <button
-          onClick={() => setActiveTab("login")}
+          onClick={() => openModal("login")}
           className={`w-28 px-4 py-2 rounded-full text-sm font-medium transition cursor-pointer text-center ${
             activeTab === "login"
               ? "bg-mitti-dark-brown text-mitti-beige"
@@ -54,7 +54,7 @@ const AuthTabs = () => {
           Login
         </button>
         <button
-          onClick={() => setActiveTab("signup")}
+          onClick={() => openModal("signup")}
           className={`w-28 px-4 py-2 rounded-full text-sm font-medium transition cursor-pointer text-center ${
             activeTab === "signup"
               ? "bg-mitti-dark-brown text-mitti-beige"
