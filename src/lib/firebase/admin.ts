@@ -1,11 +1,8 @@
 import { getApps, initializeApp, cert } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { readFileSync } from "fs";
 
 if (!getApps().length) {
-  const serviceAccount = JSON.parse(
-    readFileSync("firebase-service-account.json", "utf-8")
-  );
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT!);
   initializeApp({
     credential: cert(serviceAccount),
   });
