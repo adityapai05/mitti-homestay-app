@@ -113,7 +113,7 @@ enum Role {
   ADMIN
 }
 
-generator erd {
-  provider = "prisma-erd-generator"
-  output   = "./generated/erd/diagram.png"
-}
+// generator erd {
+//  provider = "prisma-erd-generator"
+//  output   = "./generated/erd/diagram.png"
+// }
