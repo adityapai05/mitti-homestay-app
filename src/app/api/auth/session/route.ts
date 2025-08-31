@@ -1,7 +1,8 @@
+export const dynamic = "force-dynamic";
+
 import { adminAuth } from "@/lib/firebase/admin";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-
 export async function POST(req: NextRequest) {
   try {
     const { idToken } = await req.json();

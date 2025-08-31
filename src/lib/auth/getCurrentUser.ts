@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { cookies } from "next/headers";
 import { adminAuth } from "@/lib/firebase/admin";
 import { prisma } from "@/lib/prisma";

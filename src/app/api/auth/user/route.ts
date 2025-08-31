@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { adminAuth } from "@/lib/firebase/admin";
 import { prisma } from "@/lib/prisma";
