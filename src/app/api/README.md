@@ -1,13 +1,13 @@
 # MITTI - API Documentation
 
- ## Authentication API
+## Authentication API
 
 All authentication endpoints require a valid Firebase session cookie (`__session`) unless otherwise noted.
 Firebase ID tokens are used for login, and session cookies persist authentication.
 
 ---
 
- ### **POST `/api/auth/sync`**
+### **POST `/api/auth/sync`**
 
 Syncs a Firebase-authenticated user into PostgreSQL.
 Used after Firebase login to ensure a user record exists in the database.
@@ -17,7 +17,7 @@ Used after Firebase login to ensure a user record exists in the database.
 
 #### Responses:
 
-* **200 OK**
+- **200 OK**
 
 ```json
 {
@@ -32,13 +32,13 @@ Used after Firebase login to ensure a user record exists in the database.
 }
 ```
 
-* **401 Unauthorized**
+- **401 Unauthorized**
 
 ```json
 { "success": false, "error": "Missing or invalid Authorization header" }
 ```
 
-* **500 Internal Server Error**
+- **500 Internal Server Error**
 
 ```json
 { "error": "Internal Server Error" }
@@ -55,7 +55,7 @@ Returns the currently authenticated user.
 
 #### Responses:
 
-* **200 OK**
+- **200 OK**
 
 ```json
 {
@@ -72,7 +72,7 @@ Returns the currently authenticated user.
 }
 ```
 
-* **401 Unauthorized**
+- **401 Unauthorized**
 
 ```json
 { "error": "Unauthorized or user not found" }
@@ -82,21 +82,35 @@ Returns the currently authenticated user.
 
 ### **PATCH `/api/auth/user`**
 
-Updates user details (name, phone, profile image).
+Updates user details (name, phone number, profile image). Accepts `multipart/form-data` to upload a profile image to Cloudinary.
 
-**Request (JSON):**
+**Headers:**
 
-```json
-{
-  "name": "John Doe",
-  "phoneNumber": "+91 9999999999",
-  "profileImage": "https://example.com/photo.jpg"
-}
+- `Authorization: Bearer <firebase-id-token>`
+- `Content-Type: multipart/form-data`
+
+**Request (FormData):**
+
+- `name` (string, optional): User’s name (min 3 characters).
+- `phoneNumber` (string, optional): Phone number (e.g., `+919876543210`).
+- `image` (file, optional): Profile image (JPEG, PNG, WebP; max 5MB).
+
+**Example Request:**
+
+```
+PATCH /api/auth/user
+Authorization: Bearer <firebase-id-token>
+Content-Type: multipart/form-data
+
+FormData:
+  name: John Doe
+  phoneNumber: +919999999999
+  image: [profile.jpg]
 ```
 
-#### Responses:
+**Responses:**
 
-* **200 OK**
+- **200 OK**
 
 ```json
 {
@@ -104,31 +118,59 @@ Updates user details (name, phone, profile image).
   "firebaseUid": "firebase-uid",
   "name": "John Doe",
   "email": "jane@example.com",
-  "phone": "+91 9999999999",
-  "image": "https://example.com/photo.jpg",
+  "phone": "+919999999999",
+  "image": "https://res.cloudinary.com/your-cloud-name/image/upload/v.../mitti-profiles/profile.jpg",
   "role": "HOST",
   "isVerified": true,
   "createdAt": "2025-07-29T13:19:17.874Z",
-  "updatedAt": "2025-08-27T15:18:40.522Z"
+  "updatedAt": "2025-09-02T23:30:40.522Z"
 }
 ```
 
-* **400 Bad Request**
+- **400 Bad Request**
 
 ```json
-{ "error": "No fields to update" }
+{
+  "error": "No fields to update",
+  "code": "NO_FIELDS_PROVIDED"
+}
 ```
 
-* **401 Unauthorized**
-
 ```json
-{ "error": "Unauthorized - Missing Session Cookie" }
+{
+  "error": "Validation failed",
+  "code": "VALIDATION_ERROR",
+  "details": [
+    {
+      "path": "name",
+      "message": "Name must be at least 3 characters",
+      "code": "too_small"
+    },
+    {
+      "path": "phoneNumber",
+      "message": "Invalid phone number format",
+      "code": "invalid_string"
+    }
+  ]
+}
 ```
 
-* **500 Internal Server Error**
+- **401 Unauthorized**
 
 ```json
-{ "error": "Internal Server Error" }
+{
+  "error": "Unauthorized - Missing Session Cookie",
+  "code": "UNAUTHORIZED"
+}
+```
+
+- **500 Internal Server Error**
+
+```json
+{
+  "error": "Internal Server Error",
+  "code": "UPDATE_FAILED"
+}
 ```
 
 ---
@@ -140,19 +182,19 @@ Also clears the session cookie.
 
 #### Responses:
 
-* **200 OK**
+- **200 OK**
 
 ```json
 { "success": true }
 ```
 
-* **401 Unauthorized**
+- **401 Unauthorized**
 
 ```json
 { "error": "Unauthorized - Missing Session Cookie" }
 ```
 
-* **500 Internal Server Error**
+- **500 Internal Server Error**
 
 ```json
 { "error": "Internal Server Error" }
@@ -172,13 +214,13 @@ Creates a session cookie for Firebase authentication.
 
 #### Responses:
 
-* **200 OK**
+- **200 OK**
 
 ```json
 { "success": true }
 ```
 
-* **401 Unauthorized**
+- **401 Unauthorized**
 
 ```json
 { "error": "Failed to create session" }
@@ -192,13 +234,13 @@ Logs out the user by clearing the session cookie.
 
 #### Responses:
 
-* **200 OK**
+- **200 OK**
 
 ```json
 { "success": true }
 ```
----
 
+---
 
 ## Homestays API
 
@@ -213,20 +255,20 @@ List and filter homestays. Supports pagination and multiple filters.
 
 **Query Parameters:**
 
-* `category` → Filter by category (e.g. `ECO_LODGE`)
-* `maxGuests` → Minimum guest capacity
-* `minPrice` / `maxPrice` → Price range
-* `type` → Optional type field
-* `rating` → Minimum rating
-* `amenities` → Multiple amenities (`?amenities=wifi&amenities=parking`)
-* `cursor` → Cursor ID for pagination
-* `limit` → Number of results per page (default: 20)
-* `isVerified` → `true`/`false`
-* `guideAvailable` → `true`/`false`
+- `category` → Filter by category (e.g. `ECO_LODGE`)
+- `maxGuests` → Minimum guest capacity
+- `minPrice` / `maxPrice` → Price range
+- `type` → Optional type field
+- `rating` → Minimum rating
+- `amenities` → Multiple amenities (`?amenities=wifi&amenities=parking`)
+- `cursor` → Cursor ID for pagination
+- `limit` → Number of results per page (default: 20)
+- `isVerified` → `true`/`false`
+- `guideAvailable` → `true`/`false`
 
 **Responses:**
 
-* **200 OK**
+- **200 OK**
 
 ```json
 {
@@ -244,7 +286,7 @@ List and filter homestays. Supports pagination and multiple filters.
 }
 ```
 
-* **500 Internal Server Error**
+- **500 Internal Server Error**
 
 ```json
 { "error": "Internal Server Error" }
@@ -254,7 +296,12 @@ List and filter homestays. Supports pagination and multiple filters.
 
 ### **POST `/api/homestays/create`**
 
-Create a new homestay (requires `HOST` role).
+Creates a new homestay (requires `HOST` role). Use `/api/upload-image` to upload images and obtain URLs for `imageUrl`.
+
+**Headers:**
+
+- `Authorization: Bearer <firebase-id-token>`
+- `Content-Type: application/json`
 
 **Request (JSON):**
 
@@ -265,52 +312,95 @@ Create a new homestay (requires `HOST` role).
   "address": "123 Hilltop Road",
   "latitude": 27.175,
   "longitude": 78.042,
-  "pricePerNight": 150,
+  "pricePerNight": 150.0,
   "beds": 3,
   "maxGuests": 6,
-  "imageUrl": "https://example.com/photo.jpg",
+  "imageUrl": [
+    "https://res.cloudinary.com/your-cloud-name/image/upload/v.../mitti-homestays/photo1.jpg",
+    "https://res.cloudinary.com/your-cloud-name/image/upload/v.../mitti-homestays/photo2.jpg"
+  ],
   "amenities": ["wifi", "parking"],
   "guideAvailable": true,
-  "guideFee": 20,
+  "guideFee": 20.0,
   "category": "MOUNTAIN_RETREAT",
   "checkInTime": "14:00",
-  "checkOutTime": "11:00"
+  "checkOutTime": "11:00",
+  "type": "HOME"
 }
 ```
 
 **Responses:**
 
-* **201 Created**
+- **201 Created**
 
 ```json
 {
   "id": "uuid",
-  "name": "Mountain View Lodge",
-  "pricePerNight": 150,
   "ownerId": "host-uuid",
-  "category": "MOUNTAIN_RETREAT"
+  "name": "Mountain View Lodge",
+  "description": "Peaceful retreat in the hills",
+  "address": "123 Hilltop Road",
+  "latitude": 27.175,
+  "longitude": 78.042,
+  "pricePerNight": "150.00",
+  "beds": 3,
+  "maxGuests": 6,
+  "imageUrl": [
+    "https://res.cloudinary.com/your-cloud-name/image/upload/v.../mitti-homestays/photo1.jpg",
+    "https://res.cloudinary.com/your-cloud-name/image/upload/v.../mitti-homestays/photo2.jpg"
+  ],
+  "amenities": ["wifi", "parking"],
+  "guideAvailable": true,
+  "guideFee": "20.00",
+  "category": "MOUNTAIN_RETREAT",
+  "checkInTime": "14:00",
+  "checkOutTime": "11:00",
+  "type": "HOME",
+  "rating": 0,
+  "isVerified": false,
+  "createdAt": "2025-09-02T23:30:40.522Z",
+  "updatedAt": "2025-09-02T23:30:40.522Z"
 }
 ```
 
-* **400 Bad Request**
+- **400 Bad Request**
 
 ```json
-{ "error": { "name": "Name must be at least 3 characters" } }
+{
+  "error": "Validation failed",
+  "details": {
+    "name": "Name must be at least 3 characters",
+    "description": "Description must be at least 10 characters"
+  }
+}
 ```
 
-* **403 Forbidden**
+- **401 Unauthorized**
 
 ```json
-{ "error": "Only hosts can create homestays." }
+{
+  "error": "Unauthorized or user not found",
+  "code": "UNAUTHORIZED"
+}
 ```
 
-* **500 Internal Server Error**
+- **403 Forbidden**
 
 ```json
-{ "error": "Internal Server Error" }
+{
+  "error": "Only hosts can create homestays",
+  "code": "FORBIDDEN"
+}
 ```
 
----
+- **500 Internal Server Error**
+
+```json
+{
+  "error": "Internal Server Error",
+  "code": "CREATE_FAILED"
+}
+```
 
 ### **GET `/api/homestays/[id]`**
 
@@ -318,7 +408,7 @@ Fetch details of a homestay.
 
 **Responses:**
 
-* **200 OK**
+- **200 OK**
 
 ```json
 {
@@ -334,19 +424,19 @@ Fetch details of a homestay.
 }
 ```
 
-* **400 Bad Request**
+- **400 Bad Request**
 
 ```json
 { "error": "Homestay ID is required." }
 ```
 
-* **404 Not Found**
+- **404 Not Found**
 
 ```json
 { "error": "Homestay Not Found." }
 ```
 
-* **500 Internal Server Error**
+- **500 Internal Server Error**
 
 ```json
 { "error": "Internal Server Error" }
@@ -370,7 +460,7 @@ Update homestay details (requires `HOST` and ownership).
 
 **Responses:**
 
-* **200 OK**
+- **200 OK**
 
 ```json
 {
@@ -382,25 +472,25 @@ Update homestay details (requires `HOST` and ownership).
 }
 ```
 
-* **400 Bad Request**
+- **400 Bad Request**
 
 ```json
 { "error": { "name": "Name must be at least 3 characters" } }
 ```
 
-* **403 Forbidden**
+- **403 Forbidden**
 
 ```json
 { "error": "You can only update your own homestays" }
 ```
 
-* **404 Not Found**
+- **404 Not Found**
 
 ```json
 { "error": "Homestay not found." }
 ```
 
-* **500 Internal Server Error**
+- **500 Internal Server Error**
 
 ```json
 { "error": "Internal Server Error" }
@@ -415,7 +505,7 @@ Prevents deletion if active/upcoming bookings exist.
 
 **Responses:**
 
-* **200 OK**
+- **200 OK**
 
 ```json
 {
@@ -424,7 +514,7 @@ Prevents deletion if active/upcoming bookings exist.
 }
 ```
 
-* **400 Bad Request**
+- **400 Bad Request**
 
 ```json
 {
@@ -432,29 +522,31 @@ Prevents deletion if active/upcoming bookings exist.
 }
 ```
 
-* **403 Forbidden**
+- **403 Forbidden**
 
 ```json
 { "error": "You can only delete your own homestays." }
 ```
 
-* **404 Not Found**
+- **404 Not Found**
 
 ```json
 { "error": "Homestay not found." }
 ```
 
-* **500 Internal Server Error**
+- **500 Internal Server Error**
 
 ```json
 { "error": "Internal Server Error" }
 ```
+
 ---
+
 Perfect — thanks for pasting the full `/api/bookings` suite (list, create, by-id GET/PUT/DELETE). Right now your code looks consistent and REST-y, but your docs should reflect:
 
-* **Authentication required everywhere** (all routes use `getCurrentUser()`)
-* **Multiple response codes per endpoint** (not just 200/201, but also 400, 401, 403, 404, 500)
-* **Extra fields in responses** like `bookingStatus`, `pagination`, `refundInfo`
+- **Authentication required everywhere** (all routes use `getCurrentUser()`)
+- **Multiple response codes per endpoint** (not just 200/201, but also 400, 401, 403, 404, 500)
+- **Extra fields in responses** like `bookingStatus`, `pagination`, `refundInfo`
 
 ---
 
@@ -475,11 +567,11 @@ Fetch a paginated list of the authenticated user’s bookings.
 
 **Query Params:**
 
-* `status` (optional) – filter by booking status (`PENDING`, `CONFIRMED`, `CANCELLED`, `COMPLETED`)
-* `upcoming=true` – only show upcoming bookings
-* `past=true` – only show past bookings
-* `limit` (default 20) – items per page
-* `page` (default 1) – page number
+- `status` (optional) – filter by booking status (`PENDING`, `CONFIRMED`, `CANCELLED`, `COMPLETED`)
+- `upcoming=true` – only show upcoming bookings
+- `past=true` – only show past bookings
+- `limit` (default 20) – items per page
+- `page` (default 1) – page number
 
 **Response (200):**
 
@@ -525,8 +617,8 @@ Fetch a paginated list of the authenticated user’s bookings.
 
 **Error Codes:**
 
-* `401 Unauthorized` – not logged in
-* `500 Internal Server Error`
+- `401 Unauthorized` – not logged in
+- `500 Internal Server Error`
 
 ---
 
@@ -566,10 +658,10 @@ Create a new booking.
 
 **Error Codes:**
 
-* `400 Bad Request` – invalid dates, over guest limit, or host booking own homestay
-* `401 Unauthorized` – not logged in
-* `404 Not Found` – homestay not found
-* `500 Internal Server Error`
+- `400 Bad Request` – invalid dates, over guest limit, or host booking own homestay
+- `401 Unauthorized` – not logged in
+- `404 Not Found` – homestay not found
+- `500 Internal Server Error`
 
 ---
 
@@ -593,18 +685,22 @@ Fetch details of a single booking. Only booking owner or homestay owner can view
     "isUpcoming": true,
     "isPast": false
   },
-  "homestay": { "id": "uuid", "name": "Cozy Cottage", "owner": { "id": "uuid", "name": "Host Name" } },
+  "homestay": {
+    "id": "uuid",
+    "name": "Cozy Cottage",
+    "owner": { "id": "uuid", "name": "Host Name" }
+  },
   "user": { "id": "uuid", "name": "Guest Name" }
 }
 ```
 
 **Error Codes:**
 
-* `400 Bad Request` – booking ID missing
-* `401 Unauthorized` – not logged in
-* `403 Forbidden` – not booking owner or homestay owner
-* `404 Not Found` – booking not found
-* `500 Internal Server Error`
+- `400 Bad Request` – booking ID missing
+- `401 Unauthorized` – not logged in
+- `403 Forbidden` – not booking owner or homestay owner
+- `404 Not Found` – booking not found
+- `500 Internal Server Error`
 
 ---
 
@@ -623,13 +719,17 @@ Update booking status (only valid transitions are allowed).
 ```json
 {
   "message": "Booking confirmed successfully! Guest will be notified.",
-  "booking": { "id": "uuid", "status": "CONFIRMED", "homestay": { "id": "uuid", "name": "Cozy Cottage" } }
+  "booking": {
+    "id": "uuid",
+    "status": "CONFIRMED",
+    "homestay": { "id": "uuid", "name": "Cozy Cottage" }
+  }
 }
 ```
 
 **Special Cases:**
 
-* `CANCELLED` → may include refund info
+- `CANCELLED` → may include refund info
 
 ```json
 {
@@ -643,11 +743,11 @@ Update booking status (only valid transitions are allowed).
 
 **Error Codes:**
 
-* `400 Bad Request` – invalid status or timing (too late to cancel, etc.)
-* `401 Unauthorized` – not logged in
-* `403 Forbidden` – not booking owner/host or invalid action
-* `404 Not Found` – booking not found
-* `500 Internal Server Error`
+- `400 Bad Request` – invalid status or timing (too late to cancel, etc.)
+- `401 Unauthorized` – not logged in
+- `403 Forbidden` – not booking owner/host or invalid action
+- `404 Not Found` – booking not found
+- `500 Internal Server Error`
 
 ---
 
@@ -671,20 +771,17 @@ Refund info may be included in the response.
 
 **Error Codes:**
 
-* `400 Bad Request` – already cancelled, completed, or too late
-* `401 Unauthorized` – not logged in
-* `403 Forbidden` – no permission to cancel
-* `404 Not Found` – booking not found
-* `500 Internal Server Error`
-
-
-
-
+- `400 Bad Request` – already cancelled, completed, or too late
+- `401 Unauthorized` – not logged in
+- `403 Forbidden` – no permission to cancel
+- `404 Not Found` – booking not found
+- `500 Internal Server Error`
 
 Got it — this `/api/reviews/[homestayId]` endpoint is two things in one:
 
-* **GET** → list reviews for a specific homestay (with pagination, filters, stats, rating distribution).
-* **POST** → create a new review for a homestay (tied to a completed booking).
+- **GET** → list reviews for a specific homestay (with pagination, filters, stats, rating distribution).
+- **POST** → create a new review for a homestay (tied to a completed booking).
+
 ---
 
 ## Reviews API
@@ -700,15 +797,15 @@ Fetch paginated reviews for a specific homestay.
 
 **Query Params:**
 
-* `limit` (default `20`) – number of reviews per page
-* `page` (default `1`) – page number
-* `rating` (optional) – filter by specific star rating (`1`–`5`)
-* `sortBy` (optional) – sort order:
+- `limit` (default `20`) – number of reviews per page
+- `page` (default `1`) – page number
+- `rating` (optional) – filter by specific star rating (`1`–`5`)
+- `sortBy` (optional) – sort order:
 
-  * `newest` (default)
-  * `oldest`
-  * `highest` (rating)
-  * `lowest` (rating)
+  - `newest` (default)
+  - `oldest`
+  - `highest` (rating)
+  - `lowest` (rating)
 
 **Response (200):**
 
@@ -757,9 +854,9 @@ Fetch paginated reviews for a specific homestay.
 
 **Error Codes:**
 
-* `400 Bad Request` – homestay ID missing
-* `404 Not Found` – homestay not found
-* `500 Internal Server Error`
+- `400 Bad Request` – homestay ID missing
+- `404 Not Found` – homestay not found
+- `500 Internal Server Error`
 
 ---
 
@@ -799,15 +896,90 @@ Create a review for a homestay. Requires an authenticated user and a completed b
 
 **Validation Rules:**
 
-* `rating` must be an integer between 1–5
-* `comment` optional but if present: 10–1000 characters
-* `bookingId` must be a valid UUID
+- `rating` must be an integer between 1–5
+- `comment` optional but if present: 10–1000 characters
+- `bookingId` must be a valid UUID
 
 **Error Codes:**
 
-* `400 Bad Request` – invalid payload, booking/homestay mismatch, booking not completed, or review already exists
-* `401 Unauthorized` – not logged in
-* `403 Forbidden` – trying to review someone else’s booking
-* `404 Not Found` – homestay or booking not found
-* `500 Internal Server Error`
+- `400 Bad Request` – invalid payload, booking/homestay mismatch, booking not completed, or review already exists
+- `401 Unauthorized` – not logged in
+- `403 Forbidden` – trying to review someone else’s booking
+- `404 Not Found` – homestay or booking not found
+- `500 Internal Server Error`
 
+## Upload Images API
+
+### **POST `/api/upload-image`**
+
+Upload images to Cloudinary and return secure URLs.. Requires authentication.
+
+**Headers:**
+
+- `Cookie: __session= <token>`
+- `Content-Type: multipart/form-data`
+
+**Request (FormData):**
+
+- `images` (File[]): Images to upload (JPEG, PNG, WebP; max 5MB each).
+- `folder` (string, optional): Cloudinary folder (defaults to `mitti-homestays`).
+
+**Example Request:**
+
+```
+POST /api/upload-image
+Cookie: __session= <token>
+Content-Type: multipart/form-data
+
+FormData:
+  images: [file1.jpg, file2.png]
+  folder: mitti-homestays
+```
+
+**Responses:**
+
+- **200 OK**
+
+```json
+{
+  "urls": [
+    "https://res.cloudinary.com/your-cloud-name/image/upload/v.../mitti-homestays/file1.jpg",
+    "https://res.cloudinary.com/your-cloud-name/image/upload/v.../mitti-homestays/file2.png"
+  ],
+  "message": "Images uploaded successfully"
+}
+```
+
+- **400 Bad Request**
+
+```json
+{ "error": "No files uploaded", "code": "NO_FILES_UPLOADED" }
+```
+
+- **401 Unauthorized**
+
+```json
+{
+  "error": "Unauthorized",
+  "code": "UNAUTHORIZED",
+  "details": "User not authenticated"
+}
+```
+
+- **429 Too Many Requests**
+
+```json
+{
+  "error": "Too many requests",
+  "code": "RATE_LIMIT_EXCEEDED",
+  "details": "Try again later"
+}
+```
+
+- **500 Internal Server Error**
+
+```json
+{ "error": "Upload failed", "code": "UPLOAD_FAILED", "details": "..." }
+```
+
+---

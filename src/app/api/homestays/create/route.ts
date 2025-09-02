@@ -17,7 +17,10 @@ const homestaySchema = z.object({
   pricePerNight: z.number().positive("Price must be positive"),
   beds: z.number().int().positive("Beds must be a positive integer"),
   maxGuests: z.number().int().positive("Max guests must be a positive integer"),
-  imageUrl: z.url("Image URL must be valid"),
+  imageUrl: z
+    .array(z.string().url("Image URL must be valid"))
+    .optional()
+    .default([]),
   amenities: z.array(z.string()).optional(),
   guideAvailable: z.boolean().optional().default(false),
   guideFee: z
@@ -44,7 +47,6 @@ const homestaySchema = z.object({
     .default("11:00"),
 });
 
-
 export async function POST(req: NextRequest) {
   try {
     const host = await requireRole("HOST");
@@ -68,6 +70,7 @@ export async function POST(req: NextRequest) {
           ? new Decimal(parsed.data.guideFee)
           : undefined,
         ownerId: host.id,
+        imageUrl: parsed.data.imageUrl,
       },
     });
 

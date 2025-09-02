@@ -48,10 +48,6 @@ Project is currently in development phase. MVP features are being built.
    npm run dev
    ```
 
-4. **Setup Firebase**
-
-   * Add your Firebase config to `/firebase/config.ts`
-
 
 ---
 
