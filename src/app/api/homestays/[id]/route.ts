@@ -77,7 +77,7 @@ const updateHomestaySchema = z.object({
     .int()
     .positive("Max guests must be a positive integer")
     .optional(),
-  imageUrl: z.url("Image URL must be valid").optional(),
+  imageUrl: z.array(z.url("Each image URL must be valid")).optional(),
   amenities: z.array(z.string()).optional(),
   guideAvailable: z.boolean().optional(),
   guideFee: z
@@ -114,7 +114,7 @@ type UpdateHomestayData = Partial<{
   pricePerNight: Decimal;
   beds: number;
   maxGuests: number;
-  imageUrl: string;
+  imageUrl: string[];
   amenities: string[];
   guideAvailable: boolean;
   guideFee: Decimal | null;
