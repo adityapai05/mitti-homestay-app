@@ -16,12 +16,6 @@ const userUpdateSchema = z.object({
     .optional(),
 });
 
-interface ErrorResponse {
-  error: string;
-  code: string;
-  details?: { path: string; message: string; code: string }[];
-}
-
 export async function GET() {
   const user = await getCurrentUser();
 
