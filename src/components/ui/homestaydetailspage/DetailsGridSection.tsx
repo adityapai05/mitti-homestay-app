@@ -60,6 +60,8 @@ const DetailsGridSection: React.FC<DetailsGridSectionProps> = ({
                 <Image
                   src={`https://dummyimage.com/600x400?text=Map+Preview`}
                   alt="Map placeholder"
+                  height={400}
+                  width={600}
                   className="w-full h-full object-cover"
                 />
               </div>

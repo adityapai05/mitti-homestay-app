@@ -15,14 +15,21 @@ interface HomestayDetailsProps {
 
 async function getHomestay(id: string): Promise<Homestay | null> {
   try {
-    const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/homestays/${id}`
-    );
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 404) {
-      return null;
+    const response = await fetch(`/api/homestays/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    const data = await response.json();
+    return data;
+  } catch (error) {
     console.error("[GET homestay/[id]]", error);
     return null;
   }

@@ -52,7 +52,7 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ homestayId }) => {
     const fetchReviews = async () => {
       try {
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/reviews/${homestayId}`
+          `/api/reviews/${homestayId}`
         );
 
         if (response.data.reviews.length > 0) {
