@@ -232,6 +232,138 @@ const ExploreSidebar = () => {
     </div>
   );
 
+  const MobileFilterContent = (
+    <div className="w-full space-y-3 bg-gradient-to-b from-mitti-dark-brown to-mitti-brown text-mitti-cream p-6 rounded-2xl shadow-lg transition-all duration-300">
+      <div>
+        <Label className="text-base font-semibold mb-3 block text-mitti-cream">
+          Type of Stay
+        </Label>
+        <RadioGroup
+          value={type}
+          onValueChange={setType}
+          aria-label="Type of Stay"
+        >
+          <div className="flex items-center space-x-3 rounded-lg p-2 hover:bg-mitti-beige/20 transition-colors">
+            <RadioGroupItem
+              value="entire"
+              id="entire"
+              className="text-mitti-cream border-mitti-cream"
+            />
+            <Label
+              htmlFor="entire"
+              className="text-mitti-cream font-medium cursor-pointer"
+            >
+              Entire Home
+            </Label>
+          </div>
+          <div className="flex items-center space-x-3 rounded-lg p-2 hover:bg-mitti-beige/20 transition-colors">
+            <RadioGroupItem
+              value="private"
+              id="private"
+              className="text-mitti-cream border-mitti-cream"
+            />
+            <Label
+              htmlFor="private"
+              className="text-mitti-cream font-medium cursor-pointer"
+            >
+              Private Room
+            </Label>
+          </div>
+        </RadioGroup>
+      </div>
+
+      <Separator className="bg-mitti-cream/30 h-[1px]" />
+
+      <div>
+        <Label className="text-base font-semibold mb-3 block text-mitti-cream">
+          Price Range
+        </Label>
+        <Slider
+          defaultValue={priceRange}
+          min={300}
+          max={5000}
+          step={10}
+          onValueChange={setPriceRange}
+          aria-label="Price Range Slider"
+        />
+        <div className="flex justify-between text-sm pt-2 text-mitti-khaki">
+          <span>₹{priceRange[0]}</span>
+          <span>₹{priceRange[1]}</span>
+        </div>
+      </div>
+
+      <Separator className="bg-mitti-cream/30 h-[1px]" />
+
+      <div>
+        <Label className="text-base font-semibold mb-3 block text-mitti-cream">
+          Amenities
+        </Label>
+        <div className="grid grid-cols-1 gap-1">
+          {amenitiesList.map((item) => (
+            <div
+              key={item}
+              className="flex items-center space-x-3 rounded-lg p-2 hover:bg-mitti-beige/20 transition-colors"
+            >
+              <Checkbox
+                id={item}
+                checked={amenities.includes(item)}
+                onCheckedChange={() => handleAmenityToggle(item)}
+                className="border-mitti-cream data-[state=checked]:bg-mitti-olive"
+                aria-label={item}
+              />
+              <Label
+                htmlFor={item}
+                className="text-mitti-cream font-medium cursor-pointer"
+              >
+                {item}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Separator className="bg-mitti-cream/30 h-[1px]" />
+
+      <div>
+        <Label className="text-base font-semibold mb-3 block text-mitti-cream">
+          Rating
+        </Label>
+        <RadioGroup
+          value={rating}
+          onValueChange={setRating}
+          aria-label="Rating"
+        >
+          <div className="flex items-center space-x-3 rounded-lg p-2 hover:bg-mitti-beige/20 transition-colors">
+            <RadioGroupItem
+              value="4"
+              id="4"
+              className="text-mitti-cream border-mitti-cream"
+            />
+            <Label
+              htmlFor="4"
+              className="text-mitti-cream font-medium cursor-pointer"
+            >
+              4★ & Above
+            </Label>
+          </div>
+          <div className="flex items-center space-x-3 rounded-lg p-2 hover:bg-mitti-beige/20 transition-colors">
+            <RadioGroupItem
+              value="3"
+              id="3"
+              className="text-mitti-cream border-mitti-cream"
+            />
+            <Label
+              htmlFor="3"
+              className="text-mitti-cream font-medium cursor-pointer"
+            >
+              3★ & Above
+            </Label>
+          </div>
+        </RadioGroup>
+      </div>
+    </div>
+  );
+
   return (
     <div className="w-full md:w-70 font-sans">
       <div className="hidden md:block sticky top-6">{SidebarContent}</div>
@@ -248,24 +380,49 @@ const ExploreSidebar = () => {
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="p-4 w-80 bg-gradient-to-b from-mitti-dark-brown to-mitti-brown text-mitti-cream border-r-0"
+            className="p-4 w-80 bg-gradient-to-b from-mitti-dark-brown to-mitti-brown text-mitti-cream border-r-0 flex flex-col"
           >
-            <div className="flex-col  justify-between items-center">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-mitti-cream">Filters</h2>
-                <SheetClose asChild>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="text-mitti-cream hover:bg-mitti-beige/20 rounded-full cursor-pointer"
-                  >
-                    <X className="w-6 h-6" />
-                  </Button>
-                </SheetClose>
-              </div>
-              {SidebarContent}
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-mitti-cream">Filters</h2>
+              <SheetClose asChild>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-mitti-cream hover:bg-mitti-beige/20 rounded-full cursor-pointer"
+                >
+                  <X className="w-6 h-6" />
+                </Button>
+              </SheetClose>
             </div>
-            <ScrollArea className="h-[80vh] pr-4">{SidebarContent}</ScrollArea>
+            <ScrollArea className="flex-grow overflow-y-auto pr-4 scrollbar-hide">
+              <style jsx>{`
+                .scrollbar-hide::-webkit-scrollbar {
+                  display: none;
+                }
+                .scrollbar-hide {
+                  -ms-overflow-style: none;
+                  scrollbar-width: none;
+                }
+              `}</style>
+              {MobileFilterContent}
+            </ScrollArea>
+            <div className="mt-4 space-y-3">
+              <Button
+                variant="default"
+                className="w-full bg-mitti-olive text-mitti-cream hover:bg-mitti-olive/90 transition-colors font-semibold rounded-lg py-2 cursor-pointer"
+                onClick={handleApplyFilters}
+                disabled={isApplying}
+              >
+                Apply Filters
+              </Button>
+              <Button
+                variant="secondary"
+                className="w-full bg-mitti-cream text-mitti-dark-brown hover:bg-mitti-khaki transition-colors font-semibold rounded-lg py-2 cursor-pointer"
+                onClick={handleClearFilters}
+              >
+                Clear Filters
+              </Button>
+            </div>
           </SheetContent>
         </Sheet>
       </div>
