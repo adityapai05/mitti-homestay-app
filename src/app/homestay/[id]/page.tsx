@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import axios from "axios";
 import { Homestay } from "@/types";
 import HeroSection from "@/components/ui/homestaydetailspage/HeroSection";
 import HostInfoSection from "@/components/ui/homestaydetailspage/HostInfoSection";
@@ -14,21 +15,14 @@ interface HomestayDetailsProps {
 
 async function getHomestay(id: string): Promise<Homestay | null> {
   try {
-    const response = await fetch(`/api/homestays/${id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null;
-      }
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
+    const response = await axios.get(
+      `/api/homestays/${id}`
+    );
+    return response.data;
   } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return null;
+    }
     console.error("[GET homestay/[id]]", error);
     return null;
   }
