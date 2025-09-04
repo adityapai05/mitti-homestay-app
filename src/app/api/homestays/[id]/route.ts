@@ -23,12 +23,16 @@ export async function GET(
     const homestay = await prisma.homestay.findUnique({
       where: { id: homestayId },
       include: {
-        // TODO: Include reviews here in future scope
         owner: {
           select: {
             id: true,
             name: true,
             image: true,
+          },
+        },
+        reviews: {
+          select: {
+            id: true,
           },
         },
       },
@@ -41,7 +45,40 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(homestay);
+    const reviewCount = homestay.reviews.length;
+
+    const response = {
+      id: homestay.id,
+      ownerId: homestay.ownerId,
+      name: homestay.name,
+      description: homestay.description,
+      address: homestay.address,
+      latitude: homestay.latitude,
+      longitude: homestay.longitude,
+      pricePerNight: homestay.pricePerNight.toString(),
+      beds: homestay.beds,
+      type: homestay.type,
+      maxGuests: homestay.maxGuests,
+      imageUrl: homestay.imageUrl,
+      amenities: homestay.amenities,
+      rating: homestay.rating,
+      reviewCount,
+      guideAvailable: homestay.guideAvailable,
+      guideFee: homestay.guideFee ? homestay.guideFee.toString() : null,
+      checkInTime: homestay.checkInTime,
+      checkOutTime: homestay.checkOutTime,
+      category: homestay.category,
+      isVerified: homestay.isVerified,
+      createdAt: homestay.createdAt.toISOString(),
+      updatedAt: homestay.updatedAt.toISOString(),
+      owner: {
+        id: homestay.owner.id,
+        name: homestay.owner.name,
+        image: homestay.owner.image,
+      },
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error("[GET homestays/[id]]", error);
     return NextResponse.json(

@@ -5,11 +5,12 @@ import { ReactNode } from "react";
 import clsx from "clsx";
 
 interface HomestayCardProps {
+  id: string;
   title: string;
   description: string;
   price?: number;
   rating?: number;
-  imageSrc: string;
+  imageSrc: string[];
   href?: string;
   actionLabel?: string;
   children?: ReactNode;
@@ -25,12 +26,13 @@ interface HomestayCardProps {
 }
 
 const HomestayCard = ({
+  id,
   title,
   description,
   price,
   rating,
   imageSrc,
-  href,
+  href = `/homestay/${id}`,
   actionLabel = "Book Now",
   children,
   size = "default",
@@ -51,7 +53,7 @@ const HomestayCard = ({
       description: "text-base sm:text-lg min-h-[48px]",
       price: "text-base sm:text-lg",
       button: "text-base sm:text-lg px-6 py-3",
-      padding: "p-5"
+      padding: "p-5",
     },
     compact: {
       container: "w-full max-w-[280px] mx-auto",
@@ -60,11 +62,15 @@ const HomestayCard = ({
       description: "text-xs sm:text-sm min-h-[28px]",
       price: "text-xs sm:text-sm",
       button: "text-xs sm:text-sm px-3 py-1.5",
-      padding: "p-3"
-    }
+      padding: "p-3",
+    },
   };
 
   const currentSize = sizeClasses[size];
+  const imageSource =
+    Array.isArray(imageSrc) && imageSrc.length > 0
+      ? imageSrc[0]
+      : "/mitti-logo.png";
 
   return (
     <div
@@ -78,11 +84,15 @@ const HomestayCard = ({
         className={clsx("relative w-full", currentSize.image, imageClassName)}
       >
         <Image
-          src={imageSrc || "/mitti-logo.png"}
+          src={imageSource}
           alt={title}
           fill
           className="object-cover transition-transform duration-400 hover:scale-105"
-          sizes={size === "compact" ? "(max-width: 768px) 50vw, 25vw" : "(max-width: 768px) 100vw, 320px"}
+          sizes={
+            size === "compact"
+              ? "(max-width: 768px) 50vw, 25vw"
+              : "(max-width: 768px) 100vw, 320px"
+          }
         />
         {(isVerified || category) && (
           <div className="absolute top-3 left-3 flex gap-2 z-10">
@@ -101,7 +111,13 @@ const HomestayCard = ({
         <div className="absolute inset-0 bg-gradient-to-t from-mitti-dark-brown/60 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-400" />
       </div>
 
-      <div className={clsx("flex flex-col flex-1", currentSize.padding, "bg-white/90 backdrop-blur-sm")}>
+      <div
+        className={clsx(
+          "flex flex-col flex-1",
+          currentSize.padding,
+          "bg-white/90 backdrop-blur-sm"
+        )}
+      >
         <h3
           className={clsx(
             "font-bold text-mitti-dark-brown mb-1 leading-tight",
@@ -141,8 +157,18 @@ const HomestayCard = ({
 
             {rating !== undefined && (
               <div className="flex items-center gap-1.5 text-mitti-dark-brown">
-                <Star size={size === "compact" ? 16 : 18} className="fill-yellow-500 stroke-yellow-500" />
-                <span className={clsx("font-semibold", size === "compact" ? "text-sm" : "text-base")}>{rating}</span>
+                <Star
+                  size={size === "compact" ? 16 : 18}
+                  className="fill-yellow-500 stroke-yellow-500"
+                />
+                <span
+                  className={clsx(
+                    "font-semibold",
+                    size === "compact" ? "text-sm" : "text-base"
+                  )}
+                >
+                  {rating}
+                </span>
               </div>
             )}
           </div>
@@ -152,7 +178,7 @@ const HomestayCard = ({
           children
         ) : (
           <Link
-            href={href || "#"}
+            href={href}
             className={clsx(
               "block w-full text-center text-white bg-mitti-olive rounded-xl font-semibold hover:bg-mitti-brown transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-mitti-olive focus:ring-offset-2",
               currentSize.button,

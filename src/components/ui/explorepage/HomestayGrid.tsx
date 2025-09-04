@@ -3,15 +3,7 @@
 import HomestayCard from "@/components/shared/HomestayCard";
 import HomestayCardSkeleton from "@/components/shared/HomestayCardSkeleton";
 import HomestaysNotFound from "./HomestaysNotFound";
-
-interface Homestay {
-  id: string;
-  name: string;
-  description: string;
-  imageUrl: string;
-  pricePerNight: string | number;
-  rating: number;
-}
+import { Homestay } from "@/types";
 
 interface HomestaysGridProps {
   homestays: Homestay[];
@@ -30,15 +22,14 @@ const HomestayGrid = ({ homestays, loading }: HomestaysGridProps) => {
   }
 
   if (!homestays || homestays.length === 0) {
-    return (
-      <HomestaysNotFound />
-    );
+    return <HomestaysNotFound />;
   }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {homestays.map((home) => (
         <HomestayCard
+          id={home.id}
           key={home.id}
           title={home.name}
           description={home.description}

@@ -22,31 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/prebuilt-components/select";
-
-interface Homestay {
-  id: string;
-  ownerId: string;
-  name: string;
-  description: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  pricePerNight: string;
-  beds: number;
-  type: string;
-  maxGuests: number;
-  imageUrl: string;
-  amenities: string[];
-  rating: number;
-  guideAvailable: boolean;
-  guideFee: string | null;
-  checkInTime: string;
-  checkOutTime: string;
-  category: string;
-  isVerified: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import { Homestay } from "@/types";
 
 export default function ExplorePageContent() {
   const searchParams = useSearchParams();
