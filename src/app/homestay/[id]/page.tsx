@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import axios from "axios";
 import { Homestay } from "@/types";
 import HeroSection from "@/components/ui/homestaydetailspage/HeroSection";
 import HostInfoSection from "@/components/ui/homestaydetailspage/HostInfoSection";
