@@ -58,7 +58,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ homestay }) => {
           </span>
         </div>
         <span className="inline-block mt-2 px-3 py-1 bg-mitti-olive rounded-full text-sm">
-          {homestay.category}
+          {homestay.category.replace('_', ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())} 
         </span>
       </div>
     </div>

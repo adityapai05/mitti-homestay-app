@@ -1,12 +1,12 @@
 // src/components/ui/homestaydetailspage/DetailsGridSection.tsx
 import { Bed, Users, Clock, Home } from "lucide-react";
 import { Homestay } from "@/types";
-import MapView from "./MapView";
+import dynamic from "next/dynamic";
 
 interface DetailsGridSectionProps {
   homestay: Homestay;
 }
-
+const MapView = dynamic(() => import("./MapView"), { ssr: false });
 const DetailsGridSection: React.FC<DetailsGridSectionProps> = ({
   homestay,
 }) => {

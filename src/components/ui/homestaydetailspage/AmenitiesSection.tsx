@@ -51,7 +51,7 @@ const AmenitiesSection: React.FC<AmenitiesSectionProps> = ({ homestay }) => {
   const showCollapsible = homestay.amenities?.length > 6;
 
   return (
-    <section className="py-10 px-6 bg-mitti-cream shadow-sm">
+    <section className="py-6 px-6 bg-mitti-cream shadow-sm">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-2xl font-semibold text-mitti-dark-brown mb-2">
           Amenities

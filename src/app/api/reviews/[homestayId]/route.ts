@@ -44,7 +44,7 @@ export async function GET(
       homestayId,
     };
 
-    if (rating) {
+    if (rating && rating !== "all" && !isNaN(Number(rating))) {
       where.rating = Number(rating);
     }
 
