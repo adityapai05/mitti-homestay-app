@@ -27,6 +27,8 @@ export async function GET(
           select: {
             id: true,
             name: true,
+            email: true,
+            phone: true,
             image: true,
           },
         },
@@ -74,6 +76,8 @@ export async function GET(
       owner: {
         id: homestay.owner.id,
         name: homestay.owner.name,
+        email: homestay.owner.email,
+        phone: homestay.owner.phone,
         image: homestay.owner.image,
       },
     };
