@@ -1,5 +1,8 @@
-import { notFound } from "next/navigation";
-import { Homestay } from "@/types";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import axios, { AxiosError } from "axios";
 import HeroSection from "@/components/ui/homestaydetailspage/HeroSection";
 import HostInfoSection from "@/components/ui/homestaydetailspage/HostInfoSection";
 import DescriptionSection from "@/components/ui/homestaydetailspage/DescriptionSection";
@@ -7,46 +10,59 @@ import AmenitiesSection from "@/components/ui/homestaydetailspage/AmenitiesSecti
 import DetailsGridSection from "@/components/ui/homestaydetailspage/DetailsGridSection";
 import ReviewsSection from "@/components/ui/homestaydetailspage/ReviewsSection";
 import PricingBookingSection from "@/components/ui/homestaydetailspage/PricingBookingSection";
+import HomestayNotFoundPage from "@/app/homestay/[id]/not-found";
+import { Homestay } from "@/types";
+import { Loader2 } from "lucide-react";
 
-interface HomestayDetailsProps {
-  params: Promise<{ id: string }>;
-}
+export default function HomestayDetails() {
+  const [homestay, setHomestay] = useState<Homestay | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const { id } = useParams();
 
-async function getHomestay(id: string): Promise<Homestay | null> {
-  try {
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
-    console.log("Base URL:", baseUrl); 
-    const response = await fetch(`${baseUrl}/api/homestays/${id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    if (!response.ok) {
-      console.error(`Fetch failed: ${response.status} ${response.statusText}`);
-      if (response.status === 404) return null;
-      throw new Error(`HTTP error! status: ${response.status}`);
+  useEffect(() => {
+    const fetchHomestay = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`/api/homestays/${id}`);
+        console.log("Fetched homestay data:", response.data);
+        setHomestay(response.data as Homestay);
+      } catch (err: unknown) {
+        const error = err as AxiosError;
+        console.error("[GET homestay/[id]]", err);
+        if (error.response?.status === 404) {
+          setError("Homestay not found");
+        } else {
+          setError("An error occurred while fetching the homestay");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchHomestay();
     }
-    const data = await response.json();
-    console.log("Fetched homestay data:", data); // Debug
-    return data as Homestay;
-  } catch (error) {
-    console.error("[GET homestay/[id]]", error);
-    return null;
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-mitti-cream to-mitti-beige">
+        <div className="flex flex-col items-center pt-20">
+          <Loader2 className="size-16 text-mitti-brown animate-spin mb-4" />
+          <h2 className="text-xl font-semibold text-mitti-dark-brown">
+            Loading Homestay...
+          </h2>
+          <p className="text-mitti-muted mt-1">
+            Exploring the perfect retreat for you!
+          </p>
+        </div>
+      </div>
+    );
   }
-}
 
-export default async function HomestayDetails({
-  params,
-}: HomestayDetailsProps) {
-  const { id } = await params;
-  const homestay = await getHomestay(id);
-  console.log("Homestay data:", homestay);
-
-  if (!homestay) {
-    notFound();
+  if (error || !homestay) {
+    return <HomestayNotFoundPage />;
   }
 
   return (
