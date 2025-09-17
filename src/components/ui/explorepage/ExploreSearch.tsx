@@ -7,27 +7,28 @@ import { useSearchParams, useRouter } from "next/navigation";
 import qs from "query-string";
 import SearchBar from "../homepage/search-bar/SearchBar";
 
-const SearchModal = dynamic(() => import("../../ui/homepage/search-bar/SearchModal"), { ssr: false });
+const SearchModal = dynamic(
+  () => import("../../ui/homepage/search-bar/SearchModal"),
+  { ssr: false }
+);
 
 const ExploreSearch = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<"where" | "when" | "who" | null>(null);
+  const [activeSection, setActiveSection] = useState<
+    "where" | "when" | "who" | null
+  >(null);
 
   // Pre-populate from search params
   const initialDestination = searchParams.get("destination") || "";
   const initialCheckIn = searchParams.get("checkIn") || "";
   const initialCheckOut = searchParams.get("checkOut") || "";
-  const initialGuests = {
-    adults: Number(searchParams.get("adults")) || 1,
-    children: Number(searchParams.get("children")) || 0,
-    infants: Number(searchParams.get("infants")) || 0,
-  };
-  const totalGuests = initialGuests.adults + initialGuests.children + initialGuests.infants;
+  const initialGuests = Number(searchParams.get("guests")) || 1;
 
   // Dynamic button text and icon based on search params
-  const hasSearchParams = initialDestination || initialCheckIn || initialCheckOut || totalGuests > 1;
+  const hasSearchParams =
+    initialDestination || initialCheckIn || initialCheckOut || initialGuests > 1;
   const buttonText = hasSearchParams ? "Edit Search" : "Search Stays";
   const buttonIcon = activeSection ? <Check size={22} /> : <Edit size={22} />;
 
@@ -43,10 +44,7 @@ const ExploreSearch = () => {
             destination: initialDestination || undefined,
             checkIn: initialCheckIn || undefined,
             checkOut: initialCheckOut || undefined,
-            adults: initialGuests.adults || undefined,
-            children: initialGuests.children || undefined,
-            infants: initialGuests.infants || undefined,
-            totalGuests: totalGuests || undefined,
+            guests: initialGuests || undefined,
           },
         },
         { arrayFormat: "bracket" }

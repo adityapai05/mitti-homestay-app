@@ -10,7 +10,7 @@ interface SearchModalProps {
   initialDestination?: string;
   initialCheckIn?: string;
   initialCheckOut?: string;
-  initialGuests?: { adults: number; children: number; infants: number };
+  initialGuests?: number;
 }
 
 const SearchModal = ({
@@ -18,34 +18,31 @@ const SearchModal = ({
   initialDestination = "",
   initialCheckIn = "",
   initialCheckOut = "",
-  initialGuests = { adults: 1, children: 0, infants: 0 },
+  initialGuests = 1,
 }: SearchModalProps) => {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<
     "where" | "when" | "who" | null
   >("where");
-  const [destination, setDestination] = useState(initialDestination); // Use initial value
-  const [checkIn, setCheckIn] = useState(initialCheckIn); // Use initial value
-  const [checkOut, setCheckOut] = useState(initialCheckOut); // Use initial value
-  const [guests, setGuests] = useState(initialGuests); // Use initial value
-  const totalGuests = guests.adults + guests.children + guests.infants;
+  const [destination, setDestination] = useState(initialDestination);
+  const [checkIn, setCheckIn] = useState(initialCheckIn);
+  const [checkOut, setCheckOut] = useState(initialCheckOut);
+  const [guests, setGuests] = useState(initialGuests);
   const MAX_GUESTS = 15;
 
-  // Guest count helpers
-  const canIncrement = () => totalGuests < MAX_GUESTS; //can use parameter type: keyof typeof guests if needed
-  const canDecrement = (type: keyof typeof guests) => {
-    const current = guests[type];
-    return current > 0 && !(type === "adults" && current === 1);
+  const canIncrement = () => guests < MAX_GUESTS;
+  const canDecrement = () => guests > 1;
+
+  const incrementGuest = () => {
+    if (canIncrement()) {
+      setGuests((prev) => prev + 1);
+    }
   };
 
-  const incrementGuest = (type: keyof typeof guests) => {
-    if (!canIncrement()) return;
-    setGuests((prev) => ({ ...prev, [type]: prev[type] + 1 }));
-  };
-
-  const decrementGuest = (type: keyof typeof guests) => {
-    if (!canDecrement(type)) return;
-    setGuests((prev) => ({ ...prev, [type]: prev[type] - 1 }));
+  const decrementGuest = () => {
+    if (canDecrement()) {
+      setGuests((prev) => prev - 1);
+    }
   };
 
   const handleSearch = () => {
@@ -56,10 +53,7 @@ const SearchModal = ({
           destination: destination || undefined,
           checkIn: checkIn || undefined,
           checkOut: checkOut || undefined,
-          adults: guests.adults || undefined,
-          children: guests.children || undefined,
-          infants: guests.infants || undefined,
-          totalGuests: totalGuests || undefined,
+          guests: guests || undefined,
         },
       },
       { arrayFormat: "bracket" }
@@ -72,7 +66,7 @@ const SearchModal = ({
     setDestination("");
     setCheckIn("");
     setCheckOut("");
-    setGuests({ adults: 1, children: 0, infants: 0 });
+    setGuests(1);
     setActiveSection("where");
   };
 
@@ -155,40 +149,34 @@ const SearchModal = ({
               Who
             </p>
             {activeSection === "who" ? (
-              <div className="space-y-4">
-                {["adults", "children", "infants"].map((type) => (
-                  <div key={type} className="flex justify-between items-center">
-                    <span className="capitalize text-gray-700">{type}</span>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          decrementGuest(type as keyof typeof guests);
-                        }}
-                        className="w-8 h-8 bg-mitti-olive/10 rounded-full flex items-center justify-center hover:bg-mitti-olive/20 disabled:opacity-50"
-                        disabled={!canDecrement(type as keyof typeof guests)}
-                      >
-                        <Minus size={18} />
-                      </button>
-                      <span className="text-lg font-medium">
-                        {guests[type as keyof typeof guests]}
-                      </span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          incrementGuest(type as keyof typeof guests);
-                        }}
-                        className="w-8 h-8 bg-mitti-olive/10 rounded-full flex items-center justify-center hover:bg-mitti-olive/20 disabled:opacity-50"
-                        disabled={!canIncrement()}
-                      >
-                        <Plus size={18} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700">Guests</span>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      decrementGuest();
+                    }}
+                    className="w-8 h-8 bg-mitti-olive/10 rounded-full flex items-center justify-center hover:bg-mitti-olive/20 disabled:opacity-50"
+                    disabled={!canDecrement()}
+                  >
+                    <Minus size={18} />
+                  </button>
+                  <span className="text-lg font-medium">{guests}</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      incrementGuest();
+                    }}
+                    className="w-8 h-8 bg-mitti-olive/10 rounded-full flex items-center justify-center hover:bg-mitti-olive/20 disabled:opacity-50"
+                    disabled={!canIncrement()}
+                  >
+                    <Plus size={18} />
+                  </button>
+                </div>
               </div>
             ) : (
-              <p className="text-gray-600">{`${guests.adults} Adults, ${guests.children} Children, ${guests.infants} Infants`}</p>
+              <p className="text-gray-600">{`${guests} Guests`}</p>
             )}
           </div>
         </div>

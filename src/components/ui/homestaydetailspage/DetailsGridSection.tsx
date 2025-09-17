@@ -1,4 +1,3 @@
-// src/components/ui/homestaydetailspage/DetailsGridSection.tsx
 import { Bed, Users, Clock, Home } from "lucide-react";
 import { Homestay } from "@/types";
 import dynamic from "next/dynamic";

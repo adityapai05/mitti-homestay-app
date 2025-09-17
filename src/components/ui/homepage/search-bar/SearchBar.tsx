@@ -25,11 +25,7 @@ const SearchBar = ({ mode = "search" }: SearchBarProps) => {
   );
   const [checkIn, setCheckIn] = useState(searchParams.get("checkIn") || "");
   const [checkOut, setCheckOut] = useState(searchParams.get("checkOut") || "");
-  const [guests, setGuests] = useState({
-    adults: Number(searchParams.get("adults")) || 1,
-    children: Number(searchParams.get("children")) || 0,
-    infants: Number(searchParams.get("infants")) || 0,
-  });
+  const [guests, setGuests] = useState(1);
 
   const ref = useRef<HTMLDivElement>(null);
   const whereInputRef = useRef<HTMLInputElement>(null);
@@ -40,7 +36,6 @@ const SearchBar = ({ mode = "search" }: SearchBarProps) => {
   useClickOutside(ref, () => setActiveSection(null));
 
   const handleSearch = () => {
-    const totalGuests = guests.adults + guests.children + guests.infants;
 
     const query = qs.stringifyUrl(
       {
@@ -49,10 +44,7 @@ const SearchBar = ({ mode = "search" }: SearchBarProps) => {
           destination: destination || undefined,
           checkIn: checkIn || undefined,
           checkOut: checkOut || undefined,
-          adults: guests.adults || undefined,
-          children: guests.children || undefined,
-          infants: guests.infants || undefined,
-          totalGuests: totalGuests || undefined,
+          guests: guests || undefined,
         },
       },
       { arrayFormat: "bracket" }
@@ -162,7 +154,7 @@ const SearchBar = ({ mode = "search" }: SearchBarProps) => {
             onKeyDown={(e) => handleKeyDown(e, "who")}
             className="text-sm bg-transparent focus:outline-none w-full text-left"
           >
-            {guests.adults + guests.children + guests.infants} guests
+            {guests} guests
           </button>
         </div>
 
