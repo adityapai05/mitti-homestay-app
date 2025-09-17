@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     const searchParams = url.searchParams;
 
     const category = searchParams.get("category");
-    const maxGuests = searchParams.get("maxGuests");
+    const guests = searchParams.get("guests");
     const minPrice = searchParams.get("minPrice");
     const maxPrice = searchParams.get("maxPrice");
     const type = searchParams.get("type");
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
         );
       }
     }
-    if (maxGuests) where.maxGuests = { gte: Number(maxGuests) };
+    if (guests) where.maxGuests = { gte: Number(guests) };
     if (minPrice || maxPrice) {
       where.pricePerNight = {};
       if (minPrice) where.pricePerNight.gte = Number(minPrice);
@@ -71,9 +71,31 @@ export async function GET(req: NextRequest) {
       where.address = { contains: destination, mode: "insensitive" };
     }
     if (checkIn && checkOut) {
+      const checkInDate = new Date(checkIn);
+      const checkOutDate = new Date(checkOut);
+
+      if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
+        return NextResponse.json(
+          { error: "Invalid checkIn or checkOut date format. Use YYYY-MM-DD." },
+          { status: 400 }
+        );
+      }
+
+      if (checkOutDate <= checkInDate) {
+        return NextResponse.json(
+          { error: "checkOut date must be after checkIn date." },
+          { status: 400 }
+        );
+      }
+
+      const checkInISO = checkInDate.toISOString();
+      const checkOutISO = checkOutDate.toISOString();
+
       where.bookings = {
         none: {
-          OR: [{ checkIn: { lte: checkOut }, checkOut: { gte: checkIn } }],
+          OR: [
+            { checkIn: { lte: checkOutISO }, checkOut: { gte: checkInISO } },
+          ],
         },
       };
     }
