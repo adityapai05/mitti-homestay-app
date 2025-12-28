@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/prebuilt-components/calendar";
 import {
   Popover,
@@ -11,21 +11,44 @@ import { Button } from "@/components/ui/prebuilt-components/button";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { format, isBefore, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
-
 import { DateRange } from "react-day-picker";
 
 interface DateRangePickerProps {
   bookedDates: Date[];
   onChange: (range: DateRange | undefined) => void;
+  initialRange?: {
+    from?: Date;
+    to?: Date;
+  };
   className?: string;
 }
 
 const DateRangePicker: React.FC<DateRangePickerProps> = ({
   bookedDates,
   onChange,
+  initialRange,
   className,
 }) => {
-  const [range, setRange] = useState<DateRange | undefined>(undefined);
+
+  // initialize state from initialRange
+  const [range, setRange] = useState<DateRange | undefined>(() => {
+    if (initialRange?.from || initialRange?.to) {
+      return {
+        from: initialRange.from,
+        to: initialRange.to,
+      };
+    }
+    return undefined;
+  });
+
+  useEffect(() => {
+    if (initialRange) {
+      setRange({
+        from: initialRange.from,
+        to: initialRange.to,
+      });
+    }
+  }, [initialRange]);
 
   const handleSelect = (selectedRange: DateRange | undefined) => {
     setRange(selectedRange);

@@ -9,6 +9,7 @@ import {
   ImageIcon,
   Loader2,
 } from "lucide-react";
+import Image from "next/image";
 
 export default function ImageUploader({
   max = 6,
@@ -59,8 +60,12 @@ export default function ImageUploader({
       if (data.errors?.length) {
         setError(data.errors.join(" • "));
       }
-    } catch (err: any) {
-      setError(err.message || "Image upload failed");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Image upload failed");
+      }
     } finally {
       setUploading(false);
     }
@@ -126,7 +131,7 @@ export default function ImageUploader({
               key={url}
               className="relative aspect-square rounded-xl overflow-hidden border border-mitti-khaki bg-mitti-beige"
             >
-              <img
+              <Image
                 src={url}
                 alt="Homestay"
                 className="h-full w-full object-cover"

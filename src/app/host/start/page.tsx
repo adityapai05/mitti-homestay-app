@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowRight, Home, Image, CheckCircle } from "lucide-react";
+import { ArrowRight, Home, Image as ImageIcon, CheckCircle } from "lucide-react";
 
 const BecomeHostStartPage = () => {
   const router = useRouter();
@@ -29,7 +29,7 @@ const BecomeHostStartPage = () => {
             />
 
             <StepItem
-              icon={<Image size={20} />}
+              icon={<ImageIcon size={20} />}
               number={2}
               title="Make it stand out"
               description="Add photos, a title, and a description that showcase your home’s character."

@@ -5,7 +5,10 @@ import dynamic from "next/dynamic";
 interface DetailsGridSectionProps {
   homestay: Homestay;
 }
-const MapView = dynamic(() => import("./MapView"), { ssr: false });
+const MapView = dynamic(() => import("@/components/shared/MapView"), {
+  ssr: false,
+});
+
 const DetailsGridSection: React.FC<DetailsGridSectionProps> = ({
   homestay,
 }) => {
@@ -26,8 +29,8 @@ const DetailsGridSection: React.FC<DetailsGridSectionProps> = ({
             <div className="flex items-center gap-2">
               <Users size={20} className="text-mitti-olive" />
               <span>
-                Max: {" "} 
-                {homestay.maxGuests} Guest{homestay.maxGuests !== 1 ? "s" : ""}
+                Max: {homestay.maxGuests} Guest
+                {homestay.maxGuests !== 1 ? "s" : ""}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -56,7 +59,6 @@ const DetailsGridSection: React.FC<DetailsGridSectionProps> = ({
               <MapView
                 latitude={homestay.latitude}
                 longitude={homestay.longitude}
-                name={homestay.name}
               />
             ) : (
               <span className="text-mitti-dark-brown">

@@ -90,7 +90,7 @@ const StepAmenities = ({ value = [], onChange }: Props) => {
 
   useEffect(() => {
     if (!value) onChange([]);
-  }, []);
+  }, [value, onChange]);
 
   return (
     <div className="w-full">

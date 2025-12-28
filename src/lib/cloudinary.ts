@@ -1,10 +1,10 @@
-import { v2 as cloudinary } from 'cloudinary';
-import { z } from 'zod';
+import { v2 as cloudinary } from "cloudinary";
+import { z } from "zod";
 
 const cloudinaryEnvSchema = z.object({
-  CLOUDINARY_CLOUD_NAME: z.string().min(1, 'Cloudinary cloud name is required'),
-  CLOUDINARY_API_KEY: z.string().min(1, 'Cloudinary API key is required'),
-  CLOUDINARY_API_SECRET: z.string().min(1, 'Cloudinary API secret is required'),
+  CLOUDINARY_CLOUD_NAME: z.string().min(1, "Cloudinary cloud name is required"),
+  CLOUDINARY_API_KEY: z.string().min(1, "Cloudinary API key is required"),
+  CLOUDINARY_API_SECRET: z.string().min(1, "Cloudinary API secret is required"),
 });
 
 const env = cloudinaryEnvSchema.parse({
@@ -17,10 +17,10 @@ cloudinary.config({
   cloud_name: env.CLOUDINARY_CLOUD_NAME,
   api_key: env.CLOUDINARY_API_KEY,
   api_secret: env.CLOUDINARY_API_SECRET,
-  secure: true, 
+  secure: true,
 });
 
-const ALLOWED_FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_FORMATS = ["image/jpeg", "image/png", "image/webp"];
 
 // Upload options interface
 interface UploadOptions {
@@ -35,7 +35,7 @@ export const uploadImage = async (
   options: UploadOptions = {}
 ): Promise<string> => {
   const optionsSchema = z.object({
-    folder: z.string().optional().default('mitti-homestays'),
+    folder: z.string().optional().default("mitti-homestays"),
     transformation: z
       .object({
         width: z.number().positive().optional(),
@@ -51,20 +51,26 @@ export const uploadImage = async (
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        resource_type: 'image',
+        resource_type: "image",
         ...validatedOptions,
         // Add default transformations for optimization
         transformation: [
-          ...(validatedOptions.transformation ? [validatedOptions.transformation] : []),
-          { quality: 'auto', fetch_format: 'auto' },
+          ...(validatedOptions.transformation
+            ? [validatedOptions.transformation]
+            : []),
+          { quality: "auto", fetch_format: "auto" },
         ],
       },
       (error, result) => {
         if (error) {
-          return reject(new Error(`Cloudinary upload failed: ${error.message}`));
+          return reject(
+            new Error(`Cloudinary upload failed: ${error.message}`)
+          );
         }
         if (!result) {
-          return reject(new Error('Cloudinary upload failed: No result returned'));
+          return reject(
+            new Error("Cloudinary upload failed: No result returned")
+          );
         }
         resolve(result.secure_url);
       }
@@ -75,9 +81,16 @@ export const uploadImage = async (
 
 export const validateFile = (file: File): void => {
   if (!ALLOWED_FORMATS.includes(file.type)) {
-    throw new Error(`Invalid file type: ${file.type}. Allowed types: ${ALLOWED_FORMATS.join(', ')}`);
+    throw new Error(
+      `Invalid file type: ${file.type}. Allowed types: ${ALLOWED_FORMATS.join(
+        ", "
+      )}`
+    );
+  }
+  if (file.size < 50 * 1024) {
+    throw new Error("Image size must be at least 50 KB");
   }
   if (file.size > 5 * 1024 * 1024) {
-    throw new Error(`File size exceeds 5MB: ${file.size} bytes`);
+    throw new Error(`Image size cannot exceed 5 MB`);
   }
 };

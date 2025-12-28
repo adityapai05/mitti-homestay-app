@@ -8,6 +8,26 @@ const MapView = dynamic(() => import("@/components/shared/MapView"), {
   ssr: false,
 });
 
+type NominatimAddress = {
+  village?: string;
+  hamlet?: string;
+  town?: string;
+  suburb?: string;
+  city?: string;
+  county?: string;
+  state?: string;
+  state_district?: string;
+  postcode?: string;
+};
+
+type NominatimResult = {
+  place_id: number;
+  display_name: string;
+  lat: string;
+  lon: string;
+  address?: NominatimAddress;
+};
+
 export type LocationValue = {
   label: string;
   latitude: number;
@@ -28,7 +48,7 @@ type Props = {
 
 const StepLocationMap = ({ value, onChange }: Props) => {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<NominatimResult[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -55,18 +75,17 @@ const StepLocationMap = ({ value, onChange }: Props) => {
           }
         );
 
-        const data = await res.json();
+        const data: NominatimResult[] = await res.json();
 
-        const ruralFirst = data.filter((item: any) => {
-          const a = item.address || {};
-          return a.village || a.hamlet || a.town || a.suburb || a.county;
+        const ruralFirst = data.filter((item) => {
+          const a = item.address;
+          return a?.village || a?.hamlet || a?.town || a?.suburb || a?.county;
         });
 
         setResults(ruralFirst);
       } catch (err) {
-        if ((err as any).name !== "AbortError") {
-          console.error("Location search failed", err);
-        }
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        console.error("Location search failed", err);
       } finally {
         setLoading(false);
       }
@@ -117,7 +136,7 @@ const StepLocationMap = ({ value, onChange }: Props) => {
 
               {!loading &&
                 results.map((item) => {
-                  const a = item.address || {};
+                  const a = item.address;
 
                   return (
                     <button
@@ -126,14 +145,14 @@ const StepLocationMap = ({ value, onChange }: Props) => {
                       onClick={() => {
                         onChange({
                           label: item.display_name,
-                          latitude: parseFloat(item.lat),
-                          longitude: parseFloat(item.lon),
+                          latitude: Number(item.lat),
+                          longitude: Number(item.lon),
                           address: {
                             country: "India",
-                            state: a.state,
-                            district: a.county || a.state_district,
-                            city: a.village || a.town || a.suburb || a.city,
-                            pincode: a.postcode,
+                            state: a?.state,
+                            district: a?.county || a?.state_district,
+                            city: a?.village || a?.town || a?.suburb || a?.city,
+                            pincode: a?.postcode,
                           },
                         });
                         setQuery(item.display_name);

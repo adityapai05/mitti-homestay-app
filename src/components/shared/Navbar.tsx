@@ -19,7 +19,7 @@ import { logout } from "@/lib/firebase/authActions";
 
 const navLinks = [
   { href: "/explore", label: "Explore" },
-  { href: "/list-your-home", label: "List Your Home" },
+  { href: "/host/start", label: "List Your Home" },
   { href: "/contact", label: "Contact Us" },
   { href: "/about", label: "About Us" },
 ];

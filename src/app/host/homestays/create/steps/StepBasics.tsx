@@ -1,7 +1,7 @@
 "use client";
 
 import { Minus, Plus } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 export type BasicsValue = {
   guests: number;
@@ -62,18 +62,23 @@ const Counter = ({
 };
 
 const StepBasics = ({ value, onChange }: Props) => {
-  const data: BasicsValue = value || {
-    guests: 1,
-    bedrooms: 1,
-    beds: 1,
-    bathrooms: 1,
-  };
+  const data = useMemo<BasicsValue>(
+    () =>
+      value || {
+        guests: 1,
+        bedrooms: 1,
+        beds: 1,
+        bathrooms: 1,
+      },
+    [value]
+  );
+
   useEffect(() => {
     if (!value) {
       onChange(data);
     }
-  }, []);
-  
+  }, [value, onChange, data]);
+
   const update = (field: keyof BasicsValue, val: number) => {
     onChange({
       ...data,

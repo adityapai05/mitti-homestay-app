@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 
-const MapView = dynamic(() => import("@/components/shared/MapView"), {
+dynamic(() => import("@/components/shared/MapView"), {
   ssr: false,
 });
 
@@ -27,7 +27,7 @@ type Props = {
   onChange: (value: AddressValue) => void;
 };
 
-const StepAddress = ({ value, location, onChange }: Props) => {
+const StepAddress = ({ value, onChange }: Props) => {
   const updateField = (field: keyof AddressValue, val: string) => {
     onChange({
       country: "India",
