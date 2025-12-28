@@ -39,6 +39,8 @@ model Homestay {
   beds           Int
   type Type @default(ROOM)
   maxGuests      Int
+  bedrooms  Int @default(1)
+  bathrooms Int @default(1)
   imageUrl       String[]
   amenities      String[]
   rating         Float      @default(0)

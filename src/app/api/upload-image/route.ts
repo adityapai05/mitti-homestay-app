@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     const folderInput = formData.get("folder");
 
     const { folder } = formDataSchema.parse({
-      folder: typeof folderInput === 'string' ? folderInput : null,
+      folder: typeof folderInput === "string" ? folderInput : null,
     });
 
     if (!files.length) {
@@ -73,17 +73,37 @@ export async function POST(req: Request) {
       );
     }
 
-    const uploadPromises = files.map(async (file) => {
-      validateFile(file);
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      return uploadImage(buffer, { folder });
-    });
+    const uploadedUrls: string[] = [];
+    const errors: string[] = [];
 
-    const imageUrls = await Promise.all(uploadPromises);
+    for (const file of files) {
+      try {
+        validateFile(file);
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const url = await uploadImage(buffer, { folder });
+        uploadedUrls.push(url);
+      } catch (err) {
+        errors.push(
+          `${file.name}: ${(err as Error).message || "Upload failed"}`
+        );
+      }
+    }
+
+    if (uploadedUrls.length === 0) {
+      return NextResponse.json(
+        {
+          error: "No images were uploaded",
+          details: errors,
+        },
+        { status: 400 }
+      );
+    }
 
     return NextResponse.json(
-      { urls: imageUrls, message: "Images uploaded successfully" },
+      {
+        urls: uploadedUrls,
+        errors, // <-- important
+      },
       { status: 200 }
     );
   } catch (error) {

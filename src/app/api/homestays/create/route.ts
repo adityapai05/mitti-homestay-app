@@ -1,32 +1,31 @@
-import { requireRole } from "@/lib/auth/requireRole";
+import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { prisma } from "@/lib/prisma";
 import { Decimal } from "@prisma/client/runtime/library";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 const homestaySchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  address: z.string().min(1, "Address is required"),
-  latitude: z.number().refine((val) => val >= -90 && val <= 90, {
-    message: "Latitude must be between -90 and 90",
-  }),
-  longitude: z.number().refine((val) => val >= -180 && val <= 180, {
-    message: "Longitude must be between -180 and 180",
-  }),
-  pricePerNight: z.number().positive("Price must be positive"),
-  beds: z.number().int().positive("Beds must be a positive integer"),
-  maxGuests: z.number().int().positive("Max guests must be a positive integer"),
-  imageUrl: z
-    .array(z.string().url("Image URL must be valid"))
-    .optional()
-    .default([]),
+  name: z.string().min(3),
+  description: z.string().min(10),
+  address: z.string().min(1),
+
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+
+  pricePerNight: z.number().positive(),
+
+  maxGuests: z.number().int().min(1),
+  beds: z.number().int().min(1),
+  bedrooms: z.number().int().min(0),
+  bathrooms: z.number().int().min(0),
+
+  imageUrl: z.array(z.string().url()).min(5),
+
   amenities: z.array(z.string()).optional(),
+
   guideAvailable: z.boolean().optional().default(false),
-  guideFee: z
-    .number()
-    .positive("Guide fee must be a positive number")
-    .optional(),
+  guideFee: z.number().positive().optional(),
+
   category: z.enum([
     "FARM_STAY",
     "ECO_LODGE",
@@ -35,24 +34,28 @@ const homestaySchema = z.object({
     "LAKESIDE",
     "OTHER",
   ]),
+
+  type: z.enum(["ROOM", "HOME"]),
+
   checkInTime: z
     .string()
-    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format (HH:MM)")
-    .optional()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
     .default("14:00"),
   checkOutTime: z
     .string()
-    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time format (HH:MM)")
-    .optional()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
     .default("11:00"),
 });
 
 export async function POST(req: NextRequest) {
   try {
-    const host = await requireRole("HOST");
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const body = await req.json();
-
     const parsed = homestaySchema.safeParse(body);
 
     if (!parsed.success) {
@@ -62,24 +65,51 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const newHomestay = await prisma.homestay.create({
-      data: {
-        ...parsed.data,
-        pricePerNight: new Decimal(parsed.data.pricePerNight),
-        guideFee: parsed.data.guideFee
-          ? new Decimal(parsed.data.guideFee)
-          : undefined,
-        ownerId: host.id,
-        imageUrl: parsed.data.imageUrl,
-      },
+    const homestay = await prisma.$transaction(async (tx) => {
+      const created = await tx.homestay.create({
+        data: {
+          name: parsed.data.name,
+          description: parsed.data.description,
+          address: parsed.data.address,
+          latitude: parsed.data.latitude,
+          longitude: parsed.data.longitude,
+          pricePerNight: new Decimal(parsed.data.pricePerNight),
+          maxGuests: parsed.data.maxGuests,
+          beds: parsed.data.beds,
+          bedrooms: parsed.data.bedrooms,
+          bathrooms: parsed.data.bathrooms,
+          imageUrl: parsed.data.imageUrl,
+          amenities: parsed.data.amenities,
+          category: parsed.data.category,
+          type: parsed.data.type,
+          guideAvailable: parsed.data.guideAvailable,
+          guideFee: parsed.data.guideFee
+            ? new Decimal(parsed.data.guideFee)
+            : null,
+          checkInTime: parsed.data.checkInTime,
+          checkOutTime: parsed.data.checkOutTime,
+          ownerId: user.id,
+        },
+      });
+
+      if (user.role === "USER") {
+        await tx.user.update({
+          where: { id: user.id },
+          data: { role: "HOST" },
+        });
+      }
+
+      return created;
     });
 
-    return NextResponse.json(newHomestay, { status: 201 });
-  } catch (error: unknown) {
+    return NextResponse.json(homestay, { status: 201 });
+  } catch (error) {
     console.error("[POST /homestays/create]", error);
     return NextResponse.json(
-      { error: (error as Error).message || "Internal Server Error" },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
 }
+
+export const dynamic = "force-dynamic";

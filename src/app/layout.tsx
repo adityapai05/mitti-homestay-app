@@ -5,7 +5,7 @@ import { Poppins } from "next/font/google";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import { Providers } from "./providers";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/prebuilt-components/sonner";
 import AuthProvider from "@/components/shared/AuthProvider";
 import GlobalModals from "@/components/auth/GlobalModals";
 
@@ -45,11 +45,7 @@ export default function RootLayout({
         <Providers>
           <Navbar />
           <AuthProvider />
-          <Toaster
-            richColors
-            position="bottom-right"
-            theme="light"
-          />
+          <Toaster />
           {children}
           <GlobalModals />
           <Footer />
