@@ -57,7 +57,7 @@ const MapView = ({
       center={[latitude, longitude]}
       zoom={zoom}
       scrollWheelZoom={false}
-      className="w-full h-full"
+      className="w-full h-full z-0"
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

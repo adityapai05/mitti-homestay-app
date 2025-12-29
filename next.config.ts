@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
         hostname: "res.cloudinary.com",
         pathname: "/**",
       },
+      {
+        hostname: "lh3.googleusercontent.com"
+      }
     ],
   },
 };

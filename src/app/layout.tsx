@@ -2,8 +2,6 @@ import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
-import Navbar from "@/components/shared/Navbar";
-import Footer from "@/components/shared/Footer";
 import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/prebuilt-components/sonner";
 import AuthProvider from "@/components/shared/AuthProvider";
@@ -43,12 +41,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={poppins.className} suppressHydrationWarning>
         <Providers>
-          <Navbar />
           <AuthProvider />
           <Toaster />
           {children}
           <GlobalModals />
-          <Footer />
         </Providers>
       </body>
     </html>

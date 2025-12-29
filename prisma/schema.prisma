@@ -32,7 +32,13 @@ model Homestay {
   ownerId        String
   name           String
   description    String
-  address        String
+  flatno String?
+  street    String?  
+  landmark       String?
+  village        String?
+  district       String?
+  state          String?
+  pincode        String?
   latitude       Float
   longitude      Float
   pricePerNight  Decimal

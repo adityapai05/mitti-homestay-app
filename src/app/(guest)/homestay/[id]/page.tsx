@@ -10,7 +10,7 @@ import AmenitiesSection from "@/components/ui/homestaydetailspage/AmenitiesSecti
 import DetailsGridSection from "@/components/ui/homestaydetailspage/DetailsGridSection";
 import ReviewsSection from "@/components/ui/homestaydetailspage/ReviewsSection";
 import PricingBookingSection from "@/components/ui/homestaydetailspage/PricingBookingSection";
-import HomestayNotFoundPage from "@/app/homestay/[id]/not-found";
+import HomestayNotFoundPage from "@/app/(guest)/homestay/[id]/not-found";
 import { Homestay } from "@/types";
 import { Loader2 } from "lucide-react";
 

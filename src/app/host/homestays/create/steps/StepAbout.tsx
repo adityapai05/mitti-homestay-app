@@ -15,7 +15,7 @@ const StepAbout = ({
   onChange,
 }: Props) => {
   return (
-    <div className="w-full">
+    <div className="w-full mt-10">
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="mb-8 sm:mb-10">

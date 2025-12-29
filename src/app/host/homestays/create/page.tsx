@@ -1,7 +1,11 @@
+import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import CreateHomestayStepper from "./CreateHomestayStepper";
+import { redirect } from "next/navigation";
 
-const CreateHomestayPage = () => {
+export default async function CreateHomestayPage() {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/");
+  }
   return <CreateHomestayStepper />;
-};
-
-export default CreateHomestayPage;
+}

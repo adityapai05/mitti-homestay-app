@@ -43,7 +43,7 @@ const StepAddress = ({ value, onChange }: Props) => {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full mt-10">
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="mb-8 sm:mb-10">
@@ -70,23 +70,25 @@ const StepAddress = ({ value, onChange }: Props) => {
 
           <div>
             <label className="block text-sm font-medium text-mitti-dark-brown mb-1">
-              House / Flat (optional)
+              House / Flat
             </label>
             <input
               value={value?.flat || ""}
               onChange={(e) => updateField("flat", e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-mitti-cream border border-mitti-khaki text-mitti-dark-brown"
+              required
             />
           </div>
 
           <div className="sm:col-span-2">
             <label className="block text-sm font-medium text-mitti-dark-brown mb-1">
-              Street (optional)
+              Street
             </label>
             <input
               value={value?.street || ""}
               onChange={(e) => updateField("street", e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-mitti-cream border border-mitti-khaki text-mitti-dark-brown"
+              required
             />
           </div>
 

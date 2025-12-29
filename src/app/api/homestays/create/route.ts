@@ -7,7 +7,14 @@ import { z } from "zod";
 const homestaySchema = z.object({
   name: z.string().min(3),
   description: z.string().min(10),
-  address: z.string().min(1),
+
+  flatno: z.string().optional(),
+  street: z.string().optional(),
+  landmark: z.string().optional(),
+  village: z.string().optional(),
+  district: z.string().optional(),
+  state: z.string().optional(),
+  pincode: z.string().optional(),
 
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
@@ -70,24 +77,38 @@ export async function POST(req: NextRequest) {
         data: {
           name: parsed.data.name,
           description: parsed.data.description,
-          address: parsed.data.address,
+
+          flatno: parsed.data.flatno,
+          street: parsed.data.street,
+          landmark: parsed.data.landmark,
+          village: parsed.data.village,
+          district: parsed.data.district,
+          state: parsed.data.state,
+          pincode: parsed.data.pincode,
+
           latitude: parsed.data.latitude,
           longitude: parsed.data.longitude,
+
           pricePerNight: new Decimal(parsed.data.pricePerNight),
           maxGuests: parsed.data.maxGuests,
           beds: parsed.data.beds,
           bedrooms: parsed.data.bedrooms,
           bathrooms: parsed.data.bathrooms,
+
           imageUrl: parsed.data.imageUrl,
           amenities: parsed.data.amenities,
+
           category: parsed.data.category,
           type: parsed.data.type,
+
           guideAvailable: parsed.data.guideAvailable,
           guideFee: parsed.data.guideFee
             ? new Decimal(parsed.data.guideFee)
             : null,
+
           checkInTime: parsed.data.checkInTime,
           checkOutTime: parsed.data.checkOutTime,
+
           ownerId: user.id,
         },
       });

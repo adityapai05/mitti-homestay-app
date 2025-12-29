@@ -5,8 +5,8 @@ type Props = {
   onChange: (value: number) => void;
 };
 
-const MIN_PRICE = 300;
-const MAX_PRICE = 20000;
+const MIN_PRICE = 150;
+const MAX_PRICE = 10000;
 
 const StepPricing = ({ value, onChange }: Props) => {
   return (
@@ -43,7 +43,7 @@ const StepPricing = ({ value, onChange }: Props) => {
 
           {/* Helper text */}
           <p className="mt-4 text-sm text-mitti-dark-brown">
-            Tip: Many rural homestays start between ₹800 and ₹3,000 per night,
+            Tip: Many rural homestays start between ₹500 and ₹3,000 per night,
             depending on location and amenities.
           </p>
         </div>

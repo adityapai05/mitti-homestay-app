@@ -96,7 +96,7 @@ const StepLocationMap = ({ value, onChange }: Props) => {
   }, [query]);
 
   return (
-    <div className="w-full">
+    <div className="w-full mt-10">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         {/* Header */}
         <div className="mb-8 sm:mb-10">

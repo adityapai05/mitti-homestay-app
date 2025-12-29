@@ -1,15 +1,33 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowRight, Home, Image as ImageIcon, CheckCircle } from "lucide-react";
+import {
+  ArrowRight,
+  Home,
+  Image as ImageIcon,
+  CheckCircle,
+} from "lucide-react";
+import { useAuthModal } from "@/hooks/useAuthModal";
+import { useUserStore } from "@/stores/useUserStore";
 
 const BecomeHostStartPage = () => {
   const router = useRouter();
 
+  const { openModal } = useAuthModal();
+  const user = useUserStore((state) => state.user);
+
+  const handleGetStarted = () => {
+    if (!user) {
+      openModal("login");
+      return;
+    }
+
+    router.push("/host/homestays/create");
+  };
+
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-mitti-beige flex items-center justify-center px-6">
       <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-14 items-center">
-        
         <div>
           <h1 className="text-3xl md:text-4xl font-semibold leading-tight text-mitti-dark-brown">
             It’s easy to get started on MITTI
@@ -54,8 +72,8 @@ const BecomeHostStartPage = () => {
           </p>
 
           <button
-            onClick={() => router.push("/host/homestays/create")}
-            className="mt-6 inline-flex items-center justify-center gap-2 w-full px-6 py-3 rounded-lg bg-mitti-brown text-white text-base font-medium hover:opacity-90 transition cursor-pointer"
+            onClick={handleGetStarted}
+            className="mt-6 inline-flex items-center justify-center gap-2 w-full px-6 py-3 rounded-lg bg-mitti-brown text-white font-medium hover:bg-mitti-brown/90 cursor-pointer"
           >
             Get started
             <ArrowRight size={18} />
@@ -94,13 +112,9 @@ function StepItem({
           </span>
         </div>
 
-        <h3 className="mt-1 font-medium text-mitti-dark-brown">
-          {title}
-        </h3>
+        <h3 className="mt-1 font-medium text-mitti-dark-brown">{title}</h3>
 
-        <p className="text-sm text-mitti-dark-brown max-w-md">
-          {description}
-        </p>
+        <p className="text-sm text-mitti-dark-brown max-w-md">{description}</p>
       </div>
     </div>
   );

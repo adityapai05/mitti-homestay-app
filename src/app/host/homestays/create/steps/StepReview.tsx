@@ -13,6 +13,7 @@ import {
   Plug,
   TreePalm,
   CookingPot,
+  Clock,
 } from "lucide-react";
 
 import type { AddressValue } from "./StepAddress";
@@ -149,6 +150,11 @@ const StepReview = ({ data }: Props) => {
             </div>
             <div className="flex items-center gap-2">
               <Bath size={18} /> {data.basics?.bathrooms} bathrooms
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock size={18} />
+              Check-in {data.basics?.checkInTime} · Check-out{" "}
+              {data.basics?.checkOutTime}
             </div>
           </div>
 

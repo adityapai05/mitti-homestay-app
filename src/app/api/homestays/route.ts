@@ -68,8 +68,13 @@ export async function GET(req: NextRequest) {
       };
     }
     if (destination) {
-      where.address = { contains: destination, mode: "insensitive" };
+      where.OR = [
+        { village: { contains: destination, mode: "insensitive" } },
+        { district: { contains: destination, mode: "insensitive" } },
+        { state: { contains: destination, mode: "insensitive" } },
+      ];
     }
+
     if (checkIn && checkOut) {
       const checkInDate = new Date(checkIn);
       const checkOutDate = new Date(checkOut);

@@ -48,10 +48,16 @@ export async function GET(req: NextRequest) {
             select: {
               id: true,
               name: true,
-              address: true,
               imageUrl: true,
               latitude: true,
               longitude: true,
+
+              street: true,
+              village: true,
+              district: true,
+              state: true,
+              pincode: true,
+
               owner: {
                 select: {
                   id: true,
@@ -69,6 +75,16 @@ export async function GET(req: NextRequest) {
     const bookingsWithStatus = bookings.map((booking) => {
       const checkInDate = new Date(booking.checkIn);
       const checkOutDate = new Date(booking.checkOut);
+      const address = [
+        booking.homestay.street,
+        booking.homestay.village,
+        booking.homestay.district,
+        booking.homestay.state,
+        booking.homestay.pincode,
+      ]
+        .filter(Boolean)
+        .join(", ");
+
       const nights = Math.ceil(
         (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)
       );
@@ -89,6 +105,10 @@ export async function GET(req: NextRequest) {
         ...booking,
         nights,
         bookingStatus,
+        homestay: {
+          ...booking.homestay,
+          address,
+        },
       };
     });
     const totalPages = Math.ceil(totalCount / limit);

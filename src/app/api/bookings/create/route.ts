@@ -78,12 +78,8 @@ export async function POST(req: NextRequest) {
             },
             OR: [
               {
-                checkIn: {
-                  lt: checkOutDate,
-                },
-                checkOut: {
-                  gt: checkInDate,
-                },
+                checkIn: { lt: checkOutDate },
+                checkOut: { gt: checkInDate },
               },
             ],
           },
@@ -130,7 +126,7 @@ export async function POST(req: NextRequest) {
         checkIn: checkInDate,
         checkOut: checkOutDate,
         guests,
-        totalPrice: totalPrice,
+        totalPrice,
         status: "PENDING",
       },
       include: {
@@ -138,7 +134,13 @@ export async function POST(req: NextRequest) {
           select: {
             id: true,
             name: true,
-            address: true,
+            flatno: true,
+            street: true,
+            landmark: true,
+            village: true,
+            district: true,
+            state: true,
+            pincode: true,
             imageUrl: true,
             owner: {
               select: {
@@ -158,7 +160,7 @@ export async function POST(req: NextRequest) {
         },
       },
     });
-    // TODO: Send confirmation emails to user and host
+
     return NextResponse.json(
       {
         message: "Booking created successfully!",

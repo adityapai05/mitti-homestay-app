@@ -134,6 +134,7 @@ export default function ImageUploader({
               <Image
                 src={url}
                 alt="Homestay"
+                fill
                 className="h-full w-full object-cover"
               />
 
@@ -149,7 +150,7 @@ export default function ImageUploader({
               <button
                 type="button"
                 onClick={() => removeImage(url)}
-                className="absolute top-2 right-2 bg-mitti-cream rounded-full p-1 text-mitti-dark-brown hover:scale-105 transition"
+                className="absolute top-2 right-2 bg-mitti-cream rounded-full p-1 text-mitti-dark-brown hover:scale-105 transition cursor-pointer"
               >
                 <X size={14} />
               </button>
@@ -160,7 +161,7 @@ export default function ImageUploader({
                   type="button"
                   onClick={() => moveImage(index, "left")}
                   disabled={index === 0}
-                  className="bg-mitti-cream p-1 rounded-full text-mitti-dark-brown disabled:opacity-30"
+                  className="bg-mitti-cream p-1 rounded-full text-mitti-dark-brown disabled:opacity-30 cursor-pointer"
                 >
                   <ArrowLeft size={14} />
                 </button>
@@ -169,7 +170,7 @@ export default function ImageUploader({
                   type="button"
                   onClick={() => moveImage(index, "right")}
                   disabled={index === value.length - 1}
-                  className="bg-mitti-cream p-1 rounded-full text-mitti-dark-brown disabled:opacity-30"
+                  className="bg-mitti-cream p-1 rounded-full text-mitti-dark-brown disabled:opacity-30 cursor-pointer"
                 >
                   <ArrowRight size={14} />
                 </button>

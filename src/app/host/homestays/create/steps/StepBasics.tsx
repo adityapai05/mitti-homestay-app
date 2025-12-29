@@ -8,6 +8,8 @@ export type BasicsValue = {
   bedrooms: number;
   beds: number;
   bathrooms: number;
+  checkInTime: string;
+  checkOutTime: string;
 };
 
 type Props = {
@@ -69,6 +71,8 @@ const StepBasics = ({ value, onChange }: Props) => {
         bedrooms: 1,
         beds: 1,
         bathrooms: 1,
+        checkInTime: "14:00",
+        checkOutTime: "11:00"
       },
     [value]
   );
@@ -87,7 +91,7 @@ const StepBasics = ({ value, onChange }: Props) => {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full mt-10">
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="mb-8 sm:mb-10">
