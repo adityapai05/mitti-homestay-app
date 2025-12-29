@@ -1,15 +1,17 @@
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { hostHomestayWhere } from "@/lib/visibility/homestayVisibility";
 
 export async function GET() {
   try {
     const host = await requireRole("HOST");
 
     const homestays = await prisma.homestay.findMany({
-      where: {
-        ownerId: host.id,
-      },
+      where: hostHomestayWhere({
+        userId: host.id,
+        role: host.role,
+      }),
       orderBy: {
         createdAt: "desc",
       },

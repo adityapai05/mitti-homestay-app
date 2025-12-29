@@ -13,7 +13,6 @@ import {
   Plug,
   TreePalm,
   CookingPot,
-  Clock,
 } from "lucide-react";
 
 import type { AddressValue } from "./StepAddress";
@@ -50,9 +49,10 @@ const formatType = (value?: string) =>
 const formatAddress = (address?: AddressValue) => {
   if (!address) return "";
   return [
+    address.flatno,
     address.street,
     address.landmark,
-    address.city,
+    address.village,
     address.district,
     address.state,
     address.pincode,
@@ -85,13 +85,13 @@ const StepReview = ({ data }: Props) => {
         </h1>
         <p className="mt-1 text-mitti-dark-brown/70">
           Take a moment to review the details below before publishing your
-          homestay. You can go back and edit anything if needed.
+          homestay.
         </p>
       </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6">
-        {/* ---------- LEFT: PHOTOS ---------- */}
+        {/* Photos */}
         <div>
-          {/* Cover */}
           <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-mitti-khaki mb-3">
             <Image
               src={data.images[0]}
@@ -104,7 +104,6 @@ const StepReview = ({ data }: Props) => {
             </span>
           </div>
 
-          {/* Others */}
           <div className="grid grid-cols-4 gap-3">
             {data.images.slice(1).map((url) => (
               <div
@@ -122,9 +121,8 @@ const StepReview = ({ data }: Props) => {
           </div>
         </div>
 
-        {/* ---------- RIGHT: DETAILS ---------- */}
+        {/* Details */}
         <div className="space-y-4">
-          {/* About */}
           <div className="bg-mitti-cream border border-mitti-khaki rounded-2xl p-6">
             <h2 className="text-2xl font-semibold text-mitti-dark-brown mb-1">
               {data.name}
@@ -132,12 +130,11 @@ const StepReview = ({ data }: Props) => {
             <p className="text-sm text-mitti-dark-brown/70 mb-3">
               {formatCategory(data.category)} · {formatType(data.type)}
             </p>
-            <p className="text-mitti-dark-brown leading-relaxed whitespace-pre-line">
+            <p className="text-mitti-dark-brown whitespace-pre-line">
               {data.description}
             </p>
           </div>
 
-          {/* Stay details */}
           <div className="bg-mitti-cream border border-mitti-khaki rounded-2xl p-6 grid grid-cols-2 gap-4 text-mitti-dark-brown">
             <div className="flex items-center gap-2">
               <Users size={18} /> {data.basics?.guests} guests
@@ -151,14 +148,8 @@ const StepReview = ({ data }: Props) => {
             <div className="flex items-center gap-2">
               <Bath size={18} /> {data.basics?.bathrooms} bathrooms
             </div>
-            <div className="flex items-center gap-2">
-              <Clock size={18} />
-              Check-in {data.basics?.checkInTime} · Check-out{" "}
-              {data.basics?.checkOutTime}
-            </div>
           </div>
 
-          {/* Amenities */}
           {data.amenities && data.amenities.length > 0 && (
             <div className="bg-mitti-cream border border-mitti-khaki rounded-2xl p-6">
               <h3 className="font-medium text-mitti-dark-brown mb-3">
@@ -166,10 +157,7 @@ const StepReview = ({ data }: Props) => {
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 {data.amenities.map((a) => (
-                  <div
-                    key={a}
-                    className="flex items-center gap-2 text-sm text-mitti-dark-brown"
-                  >
+                  <div key={a} className="flex items-center gap-2 text-sm">
                     {amenityIconMap[a] || <Home size={16} />}
                     {formatAmenity(a)}
                   </div>
@@ -178,18 +166,14 @@ const StepReview = ({ data }: Props) => {
             </div>
           )}
 
-          {/* Location */}
           <div className="bg-mitti-cream border border-mitti-khaki rounded-2xl p-6 flex items-start gap-3">
-            <MapPin size={20} className="mt-1" />
-            <span className="text-mitti-dark-brown">
-              {formatAddress(data.address)}
-            </span>
+            <MapPin size={20} />
+            <span>{formatAddress(data.address)}</span>
           </div>
 
-          {/* Pricing */}
           <div className="bg-mitti-cream border border-mitti-khaki rounded-2xl p-6 flex items-center gap-2">
             <IndianRupee size={18} />
-            <span className="text-lg font-semibold text-mitti-dark-brown">
+            <span className="text-lg font-semibold">
               {data.pricePerNight} per night
             </span>
           </div>

@@ -21,9 +21,23 @@ export async function GET(
       );
     }
 
-    const homestay = await prisma.homestay.findUnique({
-      where: { id: homestayId },
-      select: { id: true, name: true },
+    const user = await getCurrentUser();
+
+    const homestay = await prisma.homestay.findFirst({
+      where: {
+        id: homestayId,
+        ...(user?.role === "ADMIN"
+          ? {}
+          : user?.role === "HOST"
+          ? {
+              OR: [{ isVerified: true }, { ownerId: user.id }],
+            }
+          : { isVerified: true }),
+      },
+      select: {
+        id: true,
+        name: true,
+      },
     });
 
     if (!homestay) {
@@ -51,7 +65,7 @@ export async function GET(
     let orderBy: ReviewOrderByInput = { createdAt: "desc" };
     if (sortBy === "oldest") orderBy = { createdAt: "asc" };
     if (sortBy === "highest") orderBy = { rating: "desc" };
-    if (sortBy === "oldest") orderBy = { rating: "asc" };
+    if (sortBy === "lowest") orderBy = { rating: "asc" };
 
     const skip = (page - 1) * limit;
 
@@ -100,15 +114,10 @@ export async function GET(
     });
 
     const totalPages = Math.ceil(totalCount / limit);
-    const hasNextPage = page < totalPages;
-    const hasPrevPage = page > 1;
 
     return NextResponse.json({
       reviews,
-      homestay: {
-        id: homestay.id,
-        name: homestay.name,
-      },
+      homestay,
       stats: {
         totalReviews: totalCount,
         averageRating: Number(avgRating._avg.rating?.toFixed(1)) || 0,
@@ -121,8 +130,8 @@ export async function GET(
         currentPage: page,
         totalPages,
         totalCount,
-        hasNextPage,
-        hasPrevPage,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
         limit,
       },
     });
@@ -187,9 +196,7 @@ export async function POST(
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: {
-        homestay: {
-          select: { id: true, name: true },
-        },
+        homestay: { select: { id: true } },
       },
     });
 
@@ -261,9 +268,7 @@ export async function POST(
 
     const avgRatingResult = await prisma.review.aggregate({
       where: { homestayId },
-      _avg: {
-        rating: true,
-      },
+      _avg: { rating: true },
     });
 
     await prisma.homestay.update({

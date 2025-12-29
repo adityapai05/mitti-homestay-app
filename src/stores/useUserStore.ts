@@ -1,5 +1,7 @@
 import { create } from "zustand";
 
+export type UserRole = "USER" | "HOST" | "ADMIN";
+
 type User = {
   uid: string;
   email?: string | null;
@@ -7,6 +9,7 @@ type User = {
   displayName?: string | null;
   photoURL?: string | null;
   provider: "password" | "google" | "phone";
+  role: UserRole;
 };
 
 interface UserStore {

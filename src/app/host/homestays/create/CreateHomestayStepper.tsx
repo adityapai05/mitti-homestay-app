@@ -10,13 +10,15 @@ import StepAmenities from "./steps/StepAmenities";
 import StepPhotos from "./steps/StepPhotos";
 import StepAbout from "./steps/StepAbout";
 import StepPricing from "./steps/StepPricing";
+import StepReview from "./steps/StepReview";
 import MapConfirmModal from "./MapConfirmModal";
+
 import type { LocationValue } from "./steps/StepLocationMap";
 import type { AddressValue } from "./steps/StepAddress";
+
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import StepReview from "./steps/StepReview";
 
 const TOTAL_STEPS = 10;
 
@@ -24,6 +26,7 @@ const CreateHomestayStepper = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [showMapConfirm, setShowMapConfirm] = useState(false);
   const [publishing, setPublishing] = useState(false);
+
   const [formData, setFormData] = useState<{
     category?: string;
     type?: "ROOM" | "HOME";
@@ -39,14 +42,15 @@ const CreateHomestayStepper = () => {
 
   const router = useRouter();
 
+  /* ---------------- navigation ---------------- */
+
   const handleNext = () => {
     if (currentStep === 3) {
       setShowMapConfirm(true);
       return;
     }
-
     if (currentStep < TOTAL_STEPS - 1) {
-      setCurrentStep((prev) => prev + 1);
+      setCurrentStep((p) => p + 1);
     }
   };
 
@@ -55,10 +59,12 @@ const CreateHomestayStepper = () => {
       router.back();
       return;
     }
-    setCurrentStep((prev) => prev - 1);
+    setCurrentStep((p) => p - 1);
   };
+
   const handlePublish = async () => {
     setPublishing(true);
+
     try {
       const basics = formData.basics ?? {
         guests: 1,
@@ -66,28 +72,23 @@ const CreateHomestayStepper = () => {
         beds: 1,
         bathrooms: 1,
       };
+
       const res = await fetch("/api/homestays/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-
         body: JSON.stringify({
           name: formData.name,
           description: formData.description,
           category: formData.category,
           type: formData.type,
 
-          address: formData.address
-            ? [
-                formData.address.street,
-                formData.address.landmark,
-                formData.address.city,
-                formData.address.district,
-                formData.address.state,
-                formData.address.pincode,
-              ]
-                .filter(Boolean)
-                .join(", ")
-            : "",
+          flatno: formData.address?.flatno,
+          street: formData.address?.street,
+          landmark: formData.address?.landmark,
+          village: formData.address?.village,
+          district: formData.address?.district,
+          state: formData.address?.state,
+          pincode: formData.address?.pincode,
 
           latitude: formData.location?.latitude,
           longitude: formData.location?.longitude,
@@ -120,15 +121,15 @@ const CreateHomestayStepper = () => {
     }
   };
 
+  /* ---------------- steps ---------------- */
+
   const renderStep = () => {
     switch (currentStep) {
       case 0:
         return (
           <StepCategory
             value={formData.category}
-            onChange={(value) =>
-              setFormData((prev) => ({ ...prev, category: value }))
-            }
+            onChange={(v) => setFormData((p) => ({ ...p, category: v }))}
           />
         );
 
@@ -136,9 +137,7 @@ const CreateHomestayStepper = () => {
         return (
           <StepType
             value={formData.type}
-            onChange={(value) =>
-              setFormData((prev) => ({ ...prev, type: value }))
-            }
+            onChange={(v) => setFormData((p) => ({ ...p, type: v }))}
           />
         );
 
@@ -147,18 +146,17 @@ const CreateHomestayStepper = () => {
           <StepLocationMap
             value={formData.location}
             onChange={(value) =>
-              setFormData((prev) => ({
-                ...prev,
+              setFormData((p) => ({
+                ...p,
                 location: value,
                 address: {
-                  country: "India",
-                  city: value.address.city || "",
-                  district: value.address.district || "",
-                  state: value.address.state || "",
-                  pincode: value.address.pincode || "",
+                  flatno: "",
                   street: "",
                   landmark: "",
-                  flat: "",
+                  village: value.address.city || "",
+                  district: value.address.district,
+                  state: value.address.state || "",
+                  pincode: value.address.pincode || "",
                 },
               }))
             }
@@ -169,10 +167,7 @@ const CreateHomestayStepper = () => {
         return (
           <StepAddress
             value={formData.address}
-            location={formData.location}
-            onChange={(value) =>
-              setFormData((prev) => ({ ...prev, address: value }))
-            }
+            onChange={(v) => setFormData((p) => ({ ...p, address: v }))}
           />
         );
 
@@ -180,9 +175,7 @@ const CreateHomestayStepper = () => {
         return (
           <StepBasics
             value={formData.basics}
-            onChange={(value) =>
-              setFormData((prev) => ({ ...prev, basics: value }))
-            }
+            onChange={(v) => setFormData((p) => ({ ...p, basics: v }))}
           />
         );
 
@@ -190,9 +183,7 @@ const CreateHomestayStepper = () => {
         return (
           <StepAmenities
             value={formData.amenities}
-            onChange={(value) =>
-              setFormData((prev) => ({ ...prev, amenities: value }))
-            }
+            onChange={(v) => setFormData((p) => ({ ...p, amenities: v }))}
           />
         );
 
@@ -200,9 +191,7 @@ const CreateHomestayStepper = () => {
         return (
           <StepPhotos
             value={formData.images}
-            onChange={(value) =>
-              setFormData((prev) => ({ ...prev, images: value }))
-            }
+            onChange={(v) => setFormData((p) => ({ ...p, images: v }))}
           />
         );
 
@@ -212,11 +201,7 @@ const CreateHomestayStepper = () => {
             title={formData.name}
             description={formData.description}
             onChange={({ title, description }) =>
-              setFormData((prev) => ({
-                ...prev,
-                name: title,
-                description,
-              }))
+              setFormData((p) => ({ ...p, name: title, description }))
             }
           />
         );
@@ -225,9 +210,7 @@ const CreateHomestayStepper = () => {
         return (
           <StepPricing
             value={formData.pricePerNight}
-            onChange={(value) =>
-              setFormData((prev) => ({ ...prev, pricePerNight: value }))
-            }
+            onChange={(v) => setFormData((p) => ({ ...p, pricePerNight: v }))}
           />
         );
 
@@ -235,9 +218,11 @@ const CreateHomestayStepper = () => {
         return <StepReview data={formData} />;
 
       default:
-        return <div className="text-mitti-dark-brown">Step coming soon</div>;
+        return null;
     }
   };
+
+  /* ---------------- validation ---------------- */
 
   const canProceed =
     currentStep === 0
@@ -248,14 +233,10 @@ const CreateHomestayStepper = () => {
       ? Boolean(formData.location)
       : currentStep === 3
       ? Boolean(
-          formData.address?.city &&
+          formData.address?.village &&
             formData.address?.state &&
             /^[0-9]{6}$/.test(formData.address?.pincode || "")
         )
-      : currentStep === 4
-      ? true
-      : currentStep === 5
-      ? true
       : currentStep === 6
       ? (formData.images?.length || 0) >= 5
       : currentStep === 7
@@ -268,16 +249,15 @@ const CreateHomestayStepper = () => {
         )
       : true;
 
+  /* ---------------- render ---------------- */
+
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-mitti-beige flex flex-col">
-      {/* Step content */}
       <div className="flex-1 flex items-center justify-center px-4 pb-32">
         <div className="w-full">{renderStep()}</div>
       </div>
 
-      {/* Sticky navigation with progress bar */}
       <div className="sticky bottom-0 z-[100] bg-mitti-cream border-t border-mitti-khaki">
-        {/* Progress bar */}
         <div className="h-1 w-full bg-mitti-khaki">
           <div
             className="h-1 bg-mitti-brown transition-all duration-300"
@@ -287,13 +267,12 @@ const CreateHomestayStepper = () => {
           />
         </div>
 
-        {/* Navigation content */}
         <div className="px-4 sm:px-6 py-4">
           <div className="max-w-5xl mx-auto flex items-center justify-between">
             <button
               type="button"
               onClick={handleBack}
-              className="inline-flex items-center gap-2 text-mitti-dark-brown hover:underline cursor-pointer"
+              className="inline-flex items-center gap-2 text-mitti-dark-brown"
             >
               <ArrowLeft size={18} />
               {currentStep === 0 ? "Exit" : "Back"}
@@ -303,7 +282,7 @@ const CreateHomestayStepper = () => {
               <button
                 onClick={handlePublish}
                 disabled={publishing}
-                className="px-6 py-2 rounded-lg bg-mitti-brown text-white font-medium hover:bg-mitti-brown/90 cursor-pointer"
+                className="px-6 py-2 rounded-lg bg-mitti-brown text-white"
               >
                 {publishing ? "Publishing…" : "Publish listing"}
               </button>
@@ -311,13 +290,11 @@ const CreateHomestayStepper = () => {
               <button
                 onClick={handleNext}
                 disabled={!canProceed}
-                className={`inline-flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-all
-    ${
-      canProceed
-        ? "bg-mitti-brown text-white hover:bg-mitti-brown/90 cursor-pointer"
-        : "bg-mitti-khaki text-mitti-dark-brown opacity-60 cursor-not-allowed"
-    }
-  `}
+                className={`inline-flex items-center gap-2 px-6 py-2 rounded-lg ${
+                  canProceed
+                    ? "bg-mitti-brown text-white"
+                    : "bg-mitti-khaki text-mitti-dark-brown"
+                }`}
               >
                 Next
                 <ArrowRight size={18} />
@@ -333,7 +310,7 @@ const CreateHomestayStepper = () => {
         onClose={() => setShowMapConfirm(false)}
         onConfirm={() => {
           setShowMapConfirm(false);
-          setCurrentStep((prev) => prev + 1);
+          setCurrentStep((p) => p + 1);
         }}
       />
     </div>

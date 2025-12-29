@@ -2,19 +2,23 @@ import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
 import { Category } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
+
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
+import { hostHomestayWhere } from "@/lib/visibility/homestayVisibility";
 
 export async function GET(
   _req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-
   const host = await requireRole("HOST");
 
-  const homestay = await prisma.homestay.findUnique({
-    where: { id: id },
+  const homestay = await prisma.homestay.findFirst({
+    where: {
+      id,
+      ...hostHomestayWhere({ userId: host.id }),
+    },
     select: {
       id: true,
       ownerId: true,
@@ -50,10 +54,6 @@ export async function GET(
 
   if (!homestay) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-
-  if (homestay.ownerId !== host.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   return NextResponse.json({
@@ -108,17 +108,16 @@ export async function PUT(
     return NextResponse.json(parsed.error.flatten(), { status: 400 });
   }
 
-  const existing = await prisma.homestay.findUnique({
-    where: { id: id },
-    select: { ownerId: true },
+  const existing = await prisma.homestay.findFirst({
+    where: {
+      id,
+      ...hostHomestayWhere({ userId: host.id }),
+    },
+    select: { id: true },
   });
 
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-
-  if (existing.ownerId !== host.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const data = {
@@ -135,7 +134,7 @@ export async function PUT(
   };
 
   const updated = await prisma.homestay.update({
-    where: { id: id },
+    where: { id },
     data,
   });
 
@@ -149,10 +148,13 @@ export async function DELETE(
   const { id } = await context.params;
   const host = await requireRole("HOST");
 
-  const homestay = await prisma.homestay.findUnique({
-    where: { id: id },
+  const homestay = await prisma.homestay.findFirst({
+    where: {
+      id,
+      ...hostHomestayWhere({ userId: host.id }),
+    },
     select: {
-      ownerId: true,
+      id: true,
       bookings: {
         where: {
           status: { in: ["CONFIRMED", "PENDING"] },
@@ -167,10 +169,6 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  if (homestay.ownerId !== host.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
   if (homestay.bookings.length > 0) {
     return NextResponse.json(
       { error: "Active bookings exist" },
@@ -179,7 +177,7 @@ export async function DELETE(
   }
 
   await prisma.homestay.delete({
-    where: { id: id },
+    where: { id },
   });
 
   return NextResponse.json({ success: true });

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Category, Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import { publicHomestayWhere } from "@/lib/visibility/homestayVisibility";
 
 export async function GET(req: NextRequest) {
   try {
@@ -15,23 +16,23 @@ export async function GET(req: NextRequest) {
     const rating = searchParams.get("rating");
     const amenities = searchParams.getAll("amenities");
     const page = Number(searchParams.get("page") || 1);
-    const limit = 8; // Fixed limit of 8 homestays per page
-    const isVerified = searchParams.get("isVerified");
+    const limit = 8;
     const guideAvailable = searchParams.get("guideAvailable");
     const destination = searchParams.get("destination");
     const checkIn = searchParams.get("checkIn");
     const checkOut = searchParams.get("checkOut");
     const sort = searchParams.get("sort") || "createdAt-desc";
 
-    const where: Prisma.HomestayWhereInput = {};
+    const where: Prisma.HomestayWhereInput = {
+      ...publicHomestayWhere(),
+    };
 
-    if (isVerified) where.isVerified = isVerified === "true";
     if (guideAvailable) where.guideAvailable = guideAvailable === "true";
+
     if (category) {
-      // Validate category against the Category enum
       const validCategories = Object.values(Category);
       if (validCategories.includes(category as Category)) {
-        where.category = { equals: category as Category };
+        where.category = category as Category;
       } else {
         return NextResponse.json(
           {
@@ -43,17 +44,19 @@ export async function GET(req: NextRequest) {
         );
       }
     }
+
     if (guests) where.maxGuests = { gte: Number(guests) };
+
     if (minPrice || maxPrice) {
       where.pricePerNight = {};
       if (minPrice) where.pricePerNight.gte = Number(minPrice);
       if (maxPrice) where.pricePerNight.lte = Number(maxPrice);
     }
+
     if (type) {
-      // Validate type against the Type enum
       const validTypes = ["ROOM", "HOME"];
       if (validTypes.includes(type)) {
-        where.type = { equals: type as "ROOM" | "HOME" };
+        where.type = type as "ROOM" | "HOME";
       } else {
         return NextResponse.json(
           { error: "Invalid type. Must be one of: ROOM, HOME" },
@@ -61,12 +64,15 @@ export async function GET(req: NextRequest) {
         );
       }
     }
+
     if (rating) where.rating = { gte: Number(rating) };
+
     if (amenities.length > 0) {
       where.amenities = {
-        hasEvery: [...new Set(amenities)], // Remove duplicates
+        hasEvery: [...new Set(amenities)],
       };
     }
+
     if (destination) {
       where.OR = [
         { village: { contains: destination, mode: "insensitive" } },
@@ -93,13 +99,13 @@ export async function GET(req: NextRequest) {
         );
       }
 
-      const checkInISO = checkInDate.toISOString();
-      const checkOutISO = checkOutDate.toISOString();
-
       where.bookings = {
         none: {
           OR: [
-            { checkIn: { lte: checkOutISO }, checkOut: { gte: checkInISO } },
+            {
+              checkIn: { lte: checkOutDate },
+              checkOut: { gte: checkInDate },
+            },
           ],
         },
       };
@@ -122,10 +128,8 @@ export async function GET(req: NextRequest) {
         break;
     }
 
-    // Get total count for pagination
     const totalHomestays = await prisma.homestay.count({ where });
 
-    // Calculate skip based on page number
     const skip = (page - 1) * limit;
     const homestays = await prisma.homestay.findMany({
       where,
@@ -135,15 +139,13 @@ export async function GET(req: NextRequest) {
     });
 
     const totalPages = Math.ceil(totalHomestays / limit);
-    const hasNextPage = page < totalPages;
-    const hasPrevPage = page > 1;
 
     return NextResponse.json({
       homestays,
       totalPages,
       currentPage: page,
-      hasNextPage,
-      hasPrevPage,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
     });
   } catch (error) {
     console.error("[GET /homestays]", error);

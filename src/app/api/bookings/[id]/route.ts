@@ -4,12 +4,11 @@ import { Decimal } from "@prisma/client/runtime/library";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser();
-
     if (!user) {
       return NextResponse.json(
         { error: "Authentication required." },
@@ -18,7 +17,6 @@ export async function GET(
     }
 
     const { id: bookingId } = await context.params;
-
     if (!bookingId) {
       return NextResponse.json(
         { error: "Booking ID is required." },
@@ -26,8 +24,11 @@ export async function GET(
       );
     }
 
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
+    const booking = await prisma.booking.findFirst({
+      where: {
+        id: bookingId,
+        OR: [{ userId: user.id }, { homestay: { ownerId: user.id } }],
+      },
       include: {
         homestay: {
           select: {
@@ -73,19 +74,10 @@ export async function GET(
       );
     }
 
-    const isBookingOwner = booking.userId === user.id;
-    const isHomestayOwner = booking.homestay.owner.id === user.id;
-
-    if (!isBookingOwner && !isHomestayOwner) {
-      return NextResponse.json(
-        { error: "You don't have permission to view this booking." },
-        { status: 403 }
-      );
-    }
-
     const now = new Date();
     const checkInDate = new Date(booking.checkIn);
     const checkOutDate = new Date(booking.checkOut);
+
     const nights = Math.ceil(
       (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)
     );
@@ -118,12 +110,11 @@ export async function GET(
 }
 
 export async function DELETE(
-  req: NextRequest,
+  _req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser();
-
     if (!user) {
       return NextResponse.json(
         { error: "Authentication required." },
@@ -133,15 +124,11 @@ export async function DELETE(
 
     const { id: bookingId } = await context.params;
 
-    if (!bookingId) {
-      return NextResponse.json(
-        { error: "Booking ID is required." },
-        { status: 400 }
-      );
-    }
-
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
+    const booking = await prisma.booking.findFirst({
+      where: {
+        id: bookingId,
+        OR: [{ userId: user.id }, { homestay: { ownerId: user.id } }],
+      },
       include: {
         homestay: {
           select: {
@@ -157,16 +144,6 @@ export async function DELETE(
       return NextResponse.json(
         { error: "Booking not found." },
         { status: 404 }
-      );
-    }
-
-    const isBookingOwner = booking.userId === user.id;
-    const isHomestayOwner = booking.homestay.ownerId === user.id;
-
-    if (!isBookingOwner && !isHomestayOwner) {
-      return NextResponse.json(
-        { error: "You don't have permission to cancel this booking." },
-        { status: 403 }
       );
     }
 
@@ -257,7 +234,6 @@ export async function PUT(
 ) {
   try {
     const user = await getCurrentUser();
-
     if (!user) {
       return NextResponse.json(
         { error: "Authentication required." },
@@ -277,20 +253,17 @@ export async function PUT(
       );
     }
 
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
+    const booking = await prisma.booking.findFirst({
+      where: {
+        id: bookingId,
+        OR: [{ userId: user.id }, { homestay: { ownerId: user.id } }],
+      },
       include: {
         homestay: {
           select: {
             id: true,
             name: true,
             ownerId: true,
-            owner: {
-              select: {
-                name: true,
-                email: true,
-              },
-            },
           },
         },
         user: {
@@ -307,16 +280,6 @@ export async function PUT(
       return NextResponse.json(
         { error: "Booking not found." },
         { status: 404 }
-      );
-    }
-
-    const isBookingOwner = booking.userId === user.id;
-    const isHomestayOwner = booking.homestay.ownerId === user.id;
-
-    if (!isBookingOwner && !isHomestayOwner) {
-      return NextResponse.json(
-        { error: "Permission denied." },
-        { status: 403 }
       );
     }
 

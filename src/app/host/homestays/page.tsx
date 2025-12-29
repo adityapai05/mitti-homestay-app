@@ -8,12 +8,13 @@ import { Plus, ShieldCheck, Clock } from "lucide-react";
 type Homestay = {
   id: string;
   name: string;
-  address: string;
   imageUrl: string[];
   pricePerNight: string;
   isVerified: boolean;
   category: string;
   type: "ROOM" | "HOME";
+  village?: string | null;
+  state?: string | null;
 };
 
 const HostHomestaysPage = () => {
@@ -108,7 +109,12 @@ const HostHomestaysPage = () => {
         {!loading && homestays.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {homestays.map((stay) => {
-              const coverImage = stay.imageUrl?.[0] || "/mitti-placeholder.jpg";
+              const coverImage =
+                stay.imageUrl?.[0] || "/mitti-placeholder.jpg";
+
+              const location =
+                [stay.village, stay.state].filter(Boolean).join(", ") ||
+                "Location not set";
 
               return (
                 <Link
@@ -136,7 +142,7 @@ const HostHomestaysPage = () => {
                     </h3>
 
                     <p className="text-xs text-mitti-dark-brown/70 line-clamp-1">
-                      {stay.address}
+                      {location}
                     </p>
 
                     <div className="flex items-center justify-between mt-2">

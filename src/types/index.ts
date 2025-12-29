@@ -11,31 +11,48 @@ export enum HomestayCategory {
   LAKESIDE = 'LAKESIDE',
   OTHER = 'OTHER',
 }
-
 export interface Homestay {
   id: string;
   ownerId: string;
+
   name: string;
   description: string;
-  address: string;
-  latitude: number;
-  longitude: number;
+  
+  flatno?: string | null;
+  street?: string | null;
+  landmark?: string | null;
+  village?: string | null;
+  district?: string | null;
+  state?: string | null;
+  pincode?: string | null;
+
+  latitude?: number | null;
+  longitude?: number | null;
+
   pricePerNight: string;
+
   beds: number;
   type: HomestayType;
   maxGuests: number;
+
   imageUrl: string[];
   amenities: string[];
+
   rating: number;
   reviewCount: number;
+
   guideAvailable: boolean;
   guideFee: string | null;
+
   checkInTime: string;
   checkOutTime: string;
+
   category: HomestayCategory;
   isVerified: boolean;
+
   createdAt: string;
   updatedAt: string;
+
   owner: {
     id: string;
     name: string;

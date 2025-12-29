@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import EditorShell from "./_components/EditorShell";
+import { requireRole } from "@/lib/auth/requireRole";
 
 type PageProps = {
   params: Promise<{
@@ -9,9 +10,15 @@ type PageProps = {
 };
 
 export default async function HostHomestayEditorPage({ params }: PageProps) {
-    const { id } = await params;
-  const homestay = await prisma.homestay.findUnique({
-    where: { id: id },
+  const { id } = await params;
+
+  const host = await requireRole("HOST");
+
+  const homestay = await prisma.homestay.findFirst({
+    where: {
+      id,
+      ownerId: host.id,
+    },
     select: {
       id: true,
       name: true,
@@ -25,6 +32,7 @@ export default async function HostHomestayEditorPage({ params }: PageProps) {
       bedrooms: true,
       bathrooms: true,
       amenities: true,
+
       flatno: true,
       street: true,
       landmark: true,
@@ -32,6 +40,7 @@ export default async function HostHomestayEditorPage({ params }: PageProps) {
       district: true,
       state: true,
       pincode: true,
+
       guideAvailable: true,
       guideFee: true,
       latitude: true,
@@ -62,6 +71,7 @@ export default async function HostHomestayEditorPage({ params }: PageProps) {
         district: homestay.district ?? "",
         state: homestay.state ?? "",
         pincode: homestay.pincode ?? "",
+
         guideAvailable: homestay.guideAvailable,
         guideFee: homestay.guideFee ? Number(homestay.guideFee) : 500,
       }}

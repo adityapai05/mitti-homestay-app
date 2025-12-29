@@ -1,14 +1,19 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { publicHomestayWhere } from "@/lib/visibility/homestayVisibility";
 
 export async function GET(
   _req: Request,
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
+
   try {
-    const homestay = await prisma.homestay.findUnique({
-      where: { id: id },
+    const homestay = await prisma.homestay.findFirst({
+      where: {
+        id,
+        ...publicHomestayWhere(),
+      },
       select: {
         id: true,
         name: true,
@@ -36,7 +41,6 @@ export async function GET(
 
         checkInTime: true,
         checkOutTime: true,
-        isVerified: true,
 
         owner: {
           select: {

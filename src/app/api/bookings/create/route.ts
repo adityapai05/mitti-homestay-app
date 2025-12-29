@@ -68,9 +68,10 @@ export async function POST(req: NextRequest) {
       select: {
         id: true,
         name: true,
+        ownerId: true,
+        isVerified: true, 
         maxGuests: true,
         pricePerNight: true,
-        ownerId: true,
         bookings: {
           where: {
             status: {
@@ -91,6 +92,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "Homestay not found." },
         { status: 404 }
+      );
+    }
+
+    if (!homestay.isVerified) {
+      return NextResponse.json(
+        { error: "Homestay is not verified yet." },
+        { status: 403 }
       );
     }
 
@@ -170,7 +178,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error: unknown) {
-    console.error("[POST /bookings/create] ", error);
+    console.error("[POST /bookings/create]", error);
     return NextResponse.json(
       {
         error: (error as Error).message || "Internal Server Error",

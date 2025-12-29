@@ -40,6 +40,7 @@ const useFirebaseAuth = () => {
                 : providerId === "phone"
                 ? "phone"
                 : "password",
+            role: user.role,
           });
         } catch (err) {
           console.error("[AUTH_SYNC_ERROR]", err);

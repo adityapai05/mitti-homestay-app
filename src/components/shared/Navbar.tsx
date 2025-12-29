@@ -17,9 +17,8 @@ import UserDropdown from "../ui/prebuilt-components/UserDropdown";
 import { toast } from "sonner";
 import { logout } from "@/lib/firebase/authActions";
 
-const navLinks = [
+const baseNavLinks = [
   { href: "/explore", label: "Explore" },
-  { href: "/host/start", label: "List Your Home" },
   { href: "/contact", label: "Contact Us" },
   { href: "/about", label: "About Us" },
 ];
@@ -31,6 +30,13 @@ const Navbar = () => {
   const closeMenu = () => setIsOpen(false);
   const { openModal } = useAuthModal();
   const user = useUserStore((state) => state.user);
+
+  const hostLink =
+    user?.role === "HOST"
+      ? { href: "/host/homestays", label: "Host Dashboard" }
+      : { href: "/host/start", label: "List Your Home" };
+
+  const navLinks = [...baseNavLinks, hostLink];
 
   return (
     <nav className="w-full sticky top-0 z-50 bg-mitti-cream text-mitti-dark-brown shadow-sm">
@@ -47,6 +53,7 @@ const Navbar = () => {
             />
           </Link>
 
+          {/* Desktop Nav */}
           <div className="hidden md:flex gap-8">
             {navLinks.map((link) => (
               <Link
@@ -54,20 +61,21 @@ const Navbar = () => {
                 href={link.href}
                 className={`${
                   pathname === link.href ? "font-bold" : "font-medium"
-                } hover:underline transition duration-150 cursor-pointer`}
+                } hover:underline transition duration-150`}
               >
                 {link.label}
               </Link>
             ))}
           </div>
 
+          {/* Desktop Auth */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <UserDropdown />
             ) : (
               <Button
                 onClick={() => openModal("login")}
-                className="bg-mitti-brown text-mitti-beige font-medium cursor-pointer"
+                className="bg-mitti-brown text-mitti-beige font-medium"
               >
                 <LogIn />
                 Login / Signup
@@ -75,6 +83,7 @@ const Navbar = () => {
             )}
           </div>
 
+          {/* Mobile Toggle */}
           <div className="md:hidden flex items-center">
             <button
               className="p-2"
@@ -87,6 +96,7 @@ const Navbar = () => {
         </div>
       </div>
 
+      {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden bg-mitti-cream border-t border-mitti-dark-brown/70 px-4 py-6 space-y-4">
           <div className="space-y-2">
@@ -97,23 +107,22 @@ const Navbar = () => {
                 onClick={closeMenu}
                 className={`block ${
                   pathname === link.href ? "font-bold" : "font-medium"
-                } transition duration-150`}
+                }`}
               >
                 {link.label}
               </Link>
             ))}
-            {user ? (
+
+            {user && (
               <Link
                 href="/bookings"
                 onClick={closeMenu}
                 className={`block ${
                   pathname === "/bookings" ? "font-bold" : "font-medium"
-                } transition duration-150`}
+                }`}
               >
                 My Bookings
               </Link>
-            ) : (
-              ""
             )}
           </div>
 
@@ -123,14 +132,13 @@ const Navbar = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Avatar>
-                  <AvatarImage src={user?.photoURL || "/default-avatar.png"} />
+                  <AvatarImage src={user.photoURL || "/default-avatar.png"} />
                 </Avatar>
-                <div>
-                  <p className="text-sm font-medium">
-                    {user?.email || user?.phoneNumber}
-                  </p>
-                </div>
+                <p className="text-sm font-medium">
+                  {user.email || user.phoneNumber}
+                </p>
               </div>
+
               <Button
                 variant="ghost"
                 className="text-red-600"
@@ -144,15 +152,13 @@ const Navbar = () => {
               </Button>
             </div>
           ) : (
-            <div>
-              <Button
-                className="w-full bg-mitti-brown text-mitti-beige"
-                onClick={() => openModal("login")}
-              >
-                <LogIn />
-                Login / Signup
-              </Button>
-            </div>
+            <Button
+              className="w-full bg-mitti-brown text-mitti-beige"
+              onClick={() => openModal("login")}
+            >
+              <LogIn />
+              Login / Signup
+            </Button>
           )}
         </div>
       )}

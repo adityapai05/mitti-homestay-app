@@ -1,17 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
-
-dynamic(() => import("@/components/shared/MapView"), {
-  ssr: false,
-});
-
 export type AddressValue = {
-  country: string;
-  flat?: string;
-  street?: string;
+  flatno: string;
+  street: string;
   landmark?: string;
-  city: string;
+  village: string;
   district?: string;
   state: string;
   pincode: string;
@@ -19,25 +12,19 @@ export type AddressValue = {
 
 type Props = {
   value?: AddressValue;
-  location?: {
-    latitude: number;
-    longitude: number;
-    label: string;
-  };
   onChange: (value: AddressValue) => void;
 };
 
 const StepAddress = ({ value, onChange }: Props) => {
   const updateField = (field: keyof AddressValue, val: string) => {
     onChange({
-      country: "India",
-      flat: value?.flat || "",
-      street: value?.street || "",
-      landmark: value?.landmark || "",
-      city: value?.city || "",
-      district: value?.district || "",
-      state: value?.state || "",
-      pincode: value?.pincode || "",
+      flatno: value?.flatno ?? "",
+      street: value?.street ?? "",
+      landmark: value?.landmark ?? "",
+      village: value?.village ?? "",
+      district: value?.district ?? "",
+      state: value?.state ?? "",
+      pincode: value?.pincode ?? "",
       [field]: val,
     });
   };
@@ -58,97 +45,80 @@ const StepAddress = ({ value, onChange }: Props) => {
         {/* Address form */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
           <div>
-            <label className="block text-sm font-medium text-mitti-dark-brown mb-1">
-              Country
+            <label className="block text-sm font-medium mb-1">
+              House / Flat number
             </label>
             <input
-              value="India"
-              disabled
-              className="w-full px-4 py-3 rounded-xl bg-mitti-cream border border-mitti-khaki text-mitti-dark-brown"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-mitti-dark-brown mb-1">
-              House / Flat
-            </label>
-            <input
-              value={value?.flat || ""}
-              onChange={(e) => updateField("flat", e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-mitti-cream border border-mitti-khaki text-mitti-dark-brown"
+              value={value?.flatno ?? ""}
+              onChange={(e) => updateField("flatno", e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border"
               required
             />
           </div>
 
-          <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-mitti-dark-brown mb-1">
-              Street
-            </label>
+          <div>
+            <label className="block text-sm font-medium mb-1">Street</label>
             <input
-              value={value?.street || ""}
+              value={value?.street ?? ""}
               onChange={(e) => updateField("street", e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-mitti-cream border border-mitti-khaki text-mitti-dark-brown"
+              className="w-full px-4 py-3 rounded-xl border"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-mitti-dark-brown mb-1">
+            <label className="block text-sm font-medium mb-1">
               Landmark (optional)
             </label>
             <input
-              value={value?.landmark || ""}
+              value={value?.landmark ?? ""}
               onChange={(e) => updateField("landmark", e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-mitti-cream border border-mitti-khaki text-mitti-dark-brown"
+              className="w-full px-4 py-3 rounded-xl border"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-mitti-dark-brown mb-1">
-              Village / Town / City
+            <label className="block text-sm font-medium mb-1">
+              Village / Town
             </label>
             <input
-              value={value?.city || ""}
-              onChange={(e) => updateField("city", e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-mitti-cream border border-mitti-khaki text-mitti-dark-brown"
+              value={value?.village ?? ""}
+              onChange={(e) => updateField("village", e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-mitti-dark-brown mb-1">
+            <label className="block text-sm font-medium mb-1">
               District (optional)
             </label>
             <input
-              value={value?.district || ""}
+              value={value?.district ?? ""}
               onChange={(e) => updateField("district", e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-mitti-cream border border-mitti-khaki text-mitti-dark-brown"
+              className="w-full px-4 py-3 rounded-xl border"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-mitti-dark-brown mb-1">
-              State
-            </label>
+            <label className="block text-sm font-medium mb-1">State</label>
             <input
-              value={value?.state || ""}
+              value={value?.state ?? ""}
               onChange={(e) => updateField("state", e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-mitti-cream border border-mitti-khaki text-mitti-dark-brown"
+              className="w-full px-4 py-3 rounded-xl border"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-mitti-dark-brown mb-1">
-              PIN code
-            </label>
+            <label className="block text-sm font-medium mb-1">PIN code</label>
             <input
-              value={value?.pincode || ""}
+              value={value?.pincode ?? ""}
               onChange={(e) =>
                 updateField("pincode", e.target.value.replace(/\D/g, ""))
               }
               maxLength={6}
-              className="w-full px-4 py-3 rounded-xl bg-mitti-cream border border-mitti-khaki text-mitti-dark-brown"
+              className="w-full px-4 py-3 rounded-xl border"
               required
             />
           </div>

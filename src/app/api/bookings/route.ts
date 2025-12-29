@@ -17,7 +17,6 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const searchParams = url.searchParams;
 
-    // const status = searchParams.get("status");
     const upcoming = searchParams.get("upcoming") === "true";
     const past = searchParams.get("past") === "true";
     const limit = Number(searchParams.get("limit") || 20);
@@ -52,6 +51,7 @@ export async function GET(req: NextRequest) {
               latitude: true,
               longitude: true,
 
+              flatno: true,
               street: true,
               village: true,
               district: true,
@@ -75,13 +75,8 @@ export async function GET(req: NextRequest) {
     const bookingsWithStatus = bookings.map((booking) => {
       const checkInDate = new Date(booking.checkIn);
       const checkOutDate = new Date(booking.checkOut);
-      const address = [
-        booking.homestay.street,
-        booking.homestay.village,
-        booking.homestay.district,
-        booking.homestay.state,
-        booking.homestay.pincode,
-      ]
+
+      const displayAddress = [booking.homestay.village, booking.homestay.state]
         .filter(Boolean)
         .join(", ");
 
@@ -101,16 +96,18 @@ export async function GET(req: NextRequest) {
         isUpcoming: booking.status === "CONFIRMED" && checkInDate > now,
         isPast: checkOutDate < now,
       };
+
       return {
         ...booking,
         nights,
         bookingStatus,
         homestay: {
           ...booking.homestay,
-          address,
+          displayAddress,
         },
       };
     });
+
     const totalPages = Math.ceil(totalCount / limit);
     const hasNextPage = page < totalPages;
     const hasPrevPage = page > 1;

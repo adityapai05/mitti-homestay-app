@@ -1,191 +1,187 @@
-export const dynamic = "force-dynamic";
-
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
-import { adminAuth } from "@/lib/firebase/admin";
 import { prisma } from "@/lib/prisma";
-import { validateFile, uploadImage } from "@/lib/cloudinary";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { z, ZodError } from "zod";
+import z from "zod";
 
-const userUpdateSchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters").optional(),
-  phoneNumber: z
-    .string()
-    .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format")
-    .optional(),
-});
+const createBookingSchema = z
+  .object({
+    homestayId: z.uuid("Invalid homestay ID"),
+    checkIn: z.string().refine((date) => {
+      const checkInDate = new Date(date);
+      const now = new Date();
+      return !isNaN(checkInDate.getTime()) && checkInDate > now;
+    }, "Check-in date must be a valid future date"),
 
-export async function GET() {
-  const user = await getCurrentUser();
+    checkOut: z.string().refine((date) => {
+      const checkOutDate = new Date(date);
+      return !isNaN(checkOutDate.getTime());
+    }, "Check-out date must be a valid date"),
 
-  if (!user) {
-    return NextResponse.json(
-      { error: "Unauthorized or user not found", code: "UNAUTHORIZED" },
-      { status: 401 }
-    );
-  }
+    guests: z.number().int().min(1, "At least 1 guest is required"),
+  })
+  .refine(
+    (data) => {
+      const checkIn = new Date(data.checkIn);
+      const checkOut = new Date(data.checkOut);
 
-  return NextResponse.json(user);
-}
+      if (checkOut <= checkIn) return false;
 
-export async function DELETE() {
+      const diffTime = Math.abs(checkOut.getTime() - checkIn.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays < 1) return false;
+
+      return true;
+    },
+    {
+      message: "Check-out must be after check-in with minimum 1 night stay",
+      path: ["checkOut"],
+    }
+  );
+
+export async function POST(req: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get("__session")?.value;
+    const user = await getCurrentUser();
 
-    if (!sessionCookie) {
+    if (!user) {
       return NextResponse.json(
-        {
-          error: "Unauthorized - Missing Session Cookie",
-          code: "UNAUTHORIZED",
-        },
+        { error: "Authentication required." },
         { status: 401 }
       );
     }
 
-    const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
-    const uid = decoded.uid;
+    const body = await req.json();
+    const parsed = createBookingSchema.safeParse(body);
 
-    await prisma.review.deleteMany({
-      where: {
-        homestay: {
-          ownerId: uid,
-        },
-      },
-    });
-
-    await prisma.booking.deleteMany({
-      where: {
-        homestay: {
-          ownerId: uid,
-        },
-      },
-    });
-
-    await prisma.homestay.deleteMany({
-      where: {
-        ownerId: uid,
-      },
-    });
-
-    await prisma.user.delete({
-      where: { firebaseUid: uid },
-    });
-
-    await adminAuth.deleteUser(uid);
-
-    const response = NextResponse.json({ success: true });
-    response.cookies.set("__session", "", {
-      httpOnly: true,
-      secure: true,
-      path: "/",
-      maxAge: 0,
-    });
-
-    return response;
-  } catch (error) {
-    console.error("[DELETE /api/auth/user]", error);
-    return NextResponse.json(
-      {
-        error: (error as Error).message || "Internal Server Error",
-        code: "DELETE_FAILED",
-      },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PATCH(req: NextRequest) {
-  try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get("__session")?.value;
-
-    if (!sessionCookie) {
-      return NextResponse.json(
-        {
-          error: "Unauthorized - Missing Session Cookie",
-          code: "UNAUTHORIZED",
-        },
-        { status: 401 }
-      );
-    }
-
-    const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
-    const uid = decoded.uid;
-
-    const formData = await req.formData();
-    const imageFile = formData.get("image") as File | null;
-    const name = formData.get("name") as string | null;
-    const phoneNumber = formData.get("phoneNumber") as string | null;
-
-    const parsed = userUpdateSchema.safeParse({ name, phoneNumber });
     if (!parsed.success) {
       return NextResponse.json(
-        {
-          error: "Validation failed",
-          code: "VALIDATION_ERROR",
-          details: parsed.error.issues.map((issue) => ({
-            path: issue.path.join("."),
-            message: issue.message,
-            code: issue.code,
-          })),
+        { error: z.treeifyError(parsed.error) },
+        { status: 400 }
+      );
+    }
+
+    const { homestayId, checkIn, checkOut, guests } = parsed.data;
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+
+    const homestay = await prisma.homestay.findUnique({
+      where: { id: homestayId },
+      select: {
+        id: true,
+        name: true,
+        ownerId: true,
+        isVerified: true,
+        maxGuests: true,
+        pricePerNight: true,
+        bookings: {
+          where: {
+            status: {
+              in: ["CONFIRMED", "PENDING"],
+            },
+            OR: [
+              {
+                checkIn: { lt: checkOutDate },
+                checkOut: { gt: checkInDate },
+              },
+            ],
+          },
         },
-        { status: 400 }
-      );
-    }
-
-    if (!name && !phoneNumber && !imageFile) {
-      return NextResponse.json(
-        { error: "No fields to update", code: "NO_FIELDS_PROVIDED" },
-        { status: 400 }
-      );
-    }
-
-    let profileImageUrl: string | undefined;
-    if (imageFile) {
-      validateFile(imageFile);
-      const arrayBuffer = await imageFile.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      profileImageUrl = await uploadImage(buffer, { folder: "mitti-profiles" });
-    }
-
-    await adminAuth.updateUser(uid, {
-      displayName: name || undefined,
-      phoneNumber: phoneNumber || undefined,
-      photoURL: profileImageUrl || undefined,
-    });
-
-    const updatedUser = await prisma.user.update({
-      where: { firebaseUid: uid },
-      data: {
-        name: name || undefined,
-        phone: phoneNumber || undefined,
-        image: profileImageUrl || undefined,
       },
     });
 
-    return NextResponse.json(updatedUser);
-  } catch (error) {
-    console.error("[PATCH /api/auth/user]", error);
-    if (error instanceof ZodError) {
+    if (!homestay) {
       return NextResponse.json(
-        {
-          error: "Validation failed",
-          code: "VALIDATION_ERROR",
-          details: error.issues.map((issue) => ({
-            path: issue.path.join("."),
-            message: issue.message,
-            code: issue.code,
-          })),
-        },
+        { error: "Homestay not found." },
+        { status: 404 }
+      );
+    }
+
+    if (!homestay.isVerified) {
+      return NextResponse.json(
+        { error: "Homestay is not verified yet." },
+        { status: 403 }
+      );
+    }
+
+    if (homestay.ownerId === user.id) {
+      return NextResponse.json(
+        { error: "You cannot book your own homestay." },
         { status: 400 }
       );
     }
+
+    if (guests > homestay.maxGuests) {
+      return NextResponse.json(
+        { error: `Maximum ${homestay.maxGuests} guests allowed` },
+        { status: 400 }
+      );
+    }
+
+    if (homestay.bookings.length > 0) {
+      return NextResponse.json(
+        { error: "Homestay is not available for the selected dates." },
+        { status: 400 }
+      );
+    }
+
+    const diffTime = Math.abs(checkOutDate.getTime() - checkInDate.getTime());
+    const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const totalPrice = homestay.pricePerNight.mul(nights);
+
+    const booking = await prisma.booking.create({
+      data: {
+        userId: user.id,
+        homestayId,
+        checkIn: checkInDate,
+        checkOut: checkOutDate,
+        guests,
+        totalPrice,
+        status: "PENDING",
+      },
+      include: {
+        homestay: {
+          select: {
+            id: true,
+            name: true,
+            flatno: true,
+            street: true,
+            landmark: true,
+            village: true,
+            district: true,
+            state: true,
+            pincode: true,
+            imageUrl: true,
+            owner: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(
+      {
+        message: "Booking created successfully!",
+        booking,
+        nights,
+      },
+      { status: 201 }
+    );
+  } catch (error: unknown) {
+    console.error("[POST /bookings/create]", error);
     return NextResponse.json(
       {
         error: (error as Error).message || "Internal Server Error",
-        code: "UPDATE_FAILED",
       },
       { status: 500 }
     );
