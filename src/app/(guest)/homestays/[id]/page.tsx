@@ -10,7 +10,7 @@ import AmenitiesSection from "@/components/ui/homestaydetailspage/AmenitiesSecti
 import DetailsGridSection from "@/components/ui/homestaydetailspage/DetailsGridSection";
 import ReviewsSection from "@/components/ui/homestaydetailspage/ReviewsSection";
 import PricingBookingSection from "@/components/ui/homestaydetailspage/PricingBookingSection";
-import HomestayNotFoundPage from "@/app/(guest)/homestay/[id]/not-found";
+import HomestayNotFoundPage from "@/app/(guest)/homestays/[id]/not-found";
 import { Homestay } from "@/types";
 import { Loader2 } from "lucide-react";
 
@@ -29,7 +29,7 @@ export default function HomestayDetails() {
         setHomestay(response.data as Homestay);
       } catch (err: unknown) {
         const error = err as AxiosError;
-        console.error("[GET homestay/[id]]", err);
+        console.error("[GET homestays/[id]]", err);
         if (error.response?.status === 404) {
           setError("Homestay not found");
         } else {

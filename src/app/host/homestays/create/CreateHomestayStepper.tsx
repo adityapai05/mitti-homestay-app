@@ -272,7 +272,7 @@ const CreateHomestayStepper = () => {
             <button
               type="button"
               onClick={handleBack}
-              className="inline-flex items-center gap-2 text-mitti-dark-brown"
+              className="inline-flex items-center gap-2 text-mitti-dark-brown cursor-pointer hover:underline"
             >
               <ArrowLeft size={18} />
               {currentStep === 0 ? "Exit" : "Back"}
@@ -282,7 +282,7 @@ const CreateHomestayStepper = () => {
               <button
                 onClick={handlePublish}
                 disabled={publishing}
-                className="px-6 py-2 rounded-lg bg-mitti-brown text-white"
+                className="px-6 py-2 rounded-lg bg-mitti-brown text-white cursor-pointer hover:bg-mitti-brown/90"
               >
                 {publishing ? "Publishing…" : "Publish listing"}
               </button>
@@ -292,8 +292,8 @@ const CreateHomestayStepper = () => {
                 disabled={!canProceed}
                 className={`inline-flex items-center gap-2 px-6 py-2 rounded-lg ${
                   canProceed
-                    ? "bg-mitti-brown text-white"
-                    : "bg-mitti-khaki text-mitti-dark-brown"
+                    ? "bg-mitti-brown text-white cursor-pointer hover:bg-mitti-brown/90"
+                    : "bg-mitti-khaki text-mitti-dark-brown cursor-not-allowed"
                 }`}
               >
                 Next

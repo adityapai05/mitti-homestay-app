@@ -1,6 +1,6 @@
 "use client";
 
-import { Minus, Plus } from "lucide-react";
+import { Clock, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo } from "react";
 
 export type BasicsValue = {
@@ -72,7 +72,7 @@ const StepBasics = ({ value, onChange }: Props) => {
         beds: 1,
         bathrooms: 1,
         checkInTime: "14:00",
-        checkOutTime: "11:00"
+        checkOutTime: "11:00",
       },
     [value]
   );
@@ -83,7 +83,17 @@ const StepBasics = ({ value, onChange }: Props) => {
     }
   }, [value, onChange, data]);
 
-  const update = (field: keyof BasicsValue, val: number) => {
+  const updateNumber = (
+    field: "guests" | "bedrooms" | "beds" | "bathrooms",
+    val: number
+  ) => {
+    onChange({
+      ...data,
+      [field]: val,
+    });
+  };
+
+  const updateTime = (field: "checkInTime" | "checkOutTime", val: string) => {
     onChange({
       ...data,
       [field]: val,
@@ -109,7 +119,7 @@ const StepBasics = ({ value, onChange }: Props) => {
             description="How many guests can stay comfortably?"
             value={data.guests}
             min={1}
-            onChange={(v) => update("guests", v)}
+            onChange={(v) => updateNumber("guests", v)}
           />
 
           <Counter
@@ -117,7 +127,7 @@ const StepBasics = ({ value, onChange }: Props) => {
             description="Number of bedrooms available"
             value={data.bedrooms}
             min={0}
-            onChange={(v) => update("bedrooms", v)}
+            onChange={(v) => updateNumber("bedrooms", v)}
           />
 
           <Counter
@@ -125,7 +135,7 @@ const StepBasics = ({ value, onChange }: Props) => {
             description="Total number of beds"
             value={data.beds}
             min={1}
-            onChange={(v) => update("beds", v)}
+            onChange={(v) => updateNumber("beds", v)}
           />
 
           <Counter
@@ -133,8 +143,42 @@ const StepBasics = ({ value, onChange }: Props) => {
             description="Number of bathrooms"
             value={data.bathrooms}
             min={0}
-            onChange={(v) => update("bathrooms", v)}
+            onChange={(v) => updateNumber("bathrooms", v)}
           />
+
+          {/* Check-in / Check-out */}
+          <div className="my-6 bg-mitti-cream rounded-2xl border border-mitti-khaki px-4 py-4">
+            <div className="flex items-center gap-2 font-medium text-mitti-dark-brown mb-4">
+              <Clock size={16} />
+              Check-in & check-out
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm mb-1 text-mitti-dark-brown">
+                  Check-in time
+                </label>
+                <input
+                  type="time"
+                  value={data.checkInTime}
+                  onChange={(e) => updateTime("checkInTime", e.target.value)}
+                  className="w-full rounded-lg border border-mitti-khaki px-3 py-2 cursor-pointer bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-1 text-mitti-dark-brown">
+                  Check-out time
+                </label>
+                <input
+                  type="time"
+                  value={data.checkOutTime}
+                  onChange={(e) => updateTime("checkOutTime", e.target.value)}
+                  className="w-full rounded-lg border border-mitti-khaki px-3 py-2 cursor-pointer bg-white"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

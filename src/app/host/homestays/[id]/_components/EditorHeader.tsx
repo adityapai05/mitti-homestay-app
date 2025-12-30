@@ -80,7 +80,7 @@ const EditorHeader = ({
         <div className="flex items-center gap-3">
           {/* View listing */}
           <Link
-            href={`/homestay/${homestayId}`}
+            href={`/homestays/${homestayId}`}
             target="_blank"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border
                        text-sm hover:bg-mitti-beige cursor-pointer"

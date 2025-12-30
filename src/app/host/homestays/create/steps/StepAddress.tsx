@@ -29,6 +29,10 @@ const StepAddress = ({ value, onChange }: Props) => {
     });
   };
 
+  const inputClass =
+    "w-full px-4 py-3 rounded-xl border border-mitti-dark-brown bg-white/30 " +
+    "focus:outline-none focus:ring-1 focus:ring-mitti-dark-brown";
+
   return (
     <div className="w-full mt-10">
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
@@ -45,80 +49,86 @@ const StepAddress = ({ value, onChange }: Props) => {
         {/* Address form */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-medium mb-1 text-mitti-dark-brown">
               House / Flat number
             </label>
             <input
               value={value?.flatno ?? ""}
               onChange={(e) => updateField("flatno", e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border"
+              className={inputClass}
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Street</label>
+            <label className="block text-sm font-medium mb-1 text-mitti-dark-brown">
+              Street
+            </label>
             <input
               value={value?.street ?? ""}
               onChange={(e) => updateField("street", e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border"
+              className={inputClass}
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-medium mb-1 text-mitti-dark-brown">
               Landmark (optional)
             </label>
             <input
               value={value?.landmark ?? ""}
               onChange={(e) => updateField("landmark", e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-medium mb-1 text-mitti-dark-brown">
               Village / Town
             </label>
             <input
               value={value?.village ?? ""}
               onChange={(e) => updateField("village", e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border"
+              className={inputClass}
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-medium mb-1 text-mitti-dark-brown">
               District (optional)
             </label>
             <input
               value={value?.district ?? ""}
               onChange={(e) => updateField("district", e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">State</label>
+            <label className="block text-sm font-medium mb-1 text-mitti-dark-brown">
+              State
+            </label>
             <input
               value={value?.state ?? ""}
               onChange={(e) => updateField("state", e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border"
+              className={inputClass}
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">PIN code</label>
+            <label className="block text-sm font-medium mb-1 text-mitti-dark-brown">
+              PIN code
+            </label>
             <input
               value={value?.pincode ?? ""}
               onChange={(e) =>
                 updateField("pincode", e.target.value.replace(/\D/g, ""))
               }
               maxLength={6}
-              className="w-full px-4 py-3 rounded-xl border"
+              className={inputClass}
               required
             />
           </div>

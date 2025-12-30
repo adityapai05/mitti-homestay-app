@@ -11,29 +11,29 @@ datasource db {
 }
 
 model User {
-  id          String     @id @default(uuid())
-  firebaseUid String     @unique
+  id          String   @id @default(uuid())
+  firebaseUid String   @unique
   name        String
-  email       String?    @unique
-  phone       String?    @unique
+  email       String?  @unique
+  phone       String?  @unique
   image       String?
-  role        Role       @default(USER)
-  isVerified  Boolean    @default(false)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  role        Role     @default(USER)
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  bookings    Booking[]
-  homestays   Homestay[] @relation("HomestayOwner")
-  reviews     Review[]   // User can write many reviews
+  bookings  Booking[]
+  homestays Homestay[] @relation("HomestayOwner")
+  reviews   Review[] // User can write many reviews
 }
 
 model Homestay {
-  id             String     @id @default(uuid())
+  id             String   @id @default(uuid())
   ownerId        String
   name           String
   description    String
-  flatno String?
-  street    String?  
+  flatno         String?
+  street         String?
   landmark       String?
   village        String?
   district       String?
@@ -43,42 +43,43 @@ model Homestay {
   longitude      Float
   pricePerNight  Decimal
   beds           Int
-  type Type @default(ROOM)
+  type           Type     @default(ROOM)
   maxGuests      Int
-  bedrooms  Int @default(1)
-  bathrooms Int @default(1)
+  bedrooms       Int      @default(1)
+  bathrooms      Int      @default(1)
   imageUrl       String[]
   amenities      String[]
-  rating         Float      @default(0)
-  guideAvailable Boolean    @default(false)
+  rating         Float    @default(0)
+  guideAvailable Boolean  @default(false)
   guideFee       Decimal?
-  checkInTime    String     @default("14:00") 
-  checkOutTime   String     @default("11:00") 
+  checkInTime    String   @default("14:00")
+  checkOutTime   String   @default("11:00")
   category       Category
-  isVerified     Boolean    @default(false)
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  isVerified     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  owner          User       @relation("HomestayOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  bookings       Booking[]
-  reviews        Review[]   // Homestay can have many reviews
+  owner    User      @relation("HomestayOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+  reviews  Review[] // Homestay can have many reviews
 }
 
 model Booking {
-  id         String         @id @default(uuid())
+  id         String        @id @default(uuid())
   userId     String
   homestayId String
   checkIn    DateTime
   checkOut   DateTime
   guests     Int
   totalPrice Decimal
-  status     BookingStatus  @default(PENDING_HOST_APPROVAL)
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
+  status     BookingStatus @default(PENDING_HOST_APPROVAL)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
-  user       User           @relation(fields: [userId], references: [id])
-  homestay   Homestay       @relation(fields: [homestayId], references: [id], onDelete: Cascade)
-  review     Review?
+  user     User     @relation(fields: [userId], references: [id])
+  homestay Homestay @relation(fields: [homestayId], references: [id], onDelete: Cascade)
+  review   Review?
+  payment  Payment?
 }
 
 model Review {
@@ -86,13 +87,38 @@ model Review {
   userId     String
   homestayId String
   bookingId  String   @unique
-  rating     Int      // 1 to 5
+  rating     Int // 1 to 5
   comment    String?
   createdAt  DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt  DateTime @updatedAt
   user       User     @relation(fields: [userId], references: [id])
   homestay   Homestay @relation(fields: [homestayId], references: [id], onDelete: Cascade)
   booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id        String @id @default(uuid())
+  bookingId String @unique
+
+  razorpayOrderId   String
+  razorpayPaymentId String
+  razorpaySignature String
+
+  amount   Decimal
+  currency String
+
+  status PaymentStatus
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+enum PaymentStatus {
+  SUCCESS
+  FAILED
+  REFUNDED
 }
 
 enum Category {
@@ -108,6 +134,7 @@ enum Type {
   ROOM
   HOME
 }
+
 enum BookingStatus {
   PENDING_HOST_APPROVAL
   AWAITING_PAYMENT

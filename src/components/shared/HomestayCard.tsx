@@ -32,7 +32,7 @@ const HomestayCard = ({
   price,
   rating,
   imageSrc,
-  href = `/homestay/${id}`,
+  href = `/homestays/${id}`,
   actionLabel = "Book Now",
   children,
   size = "default",

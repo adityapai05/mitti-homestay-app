@@ -13,6 +13,7 @@ import {
   Plug,
   TreePalm,
   CookingPot,
+  Clock,
 } from "lucide-react";
 
 import type { AddressValue } from "./StepAddress";
@@ -123,6 +124,7 @@ const StepReview = ({ data }: Props) => {
 
         {/* Details */}
         <div className="space-y-4">
+          {/* Title + description */}
           <div className="bg-mitti-cream border border-mitti-khaki rounded-2xl p-6">
             <h2 className="text-2xl font-semibold text-mitti-dark-brown mb-1">
               {data.name}
@@ -135,6 +137,7 @@ const StepReview = ({ data }: Props) => {
             </p>
           </div>
 
+          {/* Basics + timing */}
           <div className="bg-mitti-cream border border-mitti-khaki rounded-2xl p-6 grid grid-cols-2 gap-4 text-mitti-dark-brown">
             <div className="flex items-center gap-2">
               <Users size={18} /> {data.basics?.guests} guests
@@ -148,8 +151,27 @@ const StepReview = ({ data }: Props) => {
             <div className="flex items-center gap-2">
               <Bath size={18} /> {data.basics?.bathrooms} bathrooms
             </div>
+
+            {/* Check-in */}
+            <div className="flex items-center gap-2 col-span-2 sm:col-span-1">
+              <Clock size={18} />
+              Check-in:{" "}
+              <span className="font-medium">
+                {data.basics?.checkInTime ?? "—"}
+              </span>
+            </div>
+
+            {/* Check-out */}
+            <div className="flex items-center gap-2 col-span-2 sm:col-span-1">
+              <Clock size={18} />
+              Check-out:{" "}
+              <span className="font-medium">
+                {data.basics?.checkOutTime ?? "—"}
+              </span>
+            </div>
           </div>
 
+          {/* Amenities */}
           {data.amenities && data.amenities.length > 0 && (
             <div className="bg-mitti-cream border border-mitti-khaki rounded-2xl p-6">
               <h3 className="font-medium text-mitti-dark-brown mb-3">
@@ -166,11 +188,13 @@ const StepReview = ({ data }: Props) => {
             </div>
           )}
 
+          {/* Address */}
           <div className="bg-mitti-cream border border-mitti-khaki rounded-2xl p-6 flex items-start gap-3">
             <MapPin size={20} />
             <span>{formatAddress(data.address)}</span>
           </div>
 
+          {/* Pricing */}
           <div className="bg-mitti-cream border border-mitti-khaki rounded-2xl p-6 flex items-center gap-2">
             <IndianRupee size={18} />
             <span className="text-lg font-semibold">

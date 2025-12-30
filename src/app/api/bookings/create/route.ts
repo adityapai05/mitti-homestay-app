@@ -106,14 +106,6 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     console.error("[POST /bookings/create]", error);
 
-    const statusMap: Record<string, number> = {
-      HOMESTAY_NOT_FOUND: 404,
-      HOMESTAY_NOT_VERIFIED: 403,
-      CANNOT_BOOK_OWN_HOMESTAY: 400,
-      MAX_GUESTS_EXCEEDED: 400,
-      DATES_NOT_AVAILABLE: 409,
-    };
-
     return NextResponse.json(
       {
         error: (error as Error).message || "Internal Server Error",

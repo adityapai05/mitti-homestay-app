@@ -14,12 +14,6 @@ export async function GET(
 ) {
   try {
     const { homestayId } = await context.params;
-    if (!homestayId) {
-      return NextResponse.json(
-        { error: "Homestay ID is required" },
-        { status: 400 }
-      );
-    }
 
     const user = await getCurrentUser();
 
@@ -29,15 +23,10 @@ export async function GET(
         ...(user?.role === "ADMIN"
           ? {}
           : user?.role === "HOST"
-          ? {
-              OR: [{ isVerified: true }, { ownerId: user.id }],
-            }
+          ? { OR: [{ isVerified: true }, { ownerId: user.id }] }
           : { isVerified: true }),
       },
-      select: {
-        id: true,
-        name: true,
-      },
+      select: { id: true, name: true },
     });
 
     if (!homestay) {
@@ -47,20 +36,14 @@ export async function GET(
       );
     }
 
-    const url = new URL(req.url);
-    const searchParams = url.searchParams;
-    const limit = Number(searchParams.get("limit") || 20);
-    const page = Number(searchParams.get("page") || 1);
+    const { searchParams } = new URL(req.url);
+    const limit = Number(searchParams.get("limit") ?? 20);
+    const page = Number(searchParams.get("page") ?? 1);
     const rating = searchParams.get("rating");
-    const sortBy = searchParams.get("sortBy") || "newest";
+    const sortBy = searchParams.get("sortBy") ?? "newest";
 
-    const where: Prisma.ReviewWhereInput = {
-      homestayId,
-    };
-
-    if (rating && rating !== "all" && !isNaN(Number(rating))) {
-      where.rating = Number(rating);
-    }
+    const where: Prisma.ReviewWhereInput = { homestayId };
+    if (rating && rating !== "all") where.rating = Number(rating);
 
     let orderBy: ReviewOrderByInput = { createdAt: "desc" };
     if (sortBy === "oldest") orderBy = { createdAt: "asc" };
@@ -76,86 +59,54 @@ export async function GET(
         take: limit,
         skip,
         include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-            },
-          },
+          user: { select: { id: true, name: true, image: true } },
           booking: {
-            select: {
-              id: true,
-              checkIn: true,
-              checkOut: true,
-              guests: true,
-            },
+            select: { id: true, checkIn: true, checkOut: true, guests: true },
           },
         },
       }),
       prisma.review.count({ where }),
-      prisma.review.aggregate({
-        where,
-        _avg: {
-          rating: true,
-        },
-      }),
+      prisma.review.aggregate({ where, _avg: { rating: true } }),
     ]);
 
     const ratingDistribution = await prisma.review.groupBy({
       by: ["rating"],
       where,
-      _count: {
-        rating: true,
-      },
-      orderBy: {
-        rating: "desc",
-      },
+      _count: { rating: true },
+      orderBy: { rating: "desc" },
     });
-
-    const totalPages = Math.ceil(totalCount / limit);
 
     return NextResponse.json({
       reviews,
       homestay,
       stats: {
         totalReviews: totalCount,
-        averageRating: Number(avgRating._avg.rating?.toFixed(1)) || 0,
-        ratingDistribution: ratingDistribution.map((item) => ({
-          rating: item.rating,
-          count: item._count.rating,
+        averageRating: Number(avgRating._avg.rating?.toFixed(1) ?? 0),
+        ratingDistribution: ratingDistribution.map((r) => ({
+          rating: r.rating,
+          count: r._count.rating,
         })),
       },
       pagination: {
         currentPage: page,
-        totalPages,
+        totalPages: Math.ceil(totalCount / limit),
         totalCount,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1,
         limit,
       },
     });
-  } catch (error: unknown) {
-    console.error("[GET /reviews/[homestayId]] ", error);
+  } catch (error) {
+    console.error("[GET /reviews]", error);
     return NextResponse.json(
-      { error: (error as Error).message || "Internal Server Error" },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
 }
 
 const createReviewSchema = z.object({
-  rating: z
-    .number()
-    .int()
-    .min(1, "Rating must be at least 1")
-    .max(5, "Rating must be at most 5"),
-  comment: z
-    .string()
-    .min(10, "Comment must be at least 10 characters")
-    .max(1000, "Comment must be less than 1000 characters")
-    .optional(),
-  bookingId: z.uuid("Invalid booking ID"),
+  bookingId: z.string().uuid(),
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().min(10).max(1000).optional(),
 });
 
 export async function POST(
@@ -164,40 +115,20 @@ export async function POST(
 ) {
   try {
     const user = await getCurrentUser();
-
     if (!user) {
-      return NextResponse.json(
-        { error: "Authentication required." },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { homestayId } = await context.params;
-
-    if (!homestayId) {
-      return NextResponse.json(
-        { error: "Homestay ID is required." },
-        { status: 400 }
-      );
-    }
-
-    const body = await req.json();
-    const parsed = createReviewSchema.safeParse(body);
-
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: z.treeifyError(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { rating, comment, bookingId } = parsed.data;
+    const body = createReviewSchema.parse(await req.json());
 
     const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: {
-        homestay: { select: { id: true } },
-      },
+      where: { id: body.bookingId },
+    });
+    console.log({
+      bookingHomestayId: booking?.homestayId,
+      paramHomestayId: homestayId,
+      match: booking?.homestayId === homestayId,
     });
 
     if (!booking) {
@@ -209,86 +140,109 @@ export async function POST(
 
     if (booking.userId !== user.id) {
       return NextResponse.json(
-        { error: "You can only review your own bookings." },
+        { error: "You can only review your own booking." },
         { status: 403 }
-      );
-    }
-
-    if (booking.homestayId !== homestayId) {
-      return NextResponse.json(
-        { error: "Booking does not match the homestay." },
-        { status: 400 }
       );
     }
 
     if (booking.status !== "COMPLETED") {
       return NextResponse.json(
-        { error: "You can only review completed bookings." },
+        { error: "You can only review completed stays." },
         { status: 400 }
       );
     }
 
-    const existingReview = await prisma.review.findUnique({
-      where: { bookingId },
+    const existing = await prisma.review.findUnique({
+      where: { bookingId: body.bookingId },
     });
 
-    if (existingReview) {
+    if (existing) {
       return NextResponse.json(
-        { error: "You have already reviewed this booking." },
+        { error: "Review already exists." },
         { status: 400 }
       );
     }
 
-    const review = await prisma.review.create({
+    const review = await prisma.$transaction(async (tx) => {
+      const created = await tx.review.create({
+        data: {
+          userId: user.id,
+          homestayId: booking.homestayId,
+          bookingId: body.bookingId,
+          rating: body.rating,
+          comment: body.comment,
+        },
+      });
+
+      const avg = await tx.review.aggregate({
+        where: { homestayId },
+        _avg: { rating: true },
+      });
+
+      await tx.homestay.update({
+        where: { id: homestayId },
+        data: { rating: Number(avg._avg.rating?.toFixed(1) ?? 0) },
+      });
+
+      return created;
+    });
+
+    return NextResponse.json({ review }, { status: 201 });
+  } catch (error) {
+    console.error("[POST /reviews]", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  context: { params: Promise<{ homestayId: string }> }
+) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { homestayId } = await context.params;
+    const body = createReviewSchema.parse(await req.json());
+
+    const review = await prisma.review.findUnique({
+      where: { bookingId: body.bookingId },
+    });
+
+    if (!review || review.userId !== user.id) {
+      return NextResponse.json(
+        { error: "Review not found or forbidden." },
+        { status: 403 }
+      );
+    }
+
+    const updated = await prisma.review.update({
+      where: { bookingId: body.bookingId },
       data: {
-        userId: user.id,
-        homestayId,
-        bookingId,
-        rating,
-        comment,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-          },
-        },
-        booking: {
-          select: {
-            id: true,
-            checkIn: true,
-            checkOut: true,
-            guests: true,
-          },
-        },
+        rating: body.rating,
+        comment: body.comment,
       },
     });
 
-    const avgRatingResult = await prisma.review.aggregate({
+    const avg = await prisma.review.aggregate({
       where: { homestayId },
       _avg: { rating: true },
     });
 
     await prisma.homestay.update({
       where: { id: homestayId },
-      data: {
-        rating: Number(avgRatingResult._avg.rating?.toFixed(1) || 0),
-      },
+      data: { rating: Number(avg._avg.rating?.toFixed(1) ?? 0) },
     });
 
+    return NextResponse.json({ review: updated });
+  } catch {
     return NextResponse.json(
-      {
-        message: "Review created successfully!",
-        review,
-      },
-      { status: 201 }
-    );
-  } catch (error: unknown) {
-    console.error("[POST /reviews/[homestayId]]", error);
-    return NextResponse.json(
-      { error: (error as Error).message || "Internal Server Error" },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
