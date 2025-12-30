@@ -1,117 +1,90 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { Users, ChevronUp, ChevronDown } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Users } from "lucide-react";
+import { format, differenceInDays, isBefore } from "date-fns";
+import { toast } from "sonner";
+
 import { Homestay } from "@/types";
 import DateRangePicker from "@/components/ui/prebuilt-components/date-range-picker";
 import { Button } from "@/components/ui/prebuilt-components/button";
-import { format, isValid, isBefore, startOfDay, differenceInDays } from "date-fns";
-import {toast} from "sonner";
 
-interface PricingBookingSectionProps {
+interface Props {
   homestay: Homestay;
 }
 
-const PricingBookingSection: React.FC<PricingBookingSectionProps> = ({
-  homestay,
-}) => {
-  const searchParams = useSearchParams();
+const bookingErrorMessages: Record<string, string> = {
+  HOMESTAY_NOT_FOUND: "This homestay no longer exists or is unavailable.",
 
-  // Initialize from search parameters
-  const initialCheckIn = searchParams.get("checkIn") || "";
-  const initialCheckOut = searchParams.get("checkOut") || "";
+  HOMESTAY_NOT_VERIFIED:
+    "This homestay is not verified yet. Please try again later.",
+
+  CANNOT_BOOK_OWN_HOMESTAY:
+    "You cannot book your own homestay. Switch to a guest account to continue.",
+
+  MAX_GUESTS_EXCEEDED:
+    "The number of guests exceeds the maximum allowed for this homestay.",
+
+  DATES_NOT_AVAILABLE:
+    "These dates have just been booked by someone else. Please select different dates.",
+};
+
+const PricingBookingSection = ({ homestay }: Props) => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const initialCheckIn = searchParams.get("checkIn");
+  const initialCheckOut = searchParams.get("checkOut");
   const initialGuests = Number(searchParams.get("guests")) || 1;
 
-  // Validate dates
-  const isValidDate = (date: string) => {
-    const parsed = new Date(date);
-    return isValid(parsed) && !isBefore(parsed, startOfDay(new Date()));
-  };
-
-  const validatedCheckIn = initialCheckIn && isValidDate(initialCheckIn) ? initialCheckIn : "";
-  const validatedCheckOut =
-    initialCheckOut &&
-    isValidDate(initialCheckOut) &&
-    validatedCheckIn &&
-    isBefore(new Date(validatedCheckIn), new Date(initialCheckOut))
-      ? initialCheckOut
-      : "";
-
-  // Validate guests
-  const validatedGuests =
-    Number.isInteger(initialGuests) &&
-    initialGuests > 0 &&
-    initialGuests <= homestay.maxGuests
-      ? initialGuests
-      : 1;
-
   const [dateRange, setDateRange] = useState<{
-    from: Date | undefined;
-    to: Date | undefined;
+    from?: Date;
+    to?: Date;
   }>({
-    from: validatedCheckIn ? new Date(validatedCheckIn) : undefined,
-    to: validatedCheckOut ? new Date(validatedCheckOut) : undefined,
+    from: initialCheckIn ? new Date(initialCheckIn) : undefined,
+    to: initialCheckOut ? new Date(initialCheckOut) : undefined,
   });
-  const [guests, setGuests] = useState(validatedGuests);
+
+  const [guests, setGuests] = useState(
+    Math.min(Math.max(initialGuests, 1), homestay.maxGuests)
+  );
+
   const [includeGuide, setIncludeGuide] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [bookedDates, setBookedDates] = useState<Date[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [bookingLoading, setBookingLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    const fetchBookedDates = async () => {
-      try {
-        // TODO: Replace with real API endpoint to fetch booked dates
-        const response = await fetch(`/api/homestays/${homestay.id}/booked-dates`);
-        const data = await response.json();
-        setBookedDates(data.bookedDates || []);
-      } catch (error) {
-        console.error("Error fetching booked dates:", error);
-        toast.error("Failed to load booked dates. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBookedDates();
-  }, [homestay.id]);
+  const nights = useMemo(() => {
+    if (!dateRange.from || !dateRange.to) return 0;
+    return differenceInDays(dateRange.to, dateRange.from);
+  }, [dateRange]);
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 640) {
-        setIsExpanded(false);
-      } else {
-        setIsExpanded(true);
-      }
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const basePrice = Number(homestay.pricePerNight);
+  const guideFee = homestay.guideAvailable ? Number(homestay.guideFee || 0) : 0;
 
-  const basePrice = parseFloat(homestay.pricePerNight);
-  const guideFee = homestay.guideFee ? parseFloat(homestay.guideFee) : 0;
-  const nights = dateRange.from && dateRange.to ? differenceInDays(dateRange.to, dateRange.from) : 0;
-  const totalPrice = nights > 0 ? (basePrice + (includeGuide ? guideFee : 0)) * nights : 0;
+  const stayTotal = nights * basePrice;
+  const guideTotal = includeGuide ? nights * guideFee : 0;
+  const totalPrice = stayTotal + guideTotal;
 
   const handleBooking = async () => {
     if (!dateRange.from || !dateRange.to) {
       toast.error("Please select both check-in and check-out dates.");
       return;
     }
-    if (isBefore(dateRange.to, dateRange.from)) {
-      toast.error("Check-out date must be after check-in date.");
-      return;
-    }
-    if (guests < 1 || guests > homestay.maxGuests) {
-      toast.error(`Please select between 1 and ${homestay.maxGuests} guests.`);
+
+    if (isBefore(dateRange.to, dateRange.from) || nights < 1) {
+      toast.error("Minimum stay is 1 night.");
       return;
     }
 
-    setBookingLoading(true);
+    if (guests < 1 || guests > homestay.maxGuests) {
+      toast.error(`Maximum ${homestay.maxGuests} guests allowed.`);
+      return;
+    }
+
+    setSubmitting(true);
+
     try {
-      const response = await fetch("/api/bookings", {
+      const res = await fetch("/api/bookings/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -119,152 +92,161 @@ const PricingBookingSection: React.FC<PricingBookingSectionProps> = ({
           checkIn: format(dateRange.from, "yyyy-MM-dd"),
           checkOut: format(dateRange.to, "yyyy-MM-dd"),
           guests,
-          includeGuide,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to create booking");
+      if (res.status === 401) {
+        toast.error("Please log in to continue with your booking.");
+        router.push("/login");
+        return;
       }
 
-      toast.success("Booking Successful");
-      // Optionally redirect or reset form
-      setDateRange({ from: undefined, to: undefined });
-      setGuests(1);
-      setIncludeGuide(false);
+      if (res.status === 400 || res.status === 403 || res.status === 409) {
+        const data = await res.json();
+
+        const backendError =
+          typeof data.error === "string" ? data.error : data.error?.message;
+
+        const friendlyMessage =
+          bookingErrorMessages[backendError] ||
+          "This booking could not be completed. Please review your details and try again.";
+
+        toast.error(friendlyMessage);
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error("Booking failed");
+      }
+
+      const data = await res.json();
+
+      toast.success("Booking confirmed. Your stay is reserved.");
+      router.push(`/bookings/${data.booking.id}`);
     } catch {
-      toast.error("An error occurred while booking. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
-      setBookingLoading(false);
+      setSubmitting(false);
     }
   };
 
   return (
-    <aside
-      className={`
-        lg:sticky lg:top-24 sm:p-6 p-4 bg-mitti-cream rounded-lg shadow-lg border border-mitti-khaki/20
-        sm:relative sm:bottom-auto
-        fixed bottom-0 left-0 right-0 z-50 sm:z-auto
-      `}
-    >
-      <div className="max-w-7xl mx-auto">
-        {/* Mobile Compact View */}
-        <div className="sm:hidden flex justify-between items-center p-4 bg-mitti-cream border-t border-mitti-khaki/20">
-          <div>
-            <span className="text-lg font-semibold text-mitti-dark-brown">
-              ₹{homestay.pricePerNight}/night
-            </span>
-            <span className="text-sm text-mitti-muted ml-2">
-              {homestay.rating.toFixed(1)} ({homestay.reviewCount} reviews)
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <button
-              className="text-mitti-dark-brown"
-              onClick={() => setIsExpanded(!isExpanded)}
-              aria-label={
-                isExpanded
-                  ? "Collapse booking details"
-                  : "Expand booking details"
-              }
-            >
-              {isExpanded ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
-            </button>
-            <Button
-              onClick={handleBooking}
-              disabled={bookingLoading || !dateRange.from || !dateRange.to}
-              className="py-2 px-4 bg-mitti-brown text-white rounded-full hover:bg-mitti-brown/90 transition"
-              aria-label="Book now"
-            >
-              Book Now
-            </Button>
-          </div>
+    <aside className="lg:sticky lg:top-24">
+      <div className="rounded-2xl border border-mitti-khaki bg-mitti-cream p-6 shadow-sm space-y-6">
+        {/* Price header */}
+        <div className="flex items-baseline gap-2">
+          <span className="text-2xl font-semibold text-mitti-dark-brown">
+            ₹{basePrice}
+          </span>
+          <span className="text-sm text-mitti-dark-brown/70">per night</span>
         </div>
 
-        {/* Full Booking Form */}
-        <div
-          className={`
-            ${isExpanded ? "block" : "hidden sm:block"}
-            sm:p-0 p-4 bg-mitti-cream sm:bg-transparent
-          `}
-        >
-          <div className="space-y-6">
-            <div className="hidden sm:block">
-              <h2 className="text-2xl font-semibold text-mitti-dark-brown">
-                ₹{homestay.pricePerNight} / night
-              </h2>
+        {/* Dates */}
+        <div>
+          <label className="text-sm font-medium text-mitti-dark-brown">
+            Dates
+          </label>
+          <DateRangePicker
+            className="mt-2 cursor-pointer"
+            bookedDates={[]}
+            initialRange={dateRange}
+            onChange={(range) =>
+              setDateRange({ from: range?.from, to: range?.to })
+            }
+          />
+        </div>
+
+        {/* Guests */}
+        <div>
+          <label className="text-sm font-medium text-mitti-dark-brown">
+            Guests
+          </label>
+
+          <div className="mt-2 flex items-center gap-2 border border-mitti-khaki rounded-lg px-3 py-2">
+            <Users size={18} />
+
+            <input
+              type="number"
+              min={1}
+              max={homestay.maxGuests}
+              value={guests}
+              onChange={(e) => {
+                const value = Number(e.target.value) || 1;
+
+                if (value > homestay.maxGuests) {
+                  toast.error(
+                    `This homestay allows a maximum of ${
+                      homestay.maxGuests
+                    } guest${homestay.maxGuests > 1 ? "s" : ""}.`
+                  );
+                  setGuests(homestay.maxGuests);
+                  return;
+                }
+
+                if (value < 1) {
+                  setGuests(1);
+                  return;
+                }
+
+                setGuests(value);
+              }}
+              className="w-full bg-transparent outline-none"
+            />
+          </div>
+
+          <p className="mt-1 text-xs text-mitti-dark-brown/60">
+            Maximum {homestay.maxGuests} guest
+            {homestay.maxGuests > 1 ? "s" : ""}
+          </p>
+        </div>
+
+        {/* Guide */}
+        {homestay.guideAvailable && (
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={includeGuide}
+              onChange={(e) => setIncludeGuide(e.target.checked)}
+              className="h-4 w-4 accent-mitti-olive"
+            />
+            <span className="text-sm text-mitti-dark-brown">
+              Include local guide (₹{guideFee}/night)
+            </span>
+          </div>
+        )}
+
+        {/* Price breakdown */}
+        {nights > 0 && (
+          <div className="space-y-2 border-t border-mitti-khaki pt-4 text-sm">
+            <div className="flex justify-between">
+              <span>
+                ₹{basePrice} × {nights} nights
+              </span>
+              <span>₹{stayTotal}</span>
             </div>
-            <div className="space-y-4">
-              <div>
-                <label className="text-mitti-dark-brown font-medium">
-                  Dates
-                </label>
-                {loading ? (
-                  <p className="text-mitti-muted">Loading available dates...</p>
-                ) : (
-                  <DateRangePicker
-                    bookedDates={bookedDates}
-                    onChange={(range) => {
-                      setDateRange({
-                        from: range?.from,
-                        to: range?.to,
-                      });
-                    }}
-                    initialRange={{
-                      from: validatedCheckIn ? new Date(validatedCheckIn) : undefined,
-                      to: validatedCheckOut ? new Date(validatedCheckOut) : undefined,
-                    }}
-                    className="mt-1"
-                  />
-                )}
-              </div>
-              <div>
-                <label className="text-mitti-dark-brown font-medium">
-                  Guests
-                </label>
-                <div className="flex items-center gap-2 mt-1">
-                  <Users size={20} className="text-mitti-olive" />
-                  <input
-                    type="number"
-                    min="1"
-                    max={homestay.maxGuests}
-                    value={guests}
-                    onChange={(e) => setGuests(parseInt(e.target.value) || 1)}
-                    className="w-full p-2 border border-mitti-beige rounded-lg focus:outline-none focus:ring-2 focus:ring-mitti-olive"
-                  />
-                </div>
-              </div>
-              {homestay.guideAvailable && (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={includeGuide}
-                    onChange={(e) => setIncludeGuide(e.target.checked)}
-                    className="h-5 w-5 text-mitti-olive focus:ring-mitti-olive"
-                  />
-                  <label className="text-mitti-dark-brown">
-                    Include Local Guide (₹{homestay.guideFee}/day)
-                  </label>
-                </div>
-              )}
-            </div>
-            {nights > 0 && (
-              <div className="border-t border-mitti-beige pt-4">
-                <p className="text-mitti-dark-brown">
-                  Total for {nights} night{nights !== 1 ? "s" : ""}: ₹{totalPrice.toFixed(2)}
-                </p>
+
+            {includeGuide && (
+              <div className="flex justify-between">
+                <span>Guide fee</span>
+                <span>₹{guideTotal}</span>
               </div>
             )}
-            <Button
-              onClick={handleBooking}
-              disabled={bookingLoading || !dateRange.from || !dateRange.to}
-              className="w-full py-3 bg-mitti-brown text-white rounded-full font-semibold hover:bg-mitti-brown/90 transition hidden sm:block"
-              aria-label="Book now"
-            >
-              {bookingLoading ? "Booking..." : "Book Now"}
-            </Button>
+
+            <div className="flex justify-between font-semibold pt-2">
+              <span>Total</span>
+              <span>₹{totalPrice}</span>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* CTA */}
+        <Button
+          onClick={handleBooking}
+          disabled={submitting || nights < 1}
+          className="w-full rounded-xl bg-mitti-brown text-white hover:bg-mitti-brown/90 cursor-pointer"
+        >
+          {submitting ? "Booking…" : "Reserve"}
+        </Button>
       </div>
     </aside>
   );

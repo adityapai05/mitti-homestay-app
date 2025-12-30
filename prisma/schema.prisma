@@ -72,7 +72,7 @@ model Booking {
   checkOut   DateTime
   guests     Int
   totalPrice Decimal
-  status     BookingStatus  @default(PENDING)
+  status     BookingStatus  @default(PENDING_HOST_APPROVAL)
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
 
@@ -109,7 +109,8 @@ enum Type {
   HOME
 }
 enum BookingStatus {
-  PENDING
+  PENDING_HOST_APPROVAL
+  AWAITING_PAYMENT
   CONFIRMED
   CANCELLED
   COMPLETED

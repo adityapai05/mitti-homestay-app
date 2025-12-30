@@ -17,12 +17,6 @@ export async function GET(
     }
 
     const { id: bookingId } = await context.params;
-    if (!bookingId) {
-      return NextResponse.json(
-        { error: "Booking ID is required." },
-        { status: 400 }
-      );
-    }
 
     const booking = await prisma.booking.findFirst({
       where: {
@@ -75,24 +69,30 @@ export async function GET(
     }
 
     const now = new Date();
-    const checkInDate = new Date(booking.checkIn);
-    const checkOutDate = new Date(booking.checkOut);
+    const checkIn = new Date(booking.checkIn);
+    const checkOut = new Date(booking.checkOut);
 
     const nights = Math.ceil(
-      (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)
+      (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
     );
 
     const bookingStatus = {
       canCancel:
-        booking.status === "PENDING" ||
-        (booking.status === "CONFIRMED" && checkInDate > now),
-      canComplete: booking.status === "CONFIRMED" && checkOutDate <= now,
+        booking.status === "PENDING_HOST_APPROVAL" ||
+        booking.status === "AWAITING_PAYMENT" ||
+        (booking.status === "CONFIRMED" && checkIn > now),
+
+      awaitingHostApproval: booking.status === "PENDING_HOST_APPROVAL",
+      awaitingPayment: booking.status === "AWAITING_PAYMENT",
+
       isActive:
-        booking.status === "CONFIRMED" &&
-        checkInDate <= now &&
-        checkOutDate > now,
-      isUpcoming: booking.status === "CONFIRMED" && checkInDate > now,
-      isPast: checkOutDate < now,
+        booking.status === "CONFIRMED" && checkIn <= now && checkOut > now,
+
+      isUpcoming: booking.status === "CONFIRMED" && checkIn > now,
+
+      isPast:
+        booking.status === "COMPLETED" ||
+        (booking.status === "CONFIRMED" && checkOut < now),
     };
 
     return NextResponse.json({
@@ -100,10 +100,10 @@ export async function GET(
       nights,
       bookingStatus,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[GET /bookings/[id]]", error);
     return NextResponse.json(
-      { error: (error as Error).message || "Internal Server Error" },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
@@ -129,15 +129,6 @@ export async function DELETE(
         id: bookingId,
         OR: [{ userId: user.id }, { homestay: { ownerId: user.id } }],
       },
-      include: {
-        homestay: {
-          select: {
-            id: true,
-            name: true,
-            ownerId: true,
-          },
-        },
-      },
     });
 
     if (!booking) {
@@ -154,50 +145,31 @@ export async function DELETE(
       );
     }
 
-    const now = new Date();
-    const checkInDate = new Date(booking.checkIn);
+    const checkIn = new Date(booking.checkIn);
     const hoursUntilCheckIn =
-      (checkInDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+      (checkIn.getTime() - Date.now()) / (1000 * 60 * 60);
 
-    if (hoursUntilCheckIn < 24 && hoursUntilCheckIn > 0) {
+    if (
+      booking.status === "CONFIRMED" &&
+      hoursUntilCheckIn < 24 &&
+      hoursUntilCheckIn > 0
+    ) {
       return NextResponse.json(
-        {
-          error: "Cannot cancel booking less than 24 hours before check-in.",
-        },
+        { error: "Cannot cancel less than 24 hours before check-in." },
         { status: 400 }
       );
     }
 
-    const cancelledBooking = await prisma.booking.update({
+    const cancelled = await prisma.booking.update({
       where: { id: bookingId },
       data: {
         status: "CANCELLED",
         updatedAt: new Date(),
       },
-      include: {
-        homestay: {
-          select: {
-            id: true,
-            name: true,
-            owner: {
-              select: {
-                name: true,
-                email: true,
-              },
-            },
-          },
-        },
-        user: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
     });
 
-    let refundAmount: Decimal;
-    let refundPolicy: "full" | "partial" | "none";
+    let refundAmount: Decimal = new Decimal(0);
+    let refundPolicy: "full" | "partial" | "none" = "none";
 
     if (hoursUntilCheckIn >= 24 * 7) {
       refundAmount = booking.totalPrice;
@@ -205,29 +177,33 @@ export async function DELETE(
     } else if (hoursUntilCheckIn >= 48) {
       refundAmount = booking.totalPrice.mul(0.5);
       refundPolicy = "partial";
-    } else {
-      refundAmount = new Decimal(0);
-      refundPolicy = "none";
     }
 
     return NextResponse.json({
       message: "Booking cancelled successfully.",
-      booking: cancelledBooking,
+      booking: cancelled,
       refundInfo: {
         refundAmount,
         refundPolicy,
         processingTime: "3-5 business days",
       },
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[DELETE /bookings/[id]]", error);
     return NextResponse.json(
-      { error: (error as Error).message || "Internal Server Error" },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
 }
 
+/**
+ * TEMPORARY endpoint.
+ * In future this will be split into:
+ * - host approve
+ * - payment success webhook
+ * - system complete job
+ */
 export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -244,35 +220,25 @@ export async function PUT(
     const { id: bookingId } = await context.params;
     const { status } = await req.json();
 
-    const validStatuses = ["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"];
+    const allowedStatuses = [
+      "PENDING_HOST_APPROVAL",
+      "AWAITING_PAYMENT",
+      "CONFIRMED",
+      "CANCELLED",
+      "COMPLETED",
+    ];
 
-    if (!validStatuses.includes(status)) {
+    if (!allowedStatuses.includes(status)) {
       return NextResponse.json(
         { error: "Invalid booking status." },
         { status: 400 }
       );
     }
 
-    const booking = await prisma.booking.findFirst({
-      where: {
-        id: bookingId,
-        OR: [{ userId: user.id }, { homestay: { ownerId: user.id } }],
-      },
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
       include: {
-        homestay: {
-          select: {
-            id: true,
-            name: true,
-            ownerId: true,
-          },
-        },
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
+        homestay: { select: { ownerId: true } },
       },
     });
 
@@ -283,37 +249,29 @@ export async function PUT(
       );
     }
 
-    const updatedBooking = await prisma.booking.update({
+    if (booking.status === "COMPLETED" || booking.status === "CANCELLED") {
+      return NextResponse.json(
+        { error: "Booking cannot be updated." },
+        { status: 400 }
+      );
+    }
+
+    const updated = await prisma.booking.update({
       where: { id: bookingId },
       data: {
         status,
         updatedAt: new Date(),
       },
-      include: {
-        homestay: {
-          select: {
-            id: true,
-            name: true,
-            flatno: true,
-            street: true,
-            village: true,
-            district: true,
-            state: true,
-            pincode: true,
-          },
-        },
-        user: true,
-      },
     });
 
     return NextResponse.json({
-      message: `Booking status updated to ${status.toLowerCase()}.`,
-      booking: updatedBooking,
+      message: `Booking status updated to ${status}.`,
+      booking: updated,
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[PUT /bookings/[id]]", error);
     return NextResponse.json(
-      { error: (error as Error).message || "Internal Server Error" },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }

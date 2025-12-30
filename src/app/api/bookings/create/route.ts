@@ -7,36 +7,16 @@ const createBookingSchema = z
   .object({
     homestayId: z.uuid("Invalid homestay ID"),
     checkIn: z.string().refine((date) => {
-      const checkInDate = new Date(date);
-      const now = new Date();
-      return !isNaN(checkInDate.getTime()) && checkInDate > now;
-    }, "Check-in date must be a valid future date"),
-
-    checkOut: z.string().refine((date) => {
-      const checkOutDate = new Date(date);
-      return !isNaN(checkOutDate.getTime());
-    }, "Check-out date must be a valid date"),
-
-    guests: z.number().int().min(1, "At least 1 guest is required"),
+      const d = new Date(date);
+      return !isNaN(d.getTime()) && d > new Date();
+    }),
+    checkOut: z.string(),
+    guests: z.number().int().min(1),
   })
-  .refine(
-    (data) => {
-      const checkIn = new Date(data.checkIn);
-      const checkOut = new Date(data.checkOut);
-
-      if (checkOut <= checkIn) return false;
-
-      const diffTime = Math.abs(checkOut.getTime() - checkIn.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays < 1) return false;
-
-      return true;
-    },
-    {
-      message: "Check-out must be after check-in with minimum 1 night stay",
-      path: ["checkOut"],
-    }
-  );
+  .refine((data) => new Date(data.checkOut) > new Date(data.checkIn), {
+    message: "Check-out must be after check-in",
+    path: ["checkOut"],
+  });
 
 export async function POST(req: NextRequest) {
   try {
@@ -60,125 +40,80 @@ export async function POST(req: NextRequest) {
     }
 
     const { homestayId, checkIn, checkOut, guests } = parsed.data;
+
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
 
-    const homestay = await prisma.homestay.findUnique({
-      where: { id: homestayId },
-      select: {
-        id: true,
-        name: true,
-        ownerId: true,
-        isVerified: true, 
-        maxGuests: true,
-        pricePerNight: true,
-        bookings: {
-          where: {
-            status: {
-              in: ["CONFIRMED", "PENDING"],
-            },
-            OR: [
-              {
-                checkIn: { lt: checkOutDate },
-                checkOut: { gt: checkInDate },
-              },
-            ],
-          },
+    const booking = await prisma.$transaction(async (tx) => {
+      // Fetch homestay inside transaction
+      const homestay = await tx.homestay.findUnique({
+        where: { id: homestayId },
+        select: {
+          id: true,
+          ownerId: true,
+          isVerified: true,
+          maxGuests: true,
+          pricePerNight: true,
         },
-      },
-    });
+      });
 
-    if (!homestay) {
-      return NextResponse.json(
-        { error: "Homestay not found." },
-        { status: 404 }
-      );
-    }
+      if (!homestay) throw new Error("HOMESTAY_NOT_FOUND");
+      if (!homestay.isVerified) throw new Error("HOMESTAY_NOT_VERIFIED");
+      if (homestay.ownerId === user.id)
+        throw new Error("CANNOT_BOOK_OWN_HOMESTAY");
+      if (guests > homestay.maxGuests) throw new Error("MAX_GUESTS_EXCEEDED");
 
-    if (!homestay.isVerified) {
-      return NextResponse.json(
-        { error: "Homestay is not verified yet." },
-        { status: 403 }
-      );
-    }
-
-    if (homestay.ownerId === user.id) {
-      return NextResponse.json(
-        { error: "You cannot book your own homestay." },
-        { status: 400 }
-      );
-    }
-
-    if (guests > homestay.maxGuests) {
-      return NextResponse.json(
-        { error: `Maximum ${homestay.maxGuests} guests allowed` },
-        { status: 400 }
-      );
-    }
-
-    if (homestay.bookings.length > 0) {
-      return NextResponse.json(
-        { error: "Homestay is not available for the selected dates." },
-        { status: 400 }
-      );
-    }
-
-    const diffTime = Math.abs(checkOutDate.getTime() - checkInDate.getTime());
-    const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    const totalPrice = homestay.pricePerNight.mul(nights);
-
-    const booking = await prisma.booking.create({
-      data: {
-        userId: user.id,
-        homestayId,
-        checkIn: checkInDate,
-        checkOut: checkOutDate,
-        guests,
-        totalPrice,
-        status: "PENDING",
-      },
-      include: {
-        homestay: {
-          select: {
-            id: true,
-            name: true,
-            flatno: true,
-            street: true,
-            landmark: true,
-            village: true,
-            district: true,
-            state: true,
-            pincode: true,
-            imageUrl: true,
-            owner: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
+      // Block dates for all non-dead bookings
+      const overlapping = await tx.booking.findFirst({
+        where: {
+          homestayId,
+          status: {
+            in: ["PENDING_HOST_APPROVAL", "AWAITING_PAYMENT", "CONFIRMED"],
           },
+          checkIn: { lt: checkOutDate },
+          checkOut: { gt: checkInDate },
         },
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
+      });
+
+      if (overlapping) throw new Error("DATES_NOT_AVAILABLE");
+
+      const nights = Math.ceil(
+        (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      const totalPrice = homestay.pricePerNight.mul(nights);
+
+      return tx.booking.create({
+        data: {
+          userId: user.id,
+          homestayId,
+          checkIn: checkInDate,
+          checkOut: checkOutDate,
+          guests,
+          totalPrice,
+          status: "PENDING_HOST_APPROVAL",
         },
-      },
+      });
     });
 
     return NextResponse.json(
       {
-        message: "Booking created successfully!",
+        message: "Booking request sent to host.",
         booking,
-        nights,
       },
       { status: 201 }
     );
   } catch (error: unknown) {
     console.error("[POST /bookings/create]", error);
+
+    const statusMap: Record<string, number> = {
+      HOMESTAY_NOT_FOUND: 404,
+      HOMESTAY_NOT_VERIFIED: 403,
+      CANNOT_BOOK_OWN_HOMESTAY: 400,
+      MAX_GUESTS_EXCEEDED: 400,
+      DATES_NOT_AVAILABLE: 409,
+    };
+
     return NextResponse.json(
       {
         error: (error as Error).message || "Internal Server Error",
@@ -187,3 +122,5 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export const dynamic = "force-dynamic";

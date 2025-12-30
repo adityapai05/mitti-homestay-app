@@ -62,7 +62,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
           <Button
             variant="outline"
             className={cn(
-              "w-full justify-start text-left font-normal border-mitti-beige text-mitti-dark-brown",
+              "w-full justify-start text-left font-normal border-mitti-beige text-mitti-dark-brown cursor-pointer",
               !range?.from && !range?.to && "text-mitti-muted"
             )}
           >
@@ -88,7 +88,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
               bookedDates.some((booked) => isSameDay(booked, date))
             }
             autoFocus
-            className="text-mitti-dark-brown"
+            className="text-mitti-dark-brown border border-mitti-dark-brown rounded"
           />
         </PopoverContent>
       </Popover>

@@ -157,7 +157,9 @@ export async function DELETE(
       id: true,
       bookings: {
         where: {
-          status: { in: ["CONFIRMED", "PENDING"] },
+          status: {
+            in: ["PENDING_HOST_APPROVAL", "AWAITING_PAYMENT", "CONFIRMED"],
+          },
           checkIn: { gte: new Date() },
         },
         select: { id: true },
@@ -171,7 +173,7 @@ export async function DELETE(
 
   if (homestay.bookings.length > 0) {
     return NextResponse.json(
-      { error: "Active bookings exist" },
+      { error: "Active or upcoming bookings exist" },
       { status: 400 }
     );
   }

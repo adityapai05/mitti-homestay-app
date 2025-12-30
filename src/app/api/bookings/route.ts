@@ -22,16 +22,23 @@ export async function GET(req: NextRequest) {
     const limit = Number(searchParams.get("limit") || 20);
     const page = Number(searchParams.get("page") || 1);
 
+    const now = new Date();
+
     const where: Prisma.BookingWhereInput = {
       userId: user.id,
     };
 
-    const now = new Date();
     if (upcoming) {
-      where.checkIn = { gt: now };
-      where.status = { in: ["CONFIRMED", "PENDING"] };
-    } else if (past) {
-      where.checkOut = { lt: now };
+      where.status = {
+        in: ["PENDING_HOST_APPROVAL", "AWAITING_PAYMENT", "CONFIRMED"],
+      };
+      where.checkOut = { gt: now };
+    }
+
+    if (past) {
+      where.status = {
+        in: ["COMPLETED", "CANCELLED"],
+      };
     }
 
     const skip = (page - 1) * limit;
@@ -50,14 +57,12 @@ export async function GET(req: NextRequest) {
               imageUrl: true,
               latitude: true,
               longitude: true,
-
               flatno: true,
               street: true,
               village: true,
               district: true,
               state: true,
               pincode: true,
-
               owner: {
                 select: {
                   id: true,
@@ -72,35 +77,42 @@ export async function GET(req: NextRequest) {
       prisma.booking.count({ where }),
     ]);
 
-    const bookingsWithStatus = bookings.map((booking) => {
+    const bookingsWithComputedState = bookings.map((booking) => {
       const checkInDate = new Date(booking.checkIn);
       const checkOutDate = new Date(booking.checkOut);
-
-      const displayAddress = [booking.homestay.village, booking.homestay.state]
-        .filter(Boolean)
-        .join(", ");
 
       const nights = Math.ceil(
         (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)
       );
 
-      const bookingStatus = {
+      const displayAddress = [booking.homestay.village, booking.homestay.state]
+        .filter(Boolean)
+        .join(", ");
+
+      const bookingStatusMeta = {
         canCancel:
-          booking.status === "PENDING" ||
+          booking.status === "PENDING_HOST_APPROVAL" ||
+          booking.status === "AWAITING_PAYMENT" ||
           (booking.status === "CONFIRMED" && checkInDate > now),
-        canComplete: booking.status === "CONFIRMED" && checkOutDate <= now,
+
+        canPay: booking.status === "AWAITING_PAYMENT",
+
+        isAwaitingHostApproval: booking.status === "PENDING_HOST_APPROVAL",
+
+        isUpcoming: booking.status === "CONFIRMED" && checkInDate > now,
+
         isActive:
           booking.status === "CONFIRMED" &&
           checkInDate <= now &&
           checkOutDate > now,
-        isUpcoming: booking.status === "CONFIRMED" && checkInDate > now,
-        isPast: checkOutDate < now,
+
+        isPast: booking.status === "COMPLETED" || checkOutDate < now,
       };
 
       return {
         ...booking,
         nights,
-        bookingStatus,
+        bookingStatus: bookingStatusMeta,
         homestay: {
           ...booking.homestay,
           displayAddress,
@@ -109,24 +121,22 @@ export async function GET(req: NextRequest) {
     });
 
     const totalPages = Math.ceil(totalCount / limit);
-    const hasNextPage = page < totalPages;
-    const hasPrevPage = page > 1;
 
     return NextResponse.json({
-      bookings: bookingsWithStatus,
+      bookings: bookingsWithComputedState,
       pagination: {
         currentPage: page,
         totalPages,
         totalCount,
-        hasNextPage,
-        hasPrevPage,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
         limit,
       },
     });
   } catch (error) {
     console.error("[GET /bookings]", error);
     return NextResponse.json(
-      { error: (error as Error).message || "Internal Server Error" },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
