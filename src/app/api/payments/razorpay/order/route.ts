@@ -3,17 +3,28 @@ import Razorpay from "razorpay";
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { prisma } from "@/lib/prisma";
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
-
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const key_id = process.env.RAZORPAY_KEY_ID;
+    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!key_id || !key_secret) {
+      console.error("[RAZORPAY_CONFIG] Missing env variables");
+      return NextResponse.json(
+        { error: "Payment gateway not configured" },
+        { status: 500 }
+      );
+    }
+
+    const razorpay = new Razorpay({
+      key_id,
+      key_secret,
+    });
 
     const { bookingId } = await req.json();
 
