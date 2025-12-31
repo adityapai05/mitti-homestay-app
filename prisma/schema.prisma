@@ -16,6 +16,7 @@ model User {
   name        String
   email       String?  @unique
   phone       String?  @unique
+  contactPhone String?
   image       String?
   about       String?
   languages   String[] @default([])
@@ -42,6 +43,7 @@ model HostProfile {
 model HostPayoutAccount {
   userId     String  @unique
   method     PayoutMethodType
+  accountHolderName String
   upiId      String?
   bankName   String?
   accountNo  String?

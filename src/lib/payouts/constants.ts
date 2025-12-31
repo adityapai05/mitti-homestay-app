@@ -1,0 +1,1 @@
+export const HOST_COMMISSION_RATE = 0.1; // 10%
