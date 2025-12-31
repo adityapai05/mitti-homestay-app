@@ -17,15 +17,52 @@ model User {
   email       String?  @unique
   phone       String?  @unique
   image       String?
+  about       String?
+  languages   String[] @default([])
   role        Role     @default(USER)
   isVerified  Boolean  @default(false)
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  bookings  Booking[]
-  homestays Homestay[] @relation("HomestayOwner")
-  reviews   Review[] // User can write many reviews
+  bookings    Booking[]
+  homestays   Homestay[] @relation("HomestayOwner")
+  reviews     Review[]
+  hostProfile HostProfile?
+  payoutAccount HostPayoutAccount?
+  payouts HostPayout[] @relation("UserPayouts")
 }
+
+model HostProfile {
+  userId String @unique
+  verificationStatus HostVerificationStatus @default(PENDING)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model HostPayoutAccount {
+  userId     String  @unique
+  method     PayoutMethodType
+  upiId      String?
+  bankName   String?
+  accountNo  String?
+  ifsc       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model HostPayout {
+  id        String   @id @default(uuid())
+  userId    String
+  amount    Decimal
+  status    HostPayoutStatus
+  createdAt DateTime @default(now())
+  processedAt DateTime?
+
+  user User @relation("UserPayouts", fields: [userId], references: [id], onDelete: Cascade)
+}
+
 
 model Homestay {
   id             String   @id @default(uuid())
@@ -148,6 +185,24 @@ enum Role {
   HOST
   ADMIN
 }
+
+enum HostVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum PayoutMethodType {
+  UPI
+  BANK
+}
+
+enum HostPayoutStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
 
 // generator erd {
 //  provider = "prisma-erd-generator"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Calendar } from "@/components/ui/prebuilt-components/calendar";
 import {
   Popover,
@@ -29,8 +29,6 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   initialRange,
   className,
 }) => {
-
-  // initialize state from initialRange
   const [range, setRange] = useState<DateRange | undefined>(() => {
     if (initialRange?.from || initialRange?.to) {
       return {
@@ -55,6 +53,12 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
     onChange(selectedRange);
   };
 
+  // Memoize booked matcher for performance
+  const bookedMatcher = useMemo(
+    () => (date: Date) => bookedDates.some((booked) => isSameDay(booked, date)),
+    [bookedDates]
+  );
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -77,17 +81,23 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
               : "Select check-in and check-out"}
           </Button>
         </PopoverTrigger>
+
         <PopoverContent className="w-auto p-0 bg-mitti-cream border-mitti-beige">
           <Calendar
             mode="range"
             selected={range}
             onSelect={handleSelect}
             numberOfMonths={2}
-            disabled={(date) =>
-              isBefore(date, new Date()) ||
-              bookedDates.some((booked) => isSameDay(booked, date))
-            }
             autoFocus
+            disabled={(date) =>
+              isBefore(date, new Date()) || bookedMatcher(date)
+            }
+            modifiers={{
+              booked: bookedMatcher,
+            }}
+            modifiersClassNames={{
+              booked: "bg-red-100 text-red-700 line-through cursor-not-allowed",
+            }}
             className="text-mitti-dark-brown border border-mitti-dark-brown rounded"
           />
         </PopoverContent>

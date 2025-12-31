@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Users } from "lucide-react";
 import { format, differenceInDays, isBefore } from "date-fns";
@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Homestay } from "@/types";
 import DateRangePicker from "@/components/ui/prebuilt-components/date-range-picker";
 import { Button } from "@/components/ui/prebuilt-components/button";
+import { useAuthModal } from "@/hooks/useAuthModal";
 
 interface Props {
   homestay: Homestay;
@@ -33,6 +34,7 @@ const bookingErrorMessages: Record<string, string> = {
 const PricingBookingSection = ({ homestay }: Props) => {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { openModal } = useAuthModal();
 
   const initialCheckIn = searchParams.get("checkIn");
   const initialCheckOut = searchParams.get("checkOut");
@@ -46,12 +48,40 @@ const PricingBookingSection = ({ homestay }: Props) => {
     to: initialCheckOut ? new Date(initialCheckOut) : undefined,
   });
 
+  const [bookedDates, setBookedDates] = useState<Date[]>([]);
+
   const [guests, setGuests] = useState(
     Math.min(Math.max(initialGuests, 1), homestay.maxGuests)
   );
 
   const [includeGuide, setIncludeGuide] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const fetchBookedDates = async () => {
+      try {
+        const res = await fetch(`/api/homestays/${homestay.id}/booked-dates`);
+
+        if (!res.ok) return;
+
+        const data: { dates: string[] } = await res.json();
+
+        if (ignore) return;
+
+        setBookedDates(data.dates.map((d) => new Date(d)));
+      } catch {
+        // Silent fail: calendar still works, booking API is final authority
+      }
+    };
+
+    fetchBookedDates();
+
+    return () => {
+      ignore = true;
+    };
+  }, [homestay.id]);
 
   const nights = useMemo(() => {
     if (!dateRange.from || !dateRange.to) return 0;
@@ -97,7 +127,7 @@ const PricingBookingSection = ({ homestay }: Props) => {
 
       if (res.status === 401) {
         toast.error("Please log in to continue with your booking.");
-        router.push("/login");
+        openModal("login");
         return;
       }
 
@@ -148,7 +178,7 @@ const PricingBookingSection = ({ homestay }: Props) => {
           </label>
           <DateRangePicker
             className="mt-2 cursor-pointer"
-            bookedDates={[]}
+            bookedDates={bookedDates}
             initialRange={dateRange}
             onChange={(range) =>
               setDateRange({ from: range?.from, to: range?.to })
