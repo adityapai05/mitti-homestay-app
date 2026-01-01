@@ -1,7 +1,7 @@
 import { Suspense } from "react";
-import HostBookingsTabs from "../_components/HostBookingsTabs";
-import HostBookingsList from "../_components/HostBookingsList";
-import HostBookingsLoading from "../_components/HostBookingsLoading";
+import HostBookingsTabs from "../../_components/HostBookingsTabs";
+import HostBookingsList from "../../_components/HostBookingsList";
+import HostBookingsLoading from "../../_components/HostBookingsLoading";
 
 export default function HostBookingsPage() {
   return (

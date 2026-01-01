@@ -27,10 +27,9 @@ import { logout } from "@/lib/firebase/authActions";
 export default function UserDropdown() {
   const user = useUserStore((state) => state.user);
 
-  const displayName =
-    user?.displayName || user?.email || user?.phoneNumber || "User";
-  const avatarUrl = user?.photoURL || "/default-avatar.png";
-
+  const displayName = user?.name || user?.email || user?.phone || "User";
+  const avatarUrl = user?.image || "/default-avatar.png";
+  console.log(user);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -70,7 +69,7 @@ export default function UserDropdown() {
             </span>
             {user && (
               <span className="text-xs truncate text-mitti-dark-brown">
-                {user.email ? user.email : user.phoneNumber}
+                {user.email ? user.email : user.phone}
               </span>
             )}
           </div>

@@ -20,7 +20,7 @@ const AuthTabs = () => {
   useEffect(() => {
     if (!user || hasShownToast) return;
 
-    const { provider, displayName } = user;
+    const { provider, name } = user;
 
     if (provider === "google") {
       toast.success("Login successful");
@@ -28,7 +28,7 @@ const AuthTabs = () => {
       setHasShownToast(true);
     }
     console.log(user)
-    if (provider === "phone" && displayName) {
+    if (provider === "phone" && name) {
       toast.success("Login successful");
       closeModal();
       setHasShownToast(true);

@@ -132,10 +132,10 @@ const Navbar = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Avatar>
-                  <AvatarImage src={user.photoURL || "/default-avatar.png"} />
+                  <AvatarImage src={user.image || "/default-avatar.png"} />
                 </Avatar>
                 <p className="text-sm font-medium">
-                  {user.email || user.phoneNumber}
+                  {user.email || user.phone}
                 </p>
               </div>
 

@@ -3,13 +3,16 @@ import { create } from "zustand";
 export type UserRole = "USER" | "HOST" | "ADMIN";
 
 type User = {
-  uid: string;
-  email?: string | null;
-  phoneNumber?: string | null;
-  displayName?: string | null;
-  photoURL?: string | null;
-  provider: "password" | "google" | "phone";
+  id: string; // prisma user id
+  firebaseUid: string;
+
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  image: string | null;
+
   role: UserRole;
+  provider: "password" | "google" | "phone";
 };
 
 interface UserStore {

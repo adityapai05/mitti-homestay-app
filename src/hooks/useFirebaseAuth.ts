@@ -29,18 +29,21 @@ const useFirebaseAuth = () => {
           const { user } = await res.json();
 
           setUser({
-            uid: user.firebaseUid,
+            id: user.id,
+            firebaseUid: user.firebaseUid,
+
+            name: user.name,
             email: user.email,
-            phoneNumber: user.phone,
-            displayName: user.name,
-            photoURL: user.image,
+            phone: user.phone,
+            image: user.image,
+
+            role: user.role,
             provider:
               providerId === "google.com"
                 ? "google"
                 : providerId === "phone"
                 ? "phone"
                 : "password",
-            role: user.role,
           });
         } catch (err) {
           console.error("[AUTH_SYNC_ERROR]", err);

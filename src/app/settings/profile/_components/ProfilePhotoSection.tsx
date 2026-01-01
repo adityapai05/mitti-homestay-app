@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Edit } from "lucide-react";
+import { useUserStore } from "@/stores/useUserStore";
 
 interface Props {
   image: string | null;
@@ -13,6 +14,8 @@ interface Props {
 export default function ProfilePhotoSection({ image, onUpdated }: Props) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
+  const user = useUserStore((s) => s.user);
+  const setUser = useUserStore((s) => s.setUser);
 
   async function handleFileChange(file: File) {
     const formData = new FormData();
@@ -30,6 +33,13 @@ export default function ProfilePhotoSection({ image, onUpdated }: Props) {
 
       const updated = await res.json();
       onUpdated(updated.image ?? null);
+
+      if (user) {
+        setUser({
+          ...user,
+          image: updated.image ?? null,
+        });
+      }
 
       toast.success("Profile photo updated");
     } catch {
