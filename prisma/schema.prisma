@@ -32,6 +32,7 @@ model User {
   hostProfile HostProfile?
   payoutAccount HostPayoutAccount?
   payouts HostPayout[] @relation("UserPayouts")
+  adminActions AdminActionLog[]
 }
 
 model HostProfile {
@@ -153,6 +154,19 @@ model Payment {
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 }
+
+model AdminActionLog {
+  id        String   @id @default(uuid())
+  adminId  String
+  action   String
+  entity   String
+  entityId String
+  meta     Json?
+  createdAt DateTime @default(now())
+
+  admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+}
+
 
 enum PaymentStatus {
   SUCCESS
