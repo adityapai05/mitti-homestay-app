@@ -1,10 +1,9 @@
-export const dynamic = "force-dynamic";
-
 import { cookies } from "next/headers";
 import { adminAuth } from "@/lib/firebase/admin";
 import { prisma } from "@/lib/prisma";
+import { Role, ServerUser } from "@/types";
 
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<ServerUser | null> {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("__session")?.value;
 
@@ -18,7 +17,28 @@ export async function getCurrentUser() {
       where: { firebaseUid: uid },
     });
 
-    return user;
+    if (!user) return null;
+
+    return {
+      id: user.id,
+      firebaseUid: user.firebaseUid,
+
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      contactPhone: user.contactPhone,
+
+      image: user.image,
+      about: user.about,
+      languages: user.languages,
+
+      role: user.role as Role,
+      isVerified: user.isVerified,
+      isActive: user.isActive,
+
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+    };
   } catch (error) {
     console.error("[getCurrentUser]", error);
     return null;

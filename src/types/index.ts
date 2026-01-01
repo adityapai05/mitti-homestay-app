@@ -1,23 +1,109 @@
-export enum HomestayType {
-  ROOM = 'ROOM',
-  HOME = 'HOME',
+import {
+  Role,
+  HostVerificationStatus,
+  BookingStatus,
+  PaymentStatus,
+  PayoutMethodType,
+  HostPayoutStatus,
+  Type as HomestayType,
+  Category as HomestayCategory,
+} from "@prisma/client";
+
+export {
+  Role,
+  HostVerificationStatus,
+  BookingStatus,
+  PaymentStatus,
+  PayoutMethodType,
+  HostPayoutStatus,
+  HomestayType,
+  HomestayCategory,
+};
+
+export interface User {
+  id: string;
+  firebaseUid: string;
+
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  contactPhone?: string | null;
+
+  image?: string | null;
+  about?: string | null;
+  languages: string[];
+
+  role: Role;
+  isVerified: boolean;
+  isActive: boolean;
+
+  createdAt: string;
+  updatedAt: string;
 }
 
-export enum HomestayCategory {
-  FARM_STAY = 'FARM_STAY',
-  ECO_LODGE = 'ECO_LODGE',
-  TRADITIONAL_HOME = 'TRADITIONAL_HOME',
-  MOUNTAIN_RETREAT = 'MOUNTAIN_RETREAT',
-  LAKESIDE = 'LAKESIDE',
-  OTHER = 'OTHER',
+export interface ServerUser {
+  id: string;
+  firebaseUid: string;
+
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  contactPhone?: string | null;
+
+  image?: string | null;
+  about?: string | null;
+  languages: string[];
+
+  role: Role;
+  isVerified: boolean;
+  isActive: boolean;
+
+  createdAt: string;
+  updatedAt: string;
 }
+
+export interface HostProfile {
+  userId: string;
+  verificationStatus: HostVerificationStatus;
+  user: User;
+}
+
+export interface HostPayoutAccount {
+  userId: string;
+  method: PayoutMethodType;
+
+  accountHolderName: string;
+
+  upiId?: string | null;
+
+  bankName?: string | null;
+  accountNo?: string | null;
+  ifsc?: string | null;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HostPayout {
+  id: string;
+  userId: string;
+
+  amount: string;
+  status: HostPayoutStatus;
+
+  createdAt: string;
+  processedAt?: string | null;
+
+  user: User;
+}
+
 export interface Homestay {
   id: string;
   ownerId: string;
 
   name: string;
   description: string;
-  
+
   flatno?: string | null;
   street?: string | null;
   landmark?: string | null;
@@ -32,6 +118,9 @@ export interface Homestay {
   pricePerNight: string;
 
   beds: number;
+  bedrooms: number;
+  bathrooms: number;
+
   type: HomestayType;
   maxGuests: number;
 
@@ -39,10 +128,10 @@ export interface Homestay {
   amenities: string[];
 
   rating: number;
-  reviewCount: number;
+  reviewCount?: number;
 
   guideAvailable: boolean;
-  guideFee: string | null;
+  guideFee?: string | null;
 
   checkInTime: string;
   checkOutTime: string;
@@ -56,8 +145,86 @@ export interface Homestay {
   owner: {
     id: string;
     name: string;
-    email: string;
-    phone: string;
-    image: string | null;
+    email?: string | null;
+    phone?: string | null;
+    image?: string | null;
   };
+}
+
+export interface Booking {
+  id: string;
+
+  userId: string;
+  homestayId: string;
+
+  checkIn: string;
+  checkOut: string;
+
+  guests: number;
+  totalPrice: string;
+
+  status: BookingStatus;
+
+  createdAt: string;
+  updatedAt: string;
+
+  user: User;
+  homestay: Homestay;
+
+  review?: Review | null;
+  payment?: Payment | null;
+}
+
+export interface Payment {
+  id: string;
+  bookingId: string;
+
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
+
+  amount: string;
+  currency: string;
+
+  status: PaymentStatus;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Review {
+  id: string;
+
+  userId: string;
+  homestayId: string;
+  bookingId: string;
+
+  rating: number;
+  comment?: string | null;
+
+  createdAt: string;
+  updatedAt: string;
+
+  user: User;
+}
+
+export interface AdminActionLog {
+  id: string;
+
+  adminId: string;
+  action: string;
+  entity: string;
+  entityId: string;
+
+  meta?: Record<string, any> | null;
+
+  createdAt: string;
+
+  admin: User;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
 }
