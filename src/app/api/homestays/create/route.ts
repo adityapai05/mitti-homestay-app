@@ -113,12 +113,23 @@ export async function POST(req: NextRequest) {
         },
       });
 
+      // Promote role if needed
       if (user.role === "USER") {
         await tx.user.update({
           where: { id: user.id },
           data: { role: "HOST" },
         });
       }
+
+      // Ensure HostProfile exists
+      await tx.hostProfile.upsert({
+        where: { userId: user.id },
+        update: {},
+        create: {
+          userId: user.id,
+          verificationStatus: "PENDING",
+        },
+      });
 
       return created;
     });

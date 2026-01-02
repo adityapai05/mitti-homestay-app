@@ -8,10 +8,9 @@ export async function GET() {
     const host = await requireRole("HOST");
 
     const homestays = await prisma.homestay.findMany({
-      where: hostHomestayWhere({
-        userId: host.id,
-        role: host.role,
-      }),
+      where: {
+        ownerId: host.id, 
+      },
       orderBy: {
         createdAt: "desc",
       },
