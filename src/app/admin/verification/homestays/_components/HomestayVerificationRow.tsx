@@ -1,5 +1,5 @@
 import { ChevronRight } from "lucide-react";
-import type { AdminHomestay } from "./HomestayVerificationTable";
+import type { AdminHomestayRow } from "./HomestayVerificationTable";
 
 /* ---------- component ---------- */
 
@@ -7,7 +7,7 @@ export default function HomestayVerificationRow({
   homestay,
   onClick,
 }: {
-  homestay: AdminHomestay;
+  homestay: AdminHomestayRow;
   onClick: () => void;
 }) {
   return (

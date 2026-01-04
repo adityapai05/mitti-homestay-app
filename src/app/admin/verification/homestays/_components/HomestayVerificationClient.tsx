@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import HomestayVerificationTable, {
-  AdminHomestay,
+  AdminHomestayRow,
 } from "./HomestayVerificationTable";
 import HomestayReviewModal from "./HomestayReviewModal";
 
@@ -11,22 +11,24 @@ import HomestayReviewModal from "./HomestayReviewModal";
 export default function HomestayVerificationClient({
   homestays,
 }: {
-  homestays: AdminHomestay[];
+  homestays: AdminHomestayRow[];
 }) {
-  const [selectedHomestay, setSelectedHomestay] =
-    useState<AdminHomestay | null>(null);
+  
+  const [selectedHomestayId, setSelectedHomestayId] = useState<string | null>(
+    null
+  );
 
   return (
     <>
       <HomestayVerificationTable
         homestays={homestays}
-        onSelect={setSelectedHomestay}
+        onSelect={(row) => setSelectedHomestayId(row.id)}
       />
 
-      {selectedHomestay && (
+      {selectedHomestayId && (
         <HomestayReviewModal
-          homestay={selectedHomestay}
-          onClose={() => setSelectedHomestay(null)}
+          homestayId={selectedHomestayId}
+          onClose={() => setSelectedHomestayId(null)}
         />
       )}
     </>

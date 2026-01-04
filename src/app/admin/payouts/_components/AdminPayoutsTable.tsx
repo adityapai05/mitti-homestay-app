@@ -1,11 +1,35 @@
 import PayoutStatusPill from "./PayoutStatusPill";
 
+/* ---------- Types ---------- */
+
+type PayoutStatus = "PENDING" | "PROCESSED" | "FAILED";
+type PayoutMethod = "UPI" | "BANK";
+
+type PayoutUser = {
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  payoutAccount?: {
+    method: PayoutMethod;
+  } | null;
+};
+
+export type AdminPayout = {
+  id: string;
+  amount: string;
+  status: PayoutStatus;
+  createdAt: string;
+  user: PayoutUser;
+};
+
+/* ---------- Component ---------- */
+
 export default function AdminPayoutsTable({
   payouts,
   onSelect,
 }: {
-  payouts: any[];
-  onSelect: (payout: any) => void;
+  payouts: AdminPayout[];
+  onSelect: (payout: AdminPayout) => void;
 }) {
   return (
     <div className="rounded-lg border border-mitti-khaki bg-mitti-cream overflow-hidden">
@@ -36,7 +60,7 @@ export default function AdminPayoutsTable({
                 </div>
               </td>
 
-              <td className="px-4 py-4 font-medium">₹ {p.amount.toString()}</td>
+              <td className="px-4 py-4 font-medium">₹ {p.amount}</td>
 
               <td className="px-4 py-4">
                 {p.user.payoutAccount?.method ?? "—"}

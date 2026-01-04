@@ -9,7 +9,6 @@ import {
   getPaginationRowModel,
   flexRender,
   useReactTable,
-  type Table as ReactTable,
 } from "@tanstack/react-table";
 
 import {
@@ -22,39 +21,29 @@ import {
 } from "@/components/ui/prebuilt-components/table";
 import { Button } from "@/components/ui/prebuilt-components/button";
 
-interface UsersDataTableProps<TData, TValue> {
+interface ListingsDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  tableRef?: (table: ReactTable<TData>) => void;
 }
 
-export function UsersDataTable<TData, TValue>({
+export function ListingsDataTable<TData, TValue>({
   columns,
   data,
-  tableRef,
-}: UsersDataTableProps<TData, TValue>) {
+}: ListingsDataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const table = useReactTable({
     data,
     columns,
-    state: {
-      sorting,
-    },
+    state: { sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: {
-      pagination: {
-        pageSize: 10,
-      },
+      pagination: { pageSize: 10 },
     },
   });
-
-  React.useEffect(() => {
-    tableRef?.(table);
-  }, [table, tableRef]);
 
   return (
     <div className="space-y-4">
@@ -104,7 +93,7 @@ export function UsersDataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center text-mitti-dark-brown/60"
                 >
-                  No users found.
+                  No listings found.
                 </TableCell>
               </TableRow>
             )}
@@ -112,7 +101,7 @@ export function UsersDataTable<TData, TValue>({
         </Table>
       </div>
 
-      {/* Pagination controls */}
+      {/* Pagination */}
       <div className="flex items-center justify-between text-sm text-mitti-dark-brown">
         <div>
           Page{" "}

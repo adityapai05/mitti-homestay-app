@@ -1,12 +1,21 @@
 import MapView from "@/components/shared/MapView";
-import { Homestay } from "@prisma/client";
+
+/* ---------- types ---------- */
+
+type HomestayLocation = {
+  latitude: number;
+  longitude: number;
+  village?: string | null;
+  district?: string | null;
+  state?: string | null;
+};
 
 /* ---------- component ---------- */
 
 export default function LocationSection({
   homestay,
 }: {
-  homestay: Homestay;
+  homestay: HomestayLocation;
 }) {
   return (
     <section className="space-y-4">

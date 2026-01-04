@@ -2,7 +2,7 @@ import HomestayVerificationRow from "./HomestayVerificationRow";
 
 /* ---------- types ---------- */
 
-export type AdminHomestay = {
+export type AdminHomestayRow = {
   id: string;
   name: string;
   village?: string | null;
@@ -15,11 +15,12 @@ export type AdminHomestay = {
   };
 };
 
+
 /* ---------- component ---------- */
 
 type Props = {
-  homestays: AdminHomestay[];
-  onSelect: (homestay: AdminHomestay) => void;
+  homestays: AdminHomestayRow[];
+  onSelect: (homestay: AdminHomestayRow) => void;
 };
 
 export default function HomestayVerificationTable({

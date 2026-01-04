@@ -1,11 +1,11 @@
 "use client";
 
-import { ServerUser } from "@/types";
+import { User } from "@/types";
 import { LogOut } from "lucide-react";
 import { logout } from "@/lib/firebase/authActions";
 import { toast } from "sonner";
 
-export default function AdminHeader({ admin }: { admin: ServerUser }) {
+export default function AdminHeader({ admin }: { admin: User }) {
   return (
     <header className="h-14 border-b border-mitti-khaki bg-mitti-cream px-6 flex items-center justify-end">
       <div className="flex items-center gap-4">

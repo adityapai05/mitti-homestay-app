@@ -17,7 +17,7 @@ import { disableUser, enableUser } from "../actions";
 import { toast } from "sonner";
 import {
   X,
-  User,
+  User as UserIcon,
   Calendar,
   Home,
   BadgeCheck,
@@ -25,9 +25,37 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   ChevronRight,
+  type LucideIcon,
 } from "lucide-react";
+import { Role, HostVerificationStatus } from "@prisma/client";
 
-function formatIndianDate(date: string | Date) {
+/* ---------- Types ---------- */
+
+type AdminUser = {
+  id: string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+
+  role: Role;
+  isActive: boolean;
+
+  createdAt: string;
+
+  homestays?: { id: string }[];
+  bookingsMadeCount?: number;
+  bookingsHostedCount?: number;
+
+  hostProfile?: {
+    verificationStatus?: HostVerificationStatus | null;
+  } | null;
+
+  payoutAccount?: unknown | null;
+};
+
+/* ---------- Utils ---------- */
+
+function formatIndianDate(date: string) {
   return new Date(date).toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
@@ -35,14 +63,16 @@ function formatIndianDate(date: string | Date) {
   });
 }
 
+/* ---------- Component ---------- */
+
 export default function UserReviewModal({
   user,
   onClose,
 }: {
-  user: any;
+  user: AdminUser;
   onClose: () => void;
 }) {
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const isHost = user.role === "HOST";
   const isDisabled = !user.isActive;
@@ -71,7 +101,7 @@ export default function UserReviewModal({
           {/* Identity */}
           <section>
             <div className="flex items-center gap-2 text-mitti-dark-brown">
-              <User size={18} />
+              <UserIcon size={18} />
               <p className="text-lg font-semibold">{user.name}</p>
             </div>
 
@@ -188,18 +218,13 @@ export default function UserReviewModal({
               </AlertDialogTrigger>
 
               <AlertDialogContent className="bg-mitti-cream border-mitti-khaki">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-mitti-dark-brown">
-                    Enable this account?
-                  </AlertDialogTitle>
-                </AlertDialogHeader>
-
                 <AlertDialogFooter>
-                  <AlertDialogCancel className="cursor-pointer hover:bg-mitti-beige">
+                  <AlertDialogCancel className="cursor-pointer">
                     Cancel
                   </AlertDialogCancel>
+
                   <AlertDialogAction
-                    className="cursor-pointer bg-[#6B8E23] hover:bg-[#5F7F1F]"
+                    className="cursor-pointer bg-[#6B8E23]"
                     onClick={() =>
                       startTransition(async () => {
                         await enableUser(user.id);
@@ -222,22 +247,13 @@ export default function UserReviewModal({
               </AlertDialogTrigger>
 
               <AlertDialogContent className="bg-mitti-cream border-mitti-khaki">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-mitti-dark-brown">
-                    Disable this account?
-                  </AlertDialogTitle>
-                </AlertDialogHeader>
-
-                <p className="text-sm text-mitti-dark-brown/70">
-                  The user will no longer be able to log in or perform actions.
-                </p>
-
                 <AlertDialogFooter>
-                  <AlertDialogCancel className="cursor-pointer hover:bg-mitti-beige">
+                  <AlertDialogCancel className="cursor-pointer">
                     Cancel
                   </AlertDialogCancel>
+
                   <AlertDialogAction
-                    className="cursor-pointer bg-[#C0392B] hover:bg-[#A93226]"
+                    className="cursor-pointer bg-[#C0392B]"
                     onClick={() =>
                       startTransition(async () => {
                         await disableUser(user.id);
@@ -266,9 +282,9 @@ function InfoRow({
   value,
   valueClass = "",
 }: {
-  icon: any;
+  icon: LucideIcon;
   label: string;
-  value: any;
+  value: string | number;
   valueClass?: string;
 }) {
   return (

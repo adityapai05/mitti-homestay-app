@@ -1,21 +1,33 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Drawer, DrawerContent, DrawerOverlay } from "@/components/ui/prebuilt-components/drawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerOverlay,
+} from "@/components/ui/prebuilt-components/drawer";
 import { approveHost, rejectHost } from "../actions";
 import { Button } from "@/components/ui/prebuilt-components/button";
 import { Textarea } from "@/components/ui/prebuilt-components/textarea";
 import { Home, Wallet, BadgeCheck, X } from "lucide-react";
 import { toast } from "sonner";
 
+import type { HostVerificationRowItem } from "./HostVerificationRow";
+
 export default function HostReviewDrawer({
   host,
   onClose,
 }: {
-  host: any;
+  host: HostVerificationRowItem;
   onClose: () => void;
 }) {
-  const user = host.user;
+  type HostProfileExtras = {
+    languages?: string[];
+    about?: string | null;
+  };
+
+  const user = host.user as typeof host.user & HostProfileExtras;
+
   const [reason, setReason] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -54,14 +66,21 @@ export default function HostReviewDrawer({
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
           <Section title="Basic information">
-            <Key label="Email" value={user.email || user.phone} />
+            <Key
+              label="Email / Phone"
+              value={user.email || user.phone || "—"}
+            />
             <Key
               label="Joined"
               value={new Date(user.createdAt).toDateString()}
             />
             <Key
               label="Languages"
-              value={user.languages.length ? user.languages.join(", ") : "—"}
+              value={
+                user.languages && user.languages.length > 0
+                  ? user.languages.join(", ")
+                  : "—"
+              }
             />
           </Section>
 
@@ -125,6 +144,7 @@ export default function HostReviewDrawer({
                   toast.error("Rejection reason is required");
                   return;
                 }
+
                 await rejectHost(user.id, reason);
                 toast.success("Host rejected");
                 onClose();
@@ -139,6 +159,8 @@ export default function HostReviewDrawer({
     </Drawer>
   );
 }
+
+/* ---------- helpers ---------- */
 
 function Section({
   title,
@@ -157,7 +179,7 @@ function Section({
   );
 }
 
-function Key({ label, value }: { label: string; value: any }) {
+function Key({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between text-sm">
       <span className="text-mitti-dark-brown/60">{label}</span>

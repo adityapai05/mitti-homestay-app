@@ -1,4 +1,5 @@
 import { Users, Home, BadgeCheck, Wallet, UserCheck } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
@@ -87,6 +88,8 @@ export default async function AdminOverviewPage() {
   );
 }
 
+/* ---------- components ---------- */
+
 function StatCard({
   icon: Icon,
   label,
@@ -94,21 +97,14 @@ function StatCard({
   href,
   context,
 }: {
-  icon: any;
+  icon: LucideIcon;
   label: string;
   value: string | number;
   href?: string;
   context?: string;
 }) {
-  const Wrapper = href ? Link : "div";
-
-  return (
-    <Wrapper
-      href={href as any}
-      className={`rounded-lg border border-mitti-khaki bg-mitti-cream p-6
-        flex flex-col justify-between
-        ${href ? "hover:border-mitti-olive transition cursor-pointer" : ""}`}
-    >
+  const content = (
+    <>
       {/* Top */}
       <div className="flex items-start gap-4">
         <div className="mt-1 text-mitti-olive">
@@ -125,6 +121,28 @@ function StatCard({
 
       {/* Bottom context */}
       {context && <p className="mt-4 text-mitti-dark-brown/60">{context}</p>}
-    </Wrapper>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className="rounded-lg border border-mitti-khaki bg-mitti-cream p-6
+          flex flex-col justify-between
+          hover:border-mitti-olive transition cursor-pointer"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      className="rounded-lg border border-mitti-khaki bg-mitti-cream p-6
+        flex flex-col justify-between"
+    >
+      {content}
+    </div>
   );
 }

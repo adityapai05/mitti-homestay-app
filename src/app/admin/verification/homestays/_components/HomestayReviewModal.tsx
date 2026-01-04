@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/prebuilt-components/alert-dialog";
+
 import Stepper from "./Stepper";
 import OverviewSection from "./OverviewSection";
 import ImageEvidenceSection from "./ImageEvidenceSection";
@@ -14,6 +15,7 @@ import DescriptionSection from "./DescriptionSection";
 import LocationSection from "./LocationSection";
 import HostAccountabilitySection from "./HostAccountabilitySection";
 import DecisionSection from "./DecisionSection";
+import type { AdminHomestayDetails } from "@/types/index";
 
 const steps = [
   "Overview",
@@ -25,13 +27,28 @@ const steps = [
 ];
 
 export default function HomestayReviewModal({
-  homestay,
+  homestayId,
   onClose,
 }: {
-  homestay: any;
+  homestayId: string;
   onClose: () => void;
 }) {
   const [step, setStep] = useState(0);
+  const [homestay, setHomestay] = useState<AdminHomestayDetails | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      const res = await fetch(`/api/admin/homestays/${homestayId}`);
+      const data = await res.json();
+      setHomestay(data);
+    }
+
+    load();
+  }, [homestayId]);
+
+  if (!homestay) {
+    return null;
+  }
 
   return (
     <AlertDialog open onOpenChange={onClose}>
@@ -45,11 +62,49 @@ export default function HomestayReviewModal({
         <Stepper steps={steps} currentStep={step} />
 
         <div className="flex-1 overflow-y-auto px-6 py-6">
-          {step === 0 && <OverviewSection homestay={homestay} />}
-          {step === 1 && <ImageEvidenceSection homestay={homestay} />}
-          {step === 2 && <DescriptionSection homestay={homestay} />}
-          {step === 3 && <LocationSection homestay={homestay} />}
+          {step === 0 && (
+            <OverviewSection
+              homestay={{
+                village: homestay.village,
+                pricePerNight: homestay.pricePerNight,
+                maxGuests: homestay.maxGuests,
+                type: homestay.type,
+              }}
+            />
+          )}
+
+          {step === 1 && (
+            <ImageEvidenceSection
+              homestay={{
+                imageUrl: homestay.imageUrl,
+              }}
+            />
+          )}
+
+          {step === 2 && (
+            <DescriptionSection
+              homestay={{
+                ...homestay,
+                description: homestay.description,
+                amenities: homestay.amenities,
+              }}
+            />
+          )}
+
+          {step === 3 && (
+            <LocationSection
+              homestay={{
+                latitude: homestay.latitude,
+                longitude: homestay.longitude,
+                village: homestay.village,
+                district: homestay.district,
+                state: homestay.state,
+              }}
+            />
+          )}
+
           {step === 4 && <HostAccountabilitySection homestay={homestay} />}
+
           {step === 5 && (
             <DecisionSection homestay={homestay} onClose={onClose} />
           )}

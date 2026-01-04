@@ -6,12 +6,39 @@ import UsersFilterBar, { UsersFilters } from "./UsersFilterBar";
 import { UsersDataTable } from "./UsersDataTable";
 import { userColumns } from "./user-columns";
 import UserReviewModal from "./UserReviewModal";
+import { Role, HostVerificationStatus } from "@prisma/client";
 
-export default function UsersClient({ users }: { users: any[] }) {
+/* ---------- Local structural twin ---------- */
+type HomestayStub = {
+  id: string;
+};
+
+/* ---------- Canonical AdminUser (matches table EXACTLY) ---------- */
+type AdminUser = {
+  id: string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+
+  role: Role;
+  isActive: boolean;
+
+  createdAt: string;
+
+  homestays: HomestayStub[];
+
+  hostProfile?: {
+    verificationStatus?: HostVerificationStatus | null;
+  } | null;
+};
+
+/* ---------- Component ---------- */
+
+export default function UsersClient({ users }: { users: AdminUser[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
 
   const [filters, setFilters] = useState<UsersFilters>({
     search: "",
@@ -20,7 +47,7 @@ export default function UsersClient({ users }: { users: any[] }) {
     hostVerification: "",
   });
 
-  // 1. Read filters from URL on mount
+  /* 1. Read filters from URL */
   useEffect(() => {
     setFilters({
       search: searchParams.get("search") ?? "",
@@ -28,24 +55,25 @@ export default function UsersClient({ users }: { users: any[] }) {
       status: searchParams.get("status") ?? "",
       hostVerification: searchParams.get("hostVerification") ?? "",
     });
-  }, []);
+  }, [searchParams]);
 
-  // 2. Write filters to URL whenever they change
+  /* 2. Write filters to URL */
   useEffect(() => {
     const params = new URLSearchParams();
 
     if (filters.search) params.set("search", filters.search);
     if (filters.role) params.set("role", filters.role);
     if (filters.status) params.set("status", filters.status);
-    if (filters.hostVerification)
+    if (filters.hostVerification) {
       params.set("hostVerification", filters.hostVerification);
+    }
 
     router.replace(`/admin/users?${params.toString()}`, {
       scroll: false,
     });
   }, [filters, router]);
 
-  // 3. Apply filters locally
+  /* 3. Apply filters locally */
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
       const search = filters.search.toLowerCase();
@@ -53,7 +81,7 @@ export default function UsersClient({ users }: { users: any[] }) {
       if (
         search &&
         !(
-          user.name?.toLowerCase().includes(search) ||
+          user.name.toLowerCase().includes(search) ||
           user.email?.toLowerCase().includes(search) ||
           user.phone?.includes(search)
         )
@@ -94,12 +122,22 @@ export default function UsersClient({ users }: { users: any[] }) {
 
       <UsersDataTable
         data={filteredUsers}
-        columns={userColumns((user) => setSelectedUser(user))}
+        columns={userColumns((user) => {
+          setSelectedUser(user);
+        })}
       />
 
       {selectedUser && (
         <UserReviewModal
-          user={selectedUser}
+          user={{
+            ...selectedUser,
+            hostProfile: selectedUser.hostProfile
+              ? {
+                  verificationStatus:
+                    selectedUser.hostProfile.verificationStatus ?? null,
+                }
+              : null,
+          }}
           onClose={() => setSelectedUser(null)}
         />
       )}

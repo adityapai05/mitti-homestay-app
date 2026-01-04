@@ -1,5 +1,3 @@
-"use server";
-
 import { prisma } from "@/lib/prisma";
 
 export async function processPayout(payoutId: string) {
@@ -12,7 +10,7 @@ export async function processPayout(payoutId: string) {
   });
 }
 
-export async function failPayout(payoutId: string, reason: string) {
+export async function failPayout(payoutId: string) {
   await prisma.hostPayout.update({
     where: { id: payoutId },
     data: {

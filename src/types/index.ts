@@ -20,6 +20,22 @@ export {
   HomestayCategory,
 };
 
+/* -------------------- */
+/* Generic helpers */
+/* -------------------- */
+
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: JsonValue }
+  | JsonValue[];
+
+/* -------------------- */
+/* User & Auth */
+/* -------------------- */
+
 export interface User {
   id: string;
   firebaseUid: string;
@@ -41,26 +57,9 @@ export interface User {
   updatedAt: string;
 }
 
-export interface ServerUser {
-  id: string;
-  firebaseUid: string;
-
-  name: string;
-  email?: string | null;
-  phone?: string | null;
-  contactPhone?: string | null;
-
-  image?: string | null;
-  about?: string | null;
-  languages: string[];
-
-  role: Role;
-  isVerified: boolean;
-  isActive: boolean;
-
-  createdAt: string;
-  updatedAt: string;
-}
+/* -------------------- */
+/* Host */
+/* -------------------- */
 
 export interface HostProfile {
   userId: string;
@@ -96,6 +95,10 @@ export interface HostPayout {
 
   user: User;
 }
+
+/* -------------------- */
+/* Homestays */
+/* -------------------- */
 
 export interface Homestay {
   id: string;
@@ -151,6 +154,10 @@ export interface Homestay {
   };
 }
 
+/* -------------------- */
+/* Bookings & Payments */
+/* -------------------- */
+
 export interface Booking {
   id: string;
 
@@ -192,6 +199,10 @@ export interface Payment {
   updatedAt: string;
 }
 
+/* -------------------- */
+/* Reviews */
+/* -------------------- */
+
 export interface Review {
   id: string;
 
@@ -208,6 +219,10 @@ export interface Review {
   user: User;
 }
 
+/* -------------------- */
+/* Admin */
+/* -------------------- */
+
 export interface AdminActionLog {
   id: string;
 
@@ -216,12 +231,44 @@ export interface AdminActionLog {
   entity: string;
   entityId: string;
 
-  meta?: Record<string, any> | null;
+  meta?: JsonValue | null;
 
   createdAt: string;
 
   admin: User;
 }
+
+export type AdminHomestayDetails = {
+  id: string;
+  name: string;
+
+  description: string;
+  amenities: string[];
+
+  village?: string | null;
+  district?: string | null;
+  state?: string | null;
+
+  latitude: number;
+  longitude: number;
+
+  pricePerNight: string | number;
+  maxGuests: number;
+  type: "ROOM" | "HOME";
+
+  imageUrl: string[];
+
+  owner: {
+    id: string;
+    name: string;
+  };
+
+  createdAt: string;
+};
+
+/* -------------------- */
+/* API */
+/* -------------------- */
 
 export interface ApiResponse<T> {
   success: boolean;

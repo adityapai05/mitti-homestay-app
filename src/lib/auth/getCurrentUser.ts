@@ -1,9 +1,9 @@
 import { cookies } from "next/headers";
 import { adminAuth } from "@/lib/firebase/admin";
 import { prisma } from "@/lib/prisma";
-import { Role, ServerUser } from "@/types";
+import { Role, User } from "@/types";
 
-export async function getCurrentUser(): Promise<ServerUser | null> {
+export async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("__session")?.value;
 

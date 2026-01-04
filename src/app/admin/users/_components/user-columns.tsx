@@ -7,19 +7,30 @@ import RolePill from "./RolePill";
 import StatusPill from "./StatusPill";
 import HostVerificationPill from "./HostVerificationPill";
 
+/* ---------- Types ---------- */
+
+type HomestayStub = {
+  id: string;
+};
+
 export type AdminUser = {
   id: string;
   name: string;
   email?: string | null;
   phone?: string | null;
+
   role: "USER" | "HOST" | "ADMIN";
   isActive: boolean;
   createdAt: string;
-  homestays: any[];
+
+  homestays: HomestayStub[];
+
   hostProfile?: {
     verificationStatus?: "VERIFIED" | "PENDING" | "REJECTED" | null;
   } | null;
 };
+
+/* ---------- Columns ---------- */
 
 export const userColumns = (
   onReview: (user: AdminUser) => void

@@ -15,13 +15,13 @@ import {
 } from "@/components/ui/prebuilt-components/alert-dialog";
 import { approveHomestay, rejectHomestay } from "../actions";
 import { toast } from "sonner";
-import type { AdminHomestay } from "./HomestayVerificationTable";
+import type { AdminHomestayRow } from "./HomestayVerificationTable";
 
 export default function DecisionSection({
   homestay,
   onClose,
 }: {
-  homestay: AdminHomestay;
+  homestay: AdminHomestayRow;
   onClose: () => void;
 }) {
   const [reason, setReason] = useState("");

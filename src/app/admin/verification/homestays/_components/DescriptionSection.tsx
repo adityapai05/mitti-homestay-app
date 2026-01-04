@@ -6,7 +6,7 @@ import {
   PlusCircle,
   type LucideIcon,
 } from "lucide-react";
-import type { AdminHomestay } from "./HomestayVerificationTable";
+import type { AdminHomestayRow } from "./HomestayVerificationTable";
 
 const AMENITY_ICONS: Record<string, LucideIcon> = {
   home_food: Utensils,
@@ -23,7 +23,7 @@ function formatAmenity(key: string) {
 export default function DescriptionSection({
   homestay,
 }: {
-  homestay: AdminHomestay & {
+  homestay: AdminHomestayRow & {
     description: string;
     amenities: string[];
   };

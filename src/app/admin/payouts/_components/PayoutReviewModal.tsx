@@ -17,6 +17,50 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { X } from "lucide-react";
 
+/* ---------- Types ---------- */
+
+type HostVerificationStatus = "VERIFIED" | "PENDING" | "REJECTED";
+type PayoutMethod = "UPI" | "BANK";
+type PayoutStatus = "PENDING" | "PROCESSED" | "FAILED";
+
+type HostPayoutAccount = {
+  method: PayoutMethod;
+  accountHolderName: string;
+  upiId?: string | null;
+  bankName?: string | null;
+  accountNo?: string | null;
+  ifsc?: string | null;
+};
+
+type LastPayout = {
+  amount: string;
+  processedAt: string;
+};
+
+type Host = {
+  id: string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+
+  hostProfile?: {
+    verificationStatus?: HostVerificationStatus | null;
+  } | null;
+
+  payoutAccount?: HostPayoutAccount | null;
+  lastPayout?: LastPayout | null;
+};
+
+export type AdminPayout = {
+  id: string;
+  amount: string;
+  status: PayoutStatus;
+  createdAt: string;
+  user: Host;
+};
+
+/* ---------- Utils ---------- */
+
 function formatIndianDate(date: string | Date) {
   return new Date(date).toLocaleDateString("en-IN", {
     day: "2-digit",
@@ -25,14 +69,17 @@ function formatIndianDate(date: string | Date) {
   });
 }
 
+/* ---------- Component ---------- */
+
 export default function PayoutReviewModal({
   payout,
   onClose,
 }: {
-  payout: any;
+  payout: AdminPayout;
   onClose: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
+
   const host = payout.user;
   const account = host.payoutAccount;
   const lastPayout = host.lastPayout;
@@ -41,18 +88,10 @@ export default function PayoutReviewModal({
   return (
     <AlertDialog open onOpenChange={onClose}>
       <AlertDialogContent className="max-w-4xl bg-mitti-cream border-mitti-khaki">
-        {/* Close button */}
+        {/* Close */}
         <Button
           onClick={onClose}
-          className="
-            absolute right-4 top-4
-            rounded-md p-1
-            text-mitti-dark-brown/60
-            bg-mitti-cream
-            hover:bg-mitti-cream
-            hover:text-mitti-dark-brown
-            cursor-pointer
-          "
+          className="absolute right-4 top-4 rounded-md p-1 text-mitti-dark-brown/60 bg-mitti-cream hover:text-mitti-dark-brown cursor-pointer"
         >
           <X size={24} />
         </Button>
@@ -64,7 +103,7 @@ export default function PayoutReviewModal({
         </AlertDialogHeader>
 
         <div className="grid grid-cols-2 gap-8 mt-6">
-          {/* LEFT: Host info */}
+          {/* LEFT */}
           <div className="space-y-6">
             <section>
               <p className="text-xs uppercase tracking-wide text-mitti-dark-brown/60">
@@ -116,7 +155,7 @@ export default function PayoutReviewModal({
             </section>
           </div>
 
-          {/* RIGHT: Financial details */}
+          {/* RIGHT */}
           <div className="space-y-6">
             <section className="p-4 rounded-lg bg-mitti-beige border border-mitti-khaki">
               <p className="text-xs uppercase tracking-wide text-mitti-dark-brown/60">
@@ -173,7 +212,6 @@ export default function PayoutReviewModal({
         {/* Actions */}
         {payout.status === "PENDING" && (
           <div className="mt-10 flex justify-end gap-4">
-            {/* Fail payout */}
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button
@@ -191,10 +229,6 @@ export default function PayoutReviewModal({
                   </AlertDialogTitle>
                 </AlertDialogHeader>
 
-                <p className="text-sm text-mitti-dark-brown/70">
-                  This will mark the payout as failed and notify the host.
-                </p>
-
                 <AlertDialogFooter>
                   <AlertDialogCancel className="cursor-pointer hover:bg-mitti-beige">
                     Cancel
@@ -203,7 +237,7 @@ export default function PayoutReviewModal({
                     className="cursor-pointer bg-[#C0392B] hover:bg-[#A93226]"
                     onClick={() =>
                       startTransition(async () => {
-                        await failPayout(payout.id, "Manual rejection");
+                        await failPayout(payout.id);
                         toast.success("Payout marked as failed");
                         onClose();
                       })
@@ -215,7 +249,6 @@ export default function PayoutReviewModal({
               </AlertDialogContent>
             </AlertDialog>
 
-            {/* Process payout */}
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button
@@ -232,10 +265,6 @@ export default function PayoutReviewModal({
                     Confirm payout processing
                   </AlertDialogTitle>
                 </AlertDialogHeader>
-
-                <p className="text-sm text-mitti-dark-brown/70">
-                  This confirms that ₹{payout.amount} has been paid to the host.
-                </p>
 
                 <AlertDialogFooter>
                   <AlertDialogCancel className="cursor-pointer hover:bg-mitti-beige">

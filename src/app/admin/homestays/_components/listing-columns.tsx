@@ -3,37 +3,36 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/prebuilt-components/button";
-import RolePill from "./RolePill";
-import StatusPill from "./StatusPill";
-import HostVerificationPill from "./HostVerificationPill";
 
-export type AdminUser = {
+export type AdminListing = {
   id: string;
   name: string;
-  email?: string | null;
-  phone?: string | null;
-  role: "USER" | "HOST" | "ADMIN";
-  isActive: boolean;
+  village?: string | null;
+  district?: string | null;
+  state?: string | null;
+  pricePerNight: number;
+  isVerified: boolean;
+  rejectionReason?: string | null;
   createdAt: string;
-  homestays: any[];
-  hostProfile?: {
-    verificationStatus?: string | null;
-  } | null;
+  owner: {
+    id: string;
+    name: string;
+  };
 };
 
-export const userColumns = (
-  onReview: (user: AdminUser) => void
-): ColumnDef<AdminUser>[] => [
+export const listingColumns = (
+  onReview: (listing: AdminListing) => void
+): ColumnDef<AdminListing>[] => [
   {
     accessorKey: "name",
-    header: "User",
+    header: "Listing",
     cell: ({ row }) => {
-      const user = row.original;
+      const l = row.original;
       return (
         <div>
-          <p className="font-medium text-mitti-dark-brown">{user.name}</p>
+          <p className="font-medium text-mitti-dark-brown">{l.name}</p>
           <p className="text-xs text-mitti-dark-brown/70">
-            {user.email || user.phone}
+            {[l.village, l.district, l.state].filter(Boolean).join(", ")}
           </p>
         </div>
       );
@@ -41,57 +40,44 @@ export const userColumns = (
   },
 
   {
-    accessorKey: "role",
+    id: "status",
     header: ({ column }) => (
       <Button
         variant="ghost"
+        className="p-0 h-auto"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="p-0 h-auto text-left font-medium text-mitti-dark-brown"
       >
-        Role
+        Status
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <RolePill role={row.original.role} />,
-  },
-
-  {
-    accessorKey: "isActive",
-    header: "Status",
-    cell: ({ row }) => <StatusPill active={row.original.isActive} />,
-  },
-
-  {
-    id: "hostVerification",
-    header: "Host verification",
-    cell: ({ row }) => (
-      <HostVerificationPill
-        role={row.original.role}
-        status={row.original.hostProfile?.verificationStatus}
-      />
-    ),
+    cell: ({ row }) => {
+      const l = row.original;
+      if (l.isVerified) return "Verified";
+      if (l.rejectionReason) return "Rejected";
+      return "Pending";
+    },
     sortingFn: (a, b) => {
-      const aStatus = a.original.hostProfile?.verificationStatus ?? "";
-      const bStatus = b.original.hostProfile?.verificationStatus ?? "";
-      return aStatus.localeCompare(bStatus);
+      const rank = (l: AdminListing) =>
+        l.isVerified ? 2 : l.rejectionReason ? 0 : 1;
+
+      return rank(a.original) - rank(b.original);
     },
   },
 
   {
-    id: "listings",
+    accessorKey: "pricePerNight",
     header: ({ column }) => (
       <Button
         variant="ghost"
+        className="p-0 h-auto"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="p-0 h-auto text-left font-medium text-mitti-dark-brown"
       >
-        Listings
+        Price
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => row.original.homestays.length,
-    sortingFn: (a, b) =>
-      a.original.homestays.length - b.original.homestays.length,
+    cell: ({ row }) => `₹${row.original.pricePerNight}`,
   },
 
   {
@@ -99,10 +85,10 @@ export const userColumns = (
     header: ({ column }) => (
       <Button
         variant="ghost"
+        className="p-0 h-auto"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="p-0 h-auto text-left font-medium text-mitti-dark-brown"
       >
-        Joined
+        Created
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
