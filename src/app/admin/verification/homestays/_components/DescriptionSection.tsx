@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Utensils,
   Droplet,
@@ -6,7 +8,7 @@ import {
   PlusCircle,
   type LucideIcon,
 } from "lucide-react";
-import type { AdminHomestayRow } from "./HomestayVerificationTable";
+import type { AdminHomestayDetails } from "@/types";
 
 const AMENITY_ICONS: Record<string, LucideIcon> = {
   home_food: Utensils,
@@ -23,10 +25,7 @@ function formatAmenity(key: string) {
 export default function DescriptionSection({
   homestay,
 }: {
-  homestay: AdminHomestayRow & {
-    description: string;
-    amenities: string[];
-  };
+  homestay: Pick<AdminHomestayDetails, "description" | "amenities">;
 }) {
   return (
     <section className="space-y-6">
@@ -39,7 +38,7 @@ export default function DescriptionSection({
       </p>
 
       <div className="flex flex-wrap gap-3">
-        {homestay.amenities.map((amenity) => {
+        {homestay.amenities.map((amenity: string) => {
           const Icon = AMENITY_ICONS[amenity] ?? PlusCircle;
 
           return (

@@ -1,34 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import HomestayVerificationTable, {
-  AdminHomestayRow,
-} from "./HomestayVerificationTable";
+import HomestayVerificationTable from "./HomestayVerificationTable";
 import HomestayReviewModal from "./HomestayReviewModal";
-
-/* ---------- component ---------- */
+import type { AdminHomestayDetails } from "@/types";
 
 export default function HomestayVerificationClient({
   homestays,
 }: {
-  homestays: AdminHomestayRow[];
+  homestays: AdminHomestayDetails[];
 }) {
-  
-  const [selectedHomestayId, setSelectedHomestayId] = useState<string | null>(
-    null
-  );
+  const [selected, setSelected] =
+    useState<AdminHomestayDetails | null>(null);
 
   return (
     <>
       <HomestayVerificationTable
         homestays={homestays}
-        onSelect={(row) => setSelectedHomestayId(row.id)}
+        onSelect={setSelected}
       />
 
-      {selectedHomestayId && (
+      {selected && (
         <HomestayReviewModal
-          homestayId={selectedHomestayId}
-          onClose={() => setSelectedHomestayId(null)}
+          homestay={selected}
+          onClose={() => setSelected(null)}
         />
       )}
     </>

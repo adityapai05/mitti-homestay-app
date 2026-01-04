@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import HomestayVerificationClient from "./_components/HomestayVerificationClient";
-import type { AdminHomestayRow } from "./_components/HomestayVerificationTable";
+import type { AdminHomestayDetails } from "@/types";
 
 export default async function HomestayVerificationPage() {
   const homestays = await prisma.homestay.findMany({
@@ -18,16 +18,25 @@ export default async function HomestayVerificationPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  /* ---------- Prisma → Admin DTO ---------- */
-  const adminHomestays: AdminHomestayRow[] = homestays.map((h) => ({
+  const adminHomestays: AdminHomestayDetails[] = homestays.map((h) => ({
     id: h.id,
     name: h.name,
+
+    description: h.description,
+    amenities: h.amenities,
 
     village: h.village,
     district: h.district,
     state: h.state,
 
+    latitude: h.latitude!,
+    longitude: h.longitude!,
+
     pricePerNight: h.pricePerNight.toString(),
+    maxGuests: h.maxGuests,
+    type: h.type,
+
+    imageUrl: h.imageUrl,
 
     isVerified: h.isVerified,
     rejectionReason: h.rejectionReason,

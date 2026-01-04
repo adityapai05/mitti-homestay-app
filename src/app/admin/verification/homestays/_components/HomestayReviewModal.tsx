@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -15,7 +15,7 @@ import DescriptionSection from "./DescriptionSection";
 import LocationSection from "./LocationSection";
 import HostAccountabilitySection from "./HostAccountabilitySection";
 import DecisionSection from "./DecisionSection";
-import type { AdminHomestayDetails } from "@/types/index";
+import type { AdminHomestayDetails } from "@/types";
 
 const steps = [
   "Overview",
@@ -27,28 +27,13 @@ const steps = [
 ];
 
 export default function HomestayReviewModal({
-  homestayId,
+  homestay,
   onClose,
 }: {
-  homestayId: string;
+  homestay: AdminHomestayDetails;
   onClose: () => void;
 }) {
   const [step, setStep] = useState(0);
-  const [homestay, setHomestay] = useState<AdminHomestayDetails | null>(null);
-
-  useEffect(() => {
-    async function load() {
-      const res = await fetch(`/api/admin/homestays/${homestayId}`);
-      const data = await res.json();
-      setHomestay(data);
-    }
-
-    load();
-  }, [homestayId]);
-
-  if (!homestay) {
-    return null;
-  }
 
   return (
     <AlertDialog open onOpenChange={onClose}>
@@ -74,11 +59,7 @@ export default function HomestayReviewModal({
           )}
 
           {step === 1 && (
-            <ImageEvidenceSection
-              homestay={{
-                imageUrl: homestay.imageUrl,
-              }}
-            />
+            <ImageEvidenceSection homestay={{ imageUrl: homestay.imageUrl }} />
           )}
 
           {step === 2 && (
@@ -114,7 +95,7 @@ export default function HomestayReviewModal({
           <button
             disabled={step === 0}
             onClick={() => setStep((s) => s - 1)}
-            className="text-sm text-mitti-dark-brown/70 disabled:opacity-40 cursor-pointer"
+            className="text-sm text-mitti-dark-brown/70 disabled:opacity-40"
           >
             Back
           </button>
@@ -122,7 +103,7 @@ export default function HomestayReviewModal({
           <button
             disabled={step === steps.length - 1}
             onClick={() => setStep((s) => s + 1)}
-            className="text-sm font-medium text-mitti-olive disabled:opacity-40 cursor-pointer"
+            className="text-sm font-medium text-mitti-olive disabled:opacity-40"
           >
             Next
           </button>

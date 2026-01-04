@@ -1,13 +1,11 @@
 import { ChevronRight } from "lucide-react";
-import type { AdminHomestayRow } from "./HomestayVerificationTable";
-
-/* ---------- component ---------- */
+import type { AdminHomestayDetails } from "@/types";
 
 export default function HomestayVerificationRow({
   homestay,
   onClick,
 }: {
-  homestay: AdminHomestayRow;
+  homestay: AdminHomestayDetails;
   onClick: () => void;
 }) {
   return (

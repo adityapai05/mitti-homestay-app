@@ -1,26 +1,9 @@
 import HomestayVerificationRow from "./HomestayVerificationRow";
-
-/* ---------- types ---------- */
-
-export type AdminHomestayRow = {
-  id: string;
-  name: string;
-  village?: string | null;
-  state?: string | null;
-  pricePerNight: string | number;
-  createdAt: string | Date;
-  owner: {
-    id: string;
-    name: string;
-  };
-};
-
-
-/* ---------- component ---------- */
+import type { AdminHomestayDetails } from "@/types";
 
 type Props = {
-  homestays: AdminHomestayRow[];
-  onSelect: (homestay: AdminHomestayRow) => void;
+  homestays: AdminHomestayDetails[];
+  onSelect: (h: AdminHomestayDetails) => void;
 };
 
 export default function HomestayVerificationTable({
@@ -36,16 +19,16 @@ export default function HomestayVerificationTable({
             <th className="px-4 py-3 text-left">Location</th>
             <th className="px-4 py-3 text-left">Host</th>
             <th className="px-4 py-3 text-left">Price</th>
-            <th className="px-4 py-3 text-left">Status</th>
+            <th className="px-4 py-3 text-left">Created</th>
           </tr>
         </thead>
 
         <tbody>
-          {homestays.map((homestay) => (
+          {homestays.map((h) => (
             <HomestayVerificationRow
-              key={homestay.id}
-              homestay={homestay}
-              onClick={() => onSelect(homestay)}
+              key={h.id}
+              homestay={h}
+              onClick={() => onSelect(h)}
             />
           ))}
         </tbody>

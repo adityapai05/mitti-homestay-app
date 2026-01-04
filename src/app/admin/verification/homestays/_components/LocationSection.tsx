@@ -1,4 +1,8 @@
-import MapView from "@/components/shared/MapView";
+import dynamic from "next/dynamic";
+
+const MapView = dynamic(() => import("@/components/shared/MapView"), {
+  ssr: false,
+});
 
 /* ---------- types ---------- */
 
@@ -24,10 +28,7 @@ export default function LocationSection({
       </h2>
 
       <div className="h-[220px] rounded-md overflow-hidden border border-mitti-khaki">
-        <MapView
-          latitude={homestay.latitude}
-          longitude={homestay.longitude}
-        />
+        <MapView latitude={homestay.latitude} longitude={homestay.longitude} />
       </div>
 
       <p className="text-sm text-mitti-dark-brown/70">
