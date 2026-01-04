@@ -1,15 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import HomestayVerificationTable from "./HomestayVerificationTable";
+import HomestayVerificationTable, {
+  AdminHomestay,
+} from "./HomestayVerificationTable";
 import HomestayReviewModal from "./HomestayReviewModal";
+
+/* ---------- component ---------- */
 
 export default function HomestayVerificationClient({
   homestays,
 }: {
-  homestays: any[];
+  homestays: AdminHomestay[];
 }) {
-  const [selectedHomestay, setSelectedHomestay] = useState<any | null>(null);
+  const [selectedHomestay, setSelectedHomestay] =
+    useState<AdminHomestay | null>(null);
 
   return (
     <>

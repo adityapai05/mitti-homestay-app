@@ -1,11 +1,27 @@
-import HostVerificationRow from "./HostVerificationRow";
+import HostVerificationRow, { HostVerificationRowItem } from "./HostVerificationRow";
+
+export type HostVerificationItem = {
+  userId: string;
+
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  image?: string | null;
+
+  createdAt: string;
+
+  homestaysCount: number;
+  hasPayoutAccount: boolean;
+
+  verificationStatus: "PENDING" | "VERIFIED" | "REJECTED";
+};
 
 export default function HostVerificationTable({
   hosts,
   onSelectHost,
 }: {
-  hosts: any[];
-  onSelectHost: (host: any) => void;
+hosts: HostVerificationRowItem[];
+onSelectHost: (host: HostVerificationRowItem) => void;
 }) {
   return (
     <div className="rounded-lg border border-mitti-khaki bg-mitti-cream overflow-hidden">

@@ -15,12 +15,13 @@ import {
 } from "@/components/ui/prebuilt-components/alert-dialog";
 import { approveHomestay, rejectHomestay } from "../actions";
 import { toast } from "sonner";
+import type { AdminHomestay } from "./HomestayVerificationTable";
 
 export default function DecisionSection({
   homestay,
   onClose,
 }: {
-  homestay: any;
+  homestay: AdminHomestay;
   onClose: () => void;
 }) {
   const [reason, setReason] = useState("");
@@ -50,14 +51,7 @@ export default function DecisionSection({
           <AlertDialogTrigger asChild>
             <Button
               disabled={isPending}
-              className="
-                flex-1
-                bg-mitti-olive
-                hover:bg-mitti-olive/90
-                text-white
-                cursor-pointer
-                transition
-              "
+              className="flex-1 bg-mitti-olive hover:bg-mitti-olive/90 text-white cursor-pointer"
             >
               Approve homestay
             </Button>
@@ -79,12 +73,7 @@ export default function DecisionSection({
               </AlertDialogCancel>
 
               <AlertDialogAction
-                className="
-                  bg-mitti-olive
-                  hover:bg-mitti-olive/90
-                  text-white
-                  cursor-pointer
-                "
+                className="bg-mitti-olive hover:bg-mitti-olive/90 text-white cursor-pointer"
                 onClick={() =>
                   startTransition(async () => {
                     await approveHomestay(homestay.id);
@@ -104,14 +93,7 @@ export default function DecisionSection({
           <AlertDialogTrigger asChild>
             <Button
               disabled={isPending}
-              className="
-                flex-1
-                bg-[#C94A3F]
-                hover:bg-[#B34238]
-                text-white
-                cursor-pointer
-                transition
-              "
+              className="flex-1 bg-[#C94A3F] hover:bg-[#B34238] text-white cursor-pointer"
             >
               Reject homestay
             </Button>
@@ -122,9 +104,6 @@ export default function DecisionSection({
               <AlertDialogTitle className="text-mitti-dark-brown">
                 Reject this homestay?
               </AlertDialogTitle>
-              <p className="text-sm text-mitti-dark-brown/70">
-                A clear rejection reason will be shown to the host.
-              </p>
             </AlertDialogHeader>
 
             <AlertDialogFooter>
@@ -133,12 +112,7 @@ export default function DecisionSection({
               </AlertDialogCancel>
 
               <AlertDialogAction
-                className="
-                  bg-[#C94A3F]
-                  hover:bg-[#B34238]
-                  text-white
-                  cursor-pointer
-                "
+                className="bg-[#C94A3F] hover:bg-[#B34238] text-white cursor-pointer"
                 onClick={() =>
                   startTransition(async () => {
                     if (!reason.trim()) {

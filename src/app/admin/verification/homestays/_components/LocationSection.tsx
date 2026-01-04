@@ -1,6 +1,13 @@
 import MapView from "@/components/shared/MapView";
+import { Homestay } from "@prisma/client";
 
-export default function LocationSection({ homestay }: { homestay: any }) {
+/* ---------- component ---------- */
+
+export default function LocationSection({
+  homestay,
+}: {
+  homestay: Homestay;
+}) {
   return (
     <section className="space-y-4">
       <h2 className="text-lg font-semibold text-mitti-dark-brown">
@@ -8,11 +15,16 @@ export default function LocationSection({ homestay }: { homestay: any }) {
       </h2>
 
       <div className="h-[220px] rounded-md overflow-hidden border border-mitti-khaki">
-        <MapView latitude={homestay.latitude} longitude={homestay.longitude} />
+        <MapView
+          latitude={homestay.latitude}
+          longitude={homestay.longitude}
+        />
       </div>
 
       <p className="text-sm text-mitti-dark-brown/70">
-        {homestay.village}, {homestay.district}, {homestay.state}
+        {[homestay.village, homestay.district, homestay.state]
+          .filter(Boolean)
+          .join(", ") || "—"}
       </p>
     </section>
   );

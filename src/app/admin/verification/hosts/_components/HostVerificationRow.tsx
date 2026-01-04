@@ -1,11 +1,30 @@
 import { ChevronRight } from "lucide-react";
 import VerificationStatusPill from "./VerificationStatusPill";
+import type { HostVerificationStatus } from "@/types";
+
+/**
+ * This is the single source of truth type
+ * used across table, client, and drawer
+ */
+export type HostVerificationRowItem = {
+  userId: string;
+  verificationStatus: HostVerificationStatus;
+  user: {
+    id: string;
+    name: string;
+    email: string | null;
+    phone: string | null;
+    createdAt: string;
+    homestays: unknown[]; // count only, no deep usage
+    payoutAccount: unknown | null;
+  };
+};
 
 export default function HostVerificationRow({
   host,
   onClick,
 }: {
-  host: any;
+  host: HostVerificationRowItem;
   onClick: () => void;
 }) {
   const { user, verificationStatus } = host;
@@ -19,7 +38,7 @@ export default function HostVerificationRow({
         <div>
           <p className="font-medium text-mitti-dark-brown">{user.name}</p>
           <p className="text-xs text-mitti-dark-brown/70">
-            {user.email || user.phone}
+            {user.email || user.phone || "—"}
           </p>
         </div>
       </td>

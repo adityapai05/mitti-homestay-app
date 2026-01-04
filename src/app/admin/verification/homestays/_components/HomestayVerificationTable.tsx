@@ -1,8 +1,25 @@
 import HomestayVerificationRow from "./HomestayVerificationRow";
 
+/* ---------- types ---------- */
+
+export type AdminHomestay = {
+  id: string;
+  name: string;
+  village?: string | null;
+  state?: string | null;
+  pricePerNight: string | number;
+  createdAt: string | Date;
+  owner: {
+    id: string;
+    name: string;
+  };
+};
+
+/* ---------- component ---------- */
+
 type Props = {
-  homestays: any[];
-  onSelect: (homestay: any) => void;
+  homestays: AdminHomestay[];
+  onSelect: (homestay: AdminHomestay) => void;
 };
 
 export default function HomestayVerificationTable({

@@ -1,6 +1,14 @@
-import { Utensils, Droplet, Fan, Zap, PlusCircle } from "lucide-react";
+import {
+  Utensils,
+  Droplet,
+  Fan,
+  Zap,
+  PlusCircle,
+  type LucideIcon,
+} from "lucide-react";
+import type { AdminHomestay } from "./HomestayVerificationTable";
 
-const AMENITY_ICONS: Record<string, any> = {
+const AMENITY_ICONS: Record<string, LucideIcon> = {
   home_food: Utensils,
   drinking_water: Droplet,
   fan: Fan,
@@ -12,7 +20,14 @@ function formatAmenity(key: string) {
   return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export default function DescriptionSection({ homestay }: { homestay: any }) {
+export default function DescriptionSection({
+  homestay,
+}: {
+  homestay: AdminHomestay & {
+    description: string;
+    amenities: string[];
+  };
+}) {
   return (
     <section className="space-y-6">
       <h2 className="text-lg font-semibold text-mitti-dark-brown">
@@ -24,8 +39,9 @@ export default function DescriptionSection({ homestay }: { homestay: any }) {
       </p>
 
       <div className="flex flex-wrap gap-3">
-        {homestay.amenities.map((amenity: string) => {
-          const Icon = AMENITY_ICONS[amenity] || PlusCircle;
+        {homestay.amenities.map((amenity) => {
+          const Icon = AMENITY_ICONS[amenity] ?? PlusCircle;
+
           return (
             <span
               key={amenity}

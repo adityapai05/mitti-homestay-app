@@ -1,18 +1,33 @@
 import { Home, Users, IndianRupee, MapPin } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-export default function OverviewSection({ homestay }: { homestay: any }) {
+type HomestayOverview = {
+  village?: string | null;
+  pricePerNight: string | number;
+  maxGuests: number;
+  type: "ROOM" | "HOME";
+};
+
+export default function OverviewSection({
+  homestay,
+}: {
+  homestay: HomestayOverview;
+}) {
   return (
     <section className="space-y-6">
       <h2 className="text-lg font-semibold text-mitti-dark-brown">Overview</h2>
 
       <div className="grid grid-cols-2 gap-6 text-sm">
         <Item icon={MapPin} label="Location" value={homestay.village || "—"} />
+
         <Item
           icon={IndianRupee}
           label="Price per night"
           value={`₹ ${homestay.pricePerNight}`}
         />
+
         <Item icon={Users} label="Max guests" value={homestay.maxGuests} />
+
         <Item
           icon={Home}
           label="Type"
@@ -28,7 +43,7 @@ function Item({
   label,
   value,
 }: {
-  icon: any;
+  icon: LucideIcon;
   label: string;
   value: string | number;
 }) {

@@ -5,7 +5,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/prebuilt-components/dialog";
 
-export default function ImageEvidenceSection({ homestay }: { homestay: any }) {
+/* ---------- types ---------- */
+
+type HomestayImages = {
+  imageUrl: string[];
+};
+
+/* ---------- component ---------- */
+
+export default function ImageEvidenceSection({
+  homestay,
+}: {
+  homestay: HomestayImages;
+}) {
   return (
     <section className="space-y-4">
       <h2 className="text-lg font-semibold text-mitti-dark-brown">
@@ -13,7 +25,7 @@ export default function ImageEvidenceSection({ homestay }: { homestay: any }) {
       </h2>
 
       <div className="grid grid-cols-4 gap-4">
-        {homestay.imageUrl.map((url: string, idx: number) => (
+        {homestay.imageUrl.map((url, idx) => (
           <Dialog key={idx}>
             <DialogTrigger asChild>
               <div className="relative aspect-square cursor-zoom-in rounded-md overflow-hidden border border-mitti-khaki">

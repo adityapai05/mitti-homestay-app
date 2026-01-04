@@ -1,7 +1,6 @@
 import { requireRole } from "@/lib/auth/requireRole";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { hostHomestayWhere } from "@/lib/visibility/homestayVisibility";
 
 export async function GET() {
   try {

@@ -1,9 +1,19 @@
 import Link from "next/link";
 
+/* ---------- types ---------- */
+
+type HomestayOwnerRef = {
+  owner: {
+    id: string;
+  };
+};
+
+/* ---------- component ---------- */
+
 export default function HostAccountabilitySection({
   homestay,
 }: {
-  homestay: any;
+  homestay: HomestayOwnerRef;
 }) {
   return (
     <section className="space-y-4">
