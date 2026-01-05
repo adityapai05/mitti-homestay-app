@@ -8,6 +8,7 @@ import BookingStatusChart from "./_components/BookingStatusChart";
 import BookingsPerHomestayChart from "./_components/BookingsPerHomestayChart";
 import { BookingStatus } from "@prisma/client";
 
+/* ---------- Types ---------- */
 type MonthlyRevenueRow = {
   month: string;
   revenue: number;
@@ -36,10 +37,9 @@ export default async function HostAnalyticsPage() {
 
   const hostId = user.id;
 
+  /* ---------- KPIs ---------- */
   const totalBookings = await prisma.booking.count({
-    where: {
-      homestay: { ownerId: hostId },
-    },
+    where: { homestay: { ownerId: hostId } },
   });
 
   const earningsAgg = await prisma.booking.aggregate({
@@ -51,64 +51,60 @@ export default async function HostAnalyticsPage() {
   });
 
   const activeHomestays = await prisma.homestay.count({
-    where: {
-      ownerId: hostId,
-      isVerified: true,
-    },
+    where: { ownerId: hostId, isVerified: true },
   });
 
   const ratingsAgg = await prisma.review.aggregate({
-    where: {
-      homestay: { ownerId: hostId },
-    },
+    where: { homestay: { ownerId: hostId } },
     _avg: { rating: true },
   });
-
-  const earningsOverTime = await prisma.$queryRaw<MonthlyRevenueRow[]>`
-      SELECT
-        TO_CHAR(DATE_TRUNC('month', b."createdAt"), 'YYYY-MM') AS month,
-        COALESCE(SUM(b."totalPrice"), 0)::float AS revenue
-      FROM "Booking" b
-      JOIN "Homestay" h ON b."homestayId" = h.id
-      WHERE h."ownerId" = ${hostId}
-        AND b.status = 'COMPLETED'
-      GROUP BY 1
-      ORDER BY 1 ASC
-    `;
-
-  const bookingsOverTime = await prisma.$queryRaw<MonthlyCountRow[]>`
-      SELECT
-        TO_CHAR(DATE_TRUNC('month', b."createdAt"), 'YYYY-MM') AS month,
-        COUNT(*)::int AS count
-      FROM "Booking" b
-      JOIN "Homestay" h ON b."homestayId" = h.id
-      WHERE h."ownerId" = ${hostId}
-      GROUP BY 1
-      ORDER BY 1 ASC
-    `;
-
-  const bookingStatusBreakdown = await prisma.$queryRaw<StatusCountRow[]>`
-      SELECT b.status, COUNT(*)::int AS count
-      FROM "Booking" b
-      JOIN "Homestay" h ON b."homestayId" = h.id
-      WHERE h."ownerId" = ${hostId}
-      GROUP BY b.status
-    `;
-
-  const bookingsPerHomestay = await prisma.$queryRaw<HomestayBookingsRow[]>`
-      SELECT
-        h.name,
-        COUNT(b.id)::int AS count
-      FROM "Homestay" h
-      LEFT JOIN "Booking" b ON b."homestayId" = h.id
-      WHERE h."ownerId" = ${hostId}
-      GROUP BY h.name
-      ORDER BY count DESC
-    `;
 
   const totalEarnings = earningsAgg._sum.totalPrice ?? 0;
   const avgRating =
     ratingsAgg._avg.rating !== null ? ratingsAgg._avg.rating.toFixed(1) : "0.0";
+
+  /* ---------- Analytics ---------- */
+  const earningsOverTime = await prisma.$queryRaw<MonthlyRevenueRow[]>`
+    SELECT
+      TO_CHAR(DATE_TRUNC('month', b."createdAt"), 'YYYY-MM') AS month,
+      COALESCE(SUM(b."totalPrice"), 0)::float AS revenue
+    FROM "Booking" b
+    JOIN "Homestay" h ON b."homestayId" = h.id
+    WHERE h."ownerId" = ${hostId}
+      AND b.status = 'COMPLETED'
+    GROUP BY 1
+    ORDER BY 1 ASC
+  `;
+
+  const bookingsOverTime = await prisma.$queryRaw<MonthlyCountRow[]>`
+    SELECT
+      TO_CHAR(DATE_TRUNC('month', b."createdAt"), 'YYYY-MM') AS month,
+      COUNT(*)::int AS count
+    FROM "Booking" b
+    JOIN "Homestay" h ON b."homestayId" = h.id
+    WHERE h."ownerId" = ${hostId}
+    GROUP BY 1
+    ORDER BY 1 ASC
+  `;
+
+  const bookingStatusBreakdown = await prisma.$queryRaw<StatusCountRow[]>`
+    SELECT b.status, COUNT(*)::int AS count
+    FROM "Booking" b
+    JOIN "Homestay" h ON b."homestayId" = h.id
+    WHERE h."ownerId" = ${hostId}
+    GROUP BY b.status
+  `;
+
+  const bookingsPerHomestay = await prisma.$queryRaw<HomestayBookingsRow[]>`
+    SELECT
+      h.name,
+      COUNT(b.id)::int AS count
+    FROM "Homestay" h
+    LEFT JOIN "Booking" b ON b."homestayId" = h.id
+    WHERE h."ownerId" = ${hostId}
+    GROUP BY h.name
+    ORDER BY count DESC
+  `;
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-mitti-beige px-4 sm:px-6 py-10">

@@ -53,35 +53,46 @@ export default function BookingsTrendChart({
           No bookings yet
         </div>
       ) : (
-        <ChartContainer config={chartConfig} className="min-h-[260px] w-full">
-          <LineChart accessibilityLayer data={data}>
-            <CartesianGrid vertical={false} stroke="rgba(0,0,0,0.05)" />
-            <XAxis
-              dataKey="month"
-              tickFormatter={formatMonth}
-              tickLine={false}
-              axisLine={false}
-              tickMargin={10}
-            />
-            <YAxis
-              allowDecimals={false}
-              tickLine={false}
-              axisLine={false}
-              tickMargin={10}
-            />
-            <ChartTooltip
-              content={<ChartTooltipContent labelFormatter={formatMonth} />}
-            />
-            <Line
-              type="monotone"
-              dataKey="count"
-              stroke="#8B4513"
-              strokeWidth={2}
-              dot={{ r: 3, fill: "#8B4513" }}
-              activeDot={{ r: 5, fill: "#6A3410" }}
-            />
-          </LineChart>
-        </ChartContainer>
+        <>
+          <ChartContainer config={chartConfig} className="min-h-[260px] w-full">
+            <LineChart accessibilityLayer data={data}>
+              <CartesianGrid vertical={false} stroke="rgba(0,0,0,0.05)" />
+              <XAxis
+                dataKey="month"
+                tickFormatter={formatMonth}
+                tickLine={false}
+                axisLine={false}
+                tickMargin={10}
+              />
+              <YAxis
+                allowDecimals={false}
+                tickLine={false}
+                axisLine={false}
+                tickMargin={10}
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    labelFormatter={formatMonth}
+                    formatter={(value) => `${value} bookings`}
+                  />
+                }
+              />
+              <Line
+                type="monotone"
+                dataKey="count"
+                stroke="#8B4513"
+                strokeWidth={2}
+                dot={{ r: 3, fill: "#8B4513" }}
+                activeDot={{ r: 5, fill: "#6A3410" }}
+              />
+            </LineChart>
+          </ChartContainer>
+
+          <div className="mt-3 text-xs text-mitti-dark-brown/60">
+            Shows total bookings created each month
+          </div>
+        </>
       )}
     </Card>
   );

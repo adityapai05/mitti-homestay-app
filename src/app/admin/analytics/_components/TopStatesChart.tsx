@@ -25,13 +25,13 @@ export default function TopStatesChart({ data }: { data: StateCountPoint[] }) {
   const hasData = data.length > 0;
 
   return (
-    <Card className="p-6 mb-10 border border-mitti-dark-brown/10 bg-white">
+    <Card className="p-6 border border-mitti-dark-brown/10 bg-white">
       <div className="mb-3">
         <h2 className="text-lg font-semibold text-mitti-dark-brown">
           Top States by Homestays
         </h2>
         <p className="text-sm text-mitti-dark-brown/60">
-          Geographic distribution of homestays
+          States with the highest number of homestays
         </p>
       </div>
 
@@ -40,28 +40,38 @@ export default function TopStatesChart({ data }: { data: StateCountPoint[] }) {
           No location data available yet
         </div>
       ) : (
-        <ChartContainer config={chartConfig} className="min-h-[260px] w-full">
-          <BarChart accessibilityLayer data={data} layout="vertical">
-            <CartesianGrid horizontal={false} />
-            <XAxis
-              type="number"
-              allowDecimals={false}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              type="category"
-              dataKey="state"
-              tickLine={false}
-              axisLine={false}
-              width={120}
-            />
-            <ChartTooltip
-              content={<ChartTooltipContent nameKey="state" labelKey="count" />}
-            />
-            <Bar dataKey="count" radius={4} fill="var(--color-count)" />
-          </BarChart>
-        </ChartContainer>
+        <>
+          <ChartContainer config={chartConfig} className="min-h-[260px] w-full">
+            <BarChart accessibilityLayer data={data} layout="vertical">
+              <CartesianGrid horizontal={false} />
+              <XAxis
+                type="number"
+                allowDecimals={false}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                type="category"
+                dataKey="state"
+                tickLine={false}
+                axisLine={false}
+                width={120}
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    formatter={(value) => `${value} homestays listed`}
+                  />
+                }
+              />
+              <Bar dataKey="count" radius={4} fill="var(--color-count)" />
+            </BarChart>
+          </ChartContainer>
+
+          <div className="mt-3 text-xs text-mitti-dark-brown/60">
+            Geographic concentration of listings
+          </div>
+        </>
       )}
     </Card>
   );

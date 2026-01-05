@@ -58,11 +58,7 @@ export default async function AdminAnalyticsPage() {
   `;
 
   const homestays = await prisma.homestay.findMany({
-    select: {
-      isVerified: true,
-      rejectionReason: true,
-      state: true,
-    },
+    select: { isVerified: true, rejectionReason: true, state: true },
   });
 
   const homestayStatusData: HomestayStatusPoint[] = [
@@ -83,7 +79,6 @@ export default async function AdminAnalyticsPage() {
   ];
 
   const stateMap = new Map<string, number>();
-
   homestays.forEach((h) => {
     if (!h.state) return;
     stateMap.set(h.state, (stateMap.get(h.state) ?? 0) + 1);
@@ -95,8 +90,8 @@ export default async function AdminAnalyticsPage() {
     .slice(0, 8);
 
   return (
-    <div className="h-full flex flex-col py-8 px-24 mb-10">
-      <div className="mb-10">
+    <div className="h-full flex flex-col py-8 px-24">
+      <div className="mb-8">
         <h1 className="text-3xl font-semibold text-mitti-dark-brown">
           Platform Analytics
         </h1>
@@ -105,12 +100,15 @@ export default async function AdminAnalyticsPage() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <UserGrowthChart data={userGrowth} />
         <BookingsOverTimeChart data={bookingsOverTime} />
-        <HomestayStatusChart data={homestayStatusData} />
         <RevenueOverTimeChart data={revenueOverTime} />
-        <TopStatesChart data={topStatesData} />
+        <HomestayStatusChart data={homestayStatusData} />
+
+        <div className="lg:col-span-2 mb-10">
+          <TopStatesChart data={topStatesData} />
+        </div>
       </div>
     </div>
   );

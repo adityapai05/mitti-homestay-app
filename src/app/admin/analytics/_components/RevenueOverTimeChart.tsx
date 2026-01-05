@@ -1,6 +1,6 @@
 "use client";
 
-import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
@@ -24,18 +24,11 @@ const chartConfig = {
 function formatMonth(value: string) {
   const [year, month] = value.split("-");
   const date = new Date(Number(year), Number(month) - 1);
-  return date.toLocaleString("en-US", {
-    month: "short",
-    year: "numeric",
-  });
+  return date.toLocaleString("en-US", { month: "short", year: "numeric" });
 }
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value);
+  return `₹${Number(value).toLocaleString("en-IN")}`;
 }
 
 export default function RevenueOverTimeChart({
@@ -52,7 +45,7 @@ export default function RevenueOverTimeChart({
           Revenue Over Time
         </h2>
         <p className="text-sm text-mitti-dark-brown/60">
-          Revenue from completed bookings only
+          Earnings from completed bookings
         </p>
       </div>
 
@@ -61,40 +54,52 @@ export default function RevenueOverTimeChart({
           No completed bookings yet
         </div>
       ) : (
-        <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-          <LineChart accessibilityLayer data={data}>
-            <CartesianGrid vertical={false} stroke="rgba(0,0,0,0.05)" />
-            <XAxis
-              dataKey="month"
-              tickFormatter={formatMonth}
-              tickLine={false}
-              axisLine={false}
-              tickMargin={10}
-            />
-            <YAxis
-              tickFormatter={formatCurrency}
-              tickLine={false}
-              axisLine={false}
-              tickMargin={10}
-            />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  labelFormatter={formatMonth}
-                  formatter={(value) => formatCurrency(Number(value))}
-                />
-              }
-            />
-            <Line
-              type="monotone"
-              dataKey="revenue"
-              stroke="#556B2F"
-              strokeWidth={2}
-              dot={{ r: 3, fill: "#556B2F" }}
-              activeDot={{ r: 5, fill: "#3E4F1C" }}
-            />
-          </LineChart>
-        </ChartContainer>
+        <>
+          <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+            <AreaChart accessibilityLayer data={data}>
+              <defs>
+                <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#556B2F" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#556B2F" stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} stroke="rgba(0,0,0,0.05)" />
+              <XAxis
+                dataKey="month"
+                tickFormatter={formatMonth}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                tickFormatter={formatCurrency}
+                tickLine={false}
+                axisLine={false}
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    labelFormatter={formatMonth}
+                    formatter={(value) =>
+                      `${formatCurrency(Number(value))} earned`
+                    }
+                  />
+                }
+              />
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="#556B2F"
+                fill="url(#revGrad)"
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ChartContainer>
+
+          <div className="mt-3 text-xs text-mitti-dark-brown/60 flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-[#556B2F]" />
+            Revenue from completed bookings
+          </div>
+        </>
       )}
     </Card>
   );

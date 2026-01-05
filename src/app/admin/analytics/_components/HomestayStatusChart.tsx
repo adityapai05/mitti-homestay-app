@@ -15,18 +15,9 @@ type HomestayStatusPoint = {
 };
 
 const chartConfig = {
-  Verified: {
-    label: "Verified",
-    color: "#6B8E23",
-  },
-  Pending: {
-    label: "Pending",
-    color: "#D2B48C",
-  },
-  Rejected: {
-    label: "Rejected",
-    color: "#8B4513",
-  },
+  Verified: { label: "Verified", color: "#6B8E23" },
+  Pending: { label: "Pending", color: "#D2B48C" },
+  Rejected: { label: "Rejected", color: "#8B4513" },
 } satisfies ChartConfig;
 
 export default function HomestayStatusChart({
@@ -43,7 +34,7 @@ export default function HomestayStatusChart({
           Homestay Status Distribution
         </h2>
         <p className="text-sm text-mitti-dark-brown/60">
-          Verification state of listed homestays
+          Verification status of homestays
         </p>
       </div>
 
@@ -52,20 +43,27 @@ export default function HomestayStatusChart({
           No homestays available yet
         </div>
       ) : (
-        <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-          <BarChart accessibilityLayer data={data}>
-            <CartesianGrid vertical={false} />
-            <XAxis dataKey="status" tickLine={false} axisLine={false} />
-            <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent nameKey="status" labelKey="count" />
-              }
-            />
+        <>
+          <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+            <BarChart accessibilityLayer data={data}>
+              <CartesianGrid vertical={false} />
+              <XAxis dataKey="status" tickLine={false} axisLine={false} />
+              <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    formatter={(value) => `${value} homestays`}
+                  />
+                }
+              />
+              <Bar dataKey="count" radius={4} fill="var(--color-Verified)" />
+            </BarChart>
+          </ChartContainer>
 
-            <Bar dataKey="count" radius={4} fill="var(--color-Verified)" />
-          </BarChart>
-        </ChartContainer>
+          <div className="mt-3 flex gap-4 text-xs text-mitti-dark-brown/60">
+            <span>Verified, pending, and rejected listings</span>
+          </div>
+        </>
       )}
     </Card>
   );

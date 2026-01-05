@@ -17,17 +17,14 @@ type BookingsPoint = {
 const chartConfig = {
   count: {
     label: "Bookings",
-    color: "var(--chart-2)",
+    color: "#8B4513",
   },
 } satisfies ChartConfig;
 
 function formatMonth(value: string) {
   const [year, month] = value.split("-");
   const date = new Date(Number(year), Number(month) - 1);
-  return date.toLocaleString("en-US", {
-    month: "short",
-    year: "numeric",
-  });
+  return date.toLocaleString("en-US", { month: "short", year: "numeric" });
 }
 
 export default function BookingsOverTimeChart({
@@ -44,7 +41,7 @@ export default function BookingsOverTimeChart({
           Bookings Over Time
         </h2>
         <p className="text-sm text-mitti-dark-brown/60">
-          Monthly booking activity on the platform
+          Booking activity across the platform
         </p>
       </div>
 
@@ -53,35 +50,41 @@ export default function BookingsOverTimeChart({
           No booking data available yet
         </div>
       ) : (
-        <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-          <LineChart accessibilityLayer data={data}>
-            <CartesianGrid vertical={false} stroke="rgba(0,0,0,0.05)" />
-            <XAxis
-              dataKey="month"
-              tickFormatter={formatMonth}
-              tickLine={false}
-              axisLine={false}
-              tickMargin={10}
-            />
-            <YAxis
-              allowDecimals={false}
-              tickLine={false}
-              axisLine={false}
-              tickMargin={10}
-            />
-            <ChartTooltip
-              content={<ChartTooltipContent labelFormatter={formatMonth} />}
-            />
-            <Line
-              type="monotone"
-              dataKey="count"
-              stroke="#8B4513"
-              strokeWidth={2}
-              dot={{ r: 3, fill: "#8B4513" }}
-              activeDot={{ r: 5, fill: "#6A3410" }}
-            />
-          </LineChart>
-        </ChartContainer>
+        <>
+          <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+            <LineChart accessibilityLayer data={data}>
+              <CartesianGrid vertical={false} stroke="rgba(0,0,0,0.05)" />
+              <XAxis
+                dataKey="month"
+                tickFormatter={formatMonth}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    labelFormatter={formatMonth}
+                    formatter={(value) => `${value} bookings created`}
+                  />
+                }
+              />
+              <Line
+                type="monotone"
+                dataKey="count"
+                stroke="#8B4513"
+                strokeWidth={2}
+                dot={{ r: 3, fill: "#8B4513" }}
+                activeDot={{ r: 5, fill: "#6A3410" }}
+              />
+            </LineChart>
+          </ChartContainer>
+
+          <div className="mt-3 text-xs text-mitti-dark-brown/60 flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-[#8B4513]" />
+            Total bookings per month
+          </div>
+        </>
       )}
     </Card>
   );

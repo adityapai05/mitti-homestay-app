@@ -4,12 +4,12 @@ import { Pie, PieChart, Cell } from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/prebuilt-components/chart";
 import { Card } from "@/components/ui/prebuilt-components/card";
 import { BookingStatus } from "@prisma/client";
 
+/* ---------- Types ---------- */
 type StatusPoint = {
   status: BookingStatus;
   count: number;
@@ -21,6 +21,7 @@ type ChartDatum = {
   count: number;
 };
 
+/* ---------- Status Metadata ---------- */
 const STATUS_LABELS: Record<BookingStatus, string> = {
   PENDING_HOST_APPROVAL: "Pending approval",
   AWAITING_PAYMENT: "Awaiting payment",
@@ -44,13 +45,15 @@ const chartConfig: ChartConfig = {
 };
 
 export default function BookingStatusChart({ data }: { data: StatusPoint[] }) {
-  const hasData = data.length > 0;
+  const hasData = data.some((d) => d.count > 0);
 
   const chartData: ChartDatum[] = data.map((item) => ({
     status: item.status,
     label: STATUS_LABELS[item.status],
     count: item.count,
   }));
+
+  const total = chartData.reduce((sum, d) => sum + d.count, 0);
 
   return (
     <Card className="p-6 border border-mitti-khaki bg-white">
@@ -68,30 +71,62 @@ export default function BookingStatusChart({ data }: { data: StatusPoint[] }) {
           No bookings yet
         </div>
       ) : (
-        <ChartContainer config={chartConfig} className="min-h-[260px] w-full">
-          <PieChart accessibilityLayer>
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  nameKey="label"
-                  formatter={(value) => `${value} bookings`}
+        <>
+          {/* ---------- Chart ---------- */}
+          <ChartContainer config={chartConfig} className="min-h-[260px] w-full">
+            <PieChart accessibilityLayer>
+              <ChartTooltip
+                content={({ payload }) => {
+                  if (!payload || !payload.length) return null;
+                  const d = payload[0].payload as ChartDatum;
+                  const percent =
+                    total > 0 ? Math.round((d.count / total) * 100) : 0;
+
+                  return (
+                    <div className="rounded-md bg-white px-3 py-2 text-xs shadow border border-mitti-dark-brown/10">
+                      <div className="font-medium text-mitti-dark-brown">
+                        {d.label}
+                      </div>
+                      <div className="text-mitti-dark-brown/70">
+                        {d.count} bookings · {percent}%
+                      </div>
+                    </div>
+                  );
+                }}
+              />
+
+              <Pie
+                data={chartData}
+                dataKey="count"
+                nameKey="label"
+                innerRadius={70}
+                outerRadius={100}
+                paddingAngle={3}
+              >
+                {chartData.map((entry) => (
+                  <Cell key={entry.status} fill={STATUS_COLORS[entry.status]} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ChartContainer>
+
+          {/* ---------- Legend ---------- */}
+          <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
+            {chartData.map((d) => (
+              <div
+                key={d.status}
+                className="flex items-center gap-2 text-mitti-dark-brown/70"
+              >
+                <span
+                  className="h-3 w-3 rounded-sm"
+                  style={{ backgroundColor: STATUS_COLORS[d.status] }}
                 />
-              }
-            />
-            <Pie
-              data={chartData}
-              dataKey="count"
-              nameKey="label"
-              innerRadius={70}
-              outerRadius={100}
-              paddingAngle={3}
-            >
-              {chartData.map((entry) => (
-                <Cell key={entry.status} fill={STATUS_COLORS[entry.status]} />
-              ))}
-            </Pie>
-          </PieChart>
-        </ChartContainer>
+                <span className="flex-1">{d.label}</span>
+                <span className="tabular-nums">{d.count}</span>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </Card>
   );

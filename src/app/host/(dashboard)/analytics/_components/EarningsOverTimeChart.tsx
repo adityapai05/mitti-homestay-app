@@ -61,46 +61,60 @@ export default function EarningsOverTimeChart({
           No completed bookings yet
         </div>
       ) : (
-        <ChartContainer config={chartConfig} className="min-h-[260px] w-full">
-          <AreaChart accessibilityLayer data={data}>
-            <defs>
-              <linearGradient id="earningsGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#6B8E23" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="#6B8E23" stopOpacity={0.05} />
-              </linearGradient>
-            </defs>
+        <>
+          <ChartContainer config={chartConfig} className="min-h-[260px] w-full">
+            <AreaChart accessibilityLayer data={data}>
+              <defs>
+                <linearGradient
+                  id="earningsGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop offset="0%" stopColor="#6B8E23" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#6B8E23" stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
 
-            <CartesianGrid vertical={false} stroke="rgba(0,0,0,0.05)" />
-            <XAxis
-              dataKey="month"
-              tickFormatter={formatMonth}
-              tickLine={false}
-              axisLine={false}
-              tickMargin={10}
-            />
-            <YAxis
-              tickFormatter={formatCurrency}
-              tickLine={false}
-              axisLine={false}
-              tickMargin={10}
-            />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  labelFormatter={formatMonth}
-                  formatter={(value) => formatCurrency(Number(value))}
-                />
-              }
-            />
-            <Area
-              type="monotone"
-              dataKey="revenue"
-              stroke="#6B8E23"
-              strokeWidth={2}
-              fill="url(#earningsGradient)"
-            />
-          </AreaChart>
-        </ChartContainer>
+              <CartesianGrid vertical={false} stroke="rgba(0,0,0,0.05)" />
+              <XAxis
+                dataKey="month"
+                tickFormatter={formatMonth}
+                tickLine={false}
+                axisLine={false}
+                tickMargin={10}
+              />
+              <YAxis
+                tickFormatter={formatCurrency}
+                tickLine={false}
+                axisLine={false}
+                tickMargin={10}
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    labelFormatter={formatMonth}
+                    formatter={(value) =>
+                      `${formatCurrency(Number(value))} earned`
+                    }
+                  />
+                }
+              />
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="#6B8E23"
+                strokeWidth={2}
+                fill="url(#earningsGradient)"
+              />
+            </AreaChart>
+          </ChartContainer>
+
+          <div className="mt-3 text-xs text-mitti-dark-brown/60">
+            Earnings include only completed bookings
+          </div>
+        </>
       )}
     </Card>
   );

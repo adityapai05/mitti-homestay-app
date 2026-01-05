@@ -44,25 +44,37 @@ export default function BookingsPerHomestayChart({
           No bookings yet
         </div>
       ) : (
-        <ChartContainer config={chartConfig} className="min-h-[280px] w-full">
-          <BarChart accessibilityLayer data={data}>
-            <CartesianGrid vertical={false} stroke="rgba(0,0,0,0.05)" />
-            <XAxis
-              dataKey="name"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={10}
-            />
-            <YAxis
-              allowDecimals={false}
-              tickLine={false}
-              axisLine={false}
-              tickMargin={10}
-            />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="count" fill="#6A3410" radius={[6, 6, 0, 0]} />
-          </BarChart>
-        </ChartContainer>
+        <>
+          <ChartContainer config={chartConfig} className="min-h-[280px] w-full">
+            <BarChart accessibilityLayer data={data}>
+              <CartesianGrid vertical={false} stroke="rgba(0,0,0,0.05)" />
+              <XAxis
+                dataKey="name"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={10}
+              />
+              <YAxis
+                allowDecimals={false}
+                tickLine={false}
+                axisLine={false}
+                tickMargin={10}
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    formatter={(value) => `${value} bookings`}
+                  />
+                }
+              />
+              <Bar dataKey="count" fill="#6A3410" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ChartContainer>
+
+          <div className="mt-3 text-xs text-mitti-dark-brown/60">
+            Number of confirmed and completed bookings per homestay
+          </div>
+        </>
       )}
     </Card>
   );
