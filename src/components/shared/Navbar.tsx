@@ -17,26 +17,37 @@ import UserDropdown from "../ui/prebuilt-components/UserDropdown";
 import { toast } from "sonner";
 import { logout } from "@/lib/firebase/authActions";
 
-const baseNavLinks = [
+type NavLink = {
+  href: string;
+  label: string;
+};
+
+const baseNavLinks: NavLink[] = [
   { href: "/explore", label: "Explore" },
-  { href: "/contact", label: "Contact Us" },
-  { href: "/about", label: "About Us" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
 ];
 
 const Navbar = () => {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const toggleMenu = () => setIsOpen((prev) => !prev);
-  const closeMenu = () => setIsOpen(false);
   const { openModal } = useAuthModal();
   const user = useUserStore((state) => state.user);
 
-  const hostLink =
+  const toggleMenu = () => setIsOpen((prev) => !prev);
+  const closeMenu = () => setIsOpen(false);
+
+  const hostLink: NavLink =
     user?.role === "HOST"
       ? { href: "/host/homestays", label: "Host Dashboard" }
-      : { href: "/host/start", label: "List Your Home" };
+      : { href: "/host/start", label: "Become a Host" };
 
-  const navLinks = [...baseNavLinks, hostLink];
+  const navLinks: NavLink[] = [...baseNavLinks, hostLink];
+
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  };
 
   return (
     <nav className="w-full sticky top-0 z-50 bg-mitti-cream text-mitti-dark-brown shadow-sm">
@@ -45,7 +56,7 @@ const Navbar = () => {
           <Link href="/" className="flex items-center gap-2">
             <Image
               src="/mitti-logo.png"
-              alt="Mitti Logo"
+              alt="MITTI logo"
               width={75}
               height={30}
               className="h-auto w-auto object-contain"
@@ -59,9 +70,11 @@ const Navbar = () => {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`${
-                  pathname === link.href ? "font-bold" : "font-medium"
-                } hover:underline transition duration-150`}
+                className={`transition-all duration-200 ${
+                  isActive(link.href)
+                    ? "font-semibold text-mitti-brown"
+                    : "font-medium hover:text-mitti-brown hover:-translate-y-[1px]"
+                }`}
               >
                 {link.label}
               </Link>
@@ -75,10 +88,10 @@ const Navbar = () => {
             ) : (
               <Button
                 onClick={() => openModal("login")}
-                className="bg-mitti-brown text-mitti-beige font-medium cursor-pointer hover:bg-mitti-brown/80"
+                className="bg-mitti-brown text-mitti-beige font-medium hover:bg-mitti-brown/80"
               >
-                <LogIn />
-                Login / Signup
+                <LogIn className="mr-2 size-4" />
+                Login or Signup
               </Button>
             )}
           </div>
@@ -88,9 +101,9 @@ const Navbar = () => {
             <button
               className="p-2"
               onClick={toggleMenu}
-              aria-label="Toggle Menu"
+              aria-label="Toggle menu"
             >
-              {isOpen ? <X className="size-8" /> : <Menu className="size-8" />}
+              {isOpen ? <X className="size-7" /> : <Menu className="size-7" />}
             </button>
           </div>
         </div>
@@ -98,15 +111,17 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-mitti-cream border-t border-mitti-dark-brown/70 px-4 py-6 space-y-4">
+        <div className="md:hidden bg-mitti-cream border-t border-mitti-dark-brown/60 px-4 py-6 space-y-4">
           <div className="space-y-2">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={closeMenu}
-                className={`block ${
-                  pathname === link.href ? "font-bold" : "font-medium"
+                className={`block transition-colors ${
+                  isActive(link.href)
+                    ? "font-semibold text-mitti-brown"
+                    : "font-medium hover:text-mitti-brown"
                 }`}
               >
                 {link.label}
@@ -117,8 +132,10 @@ const Navbar = () => {
               <Link
                 href="/bookings"
                 onClick={closeMenu}
-                className={`block ${
-                  pathname === "/bookings" ? "font-bold" : "font-medium"
+                className={`block transition-colors ${
+                  pathname.startsWith("/bookings")
+                    ? "font-semibold text-mitti-brown"
+                    : "font-medium hover:text-mitti-brown"
                 }`}
               >
                 My Bookings
@@ -126,7 +143,7 @@ const Navbar = () => {
             )}
           </div>
 
-          <Separator className="bg-mitti-dark-brown/70" />
+          <Separator className="bg-mitti-dark-brown/60" />
 
           {user ? (
             <div className="flex items-center justify-between">
@@ -141,13 +158,13 @@ const Navbar = () => {
 
               <Button
                 variant="ghost"
-                className="text-red-600"
+                className="text-mitti-error"
                 onClick={async () => {
                   await logout();
                   toast.success("Logged out successfully");
                 }}
               >
-                <LogOut />
+                <LogOut className="mr-2 size-4" />
                 Logout
               </Button>
             </div>
@@ -156,8 +173,8 @@ const Navbar = () => {
               className="w-full bg-mitti-brown text-mitti-beige"
               onClick={() => openModal("login")}
             >
-              <LogIn />
-              Login / Signup
+              <LogIn className="mr-2 size-4" />
+              Login or Signup
             </Button>
           )}
         </div>
