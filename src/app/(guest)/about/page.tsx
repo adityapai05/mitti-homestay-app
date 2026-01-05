@@ -12,9 +12,9 @@ import {
 
 export default function AboutPage() {
   return (
-    <main className="bg-mitti-beige">
+    <main className="bg-mitti-beige w-full">
       {/* Hero */}
-      <section className="relative w-full h-[70vh] overflow-hidden">
+      <section className="relative w-full h-[65vh] sm:h-[70vh] overflow-hidden">
         <Image
           src="/about-hero.png"
           alt="Rural India landscape at dawn"
@@ -42,18 +42,18 @@ export default function AboutPage() {
       </section>
 
       {/* Narrative */}
-      <section className="px-4 sm:px-6 py-24 flex justify-center">
+      <section className="px-6 py-12 sm:py-16 flex justify-center">
         <div className="max-w-5xl relative">
-          <span className="absolute -top-12 -left-8 text-[140px] leading-none font-serif text-mitti-brown/40 select-none">
+          <span className="absolute -top-10 sm:-top-12 -left-4 sm:-left-6 text-[96px] sm:text-[140px] leading-none font-serif text-mitti-brown/30 select-none">
             “
           </span>
 
-          <p className="text-2xl sm:text-3xl text-mitti-dark-brown leading-relaxed max-w-4xl">
+          <p className="text-xl sm:text-3xl text-mitti-dark-brown leading-relaxed max-w-4xl">
             Rural India offers warmth, culture, and authenticity that rarely
             appear on mainstream travel platforms.
           </p>
 
-          <p className="mt-8 text-mitti-dark-brown/80 leading-relaxed max-w-4xl">
+          <p className="mt-6 sm:mt-8 text-mitti-dark-brown/80 leading-relaxed max-w-4xl text-justify">
             Yet many homestays remain digitally invisible due to complex systems
             and urban-centric design. MITTI was built to bridge this gap by
             focusing on clarity over complexity, trust over volume, and people
@@ -63,8 +63,8 @@ export default function AboutPage() {
       </section>
 
       {/* Capabilities */}
-      <section className="px-4 sm:px-6 pb-24 flex justify-center">
-        <div className="max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-16 text-left">
+      <section className="px-8 sm:px-6 py-2 sm:py-6 flex justify-center">
+        <div className="max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-16">
           <div>
             <Compass className="text-mitti-brown mb-4" />
             <h3 className="text-xl font-semibold text-mitti-dark-brown mb-3">
@@ -101,8 +101,8 @@ export default function AboutPage() {
       </section>
 
       {/* Rural First */}
-      <section className="px-4 sm:px-6 pb-24 flex justify-center">
-        <div className="max-w-6xl bg-mitti-cream rounded-2xl p-12">
+      <section className="px-6 sm:px-6 py-10 sm:py-12 flex justify-center">
+        <div className="max-w-6xl bg-mitti-cream rounded-2xl p-8 sm:p-12">
           <div className="flex items-center gap-3 mb-4">
             <Leaf className="text-mitti-brown" />
             <h2 className="text-2xl font-semibold text-mitti-dark-brown">
@@ -110,7 +110,7 @@ export default function AboutPage() {
             </h2>
           </div>
 
-          <p className="text-mitti-dark-brown/80 leading-relaxed max-w-4xl">
+          <p className="text-mitti-dark-brown/80 leading-relaxed max-w-4xl text-justify">
             MITTI is designed with an understanding of rural realities such as
             limited digital familiarity and inconsistent connectivity. The
             platform avoids unnecessary features and prioritizes usability.
@@ -119,8 +119,8 @@ export default function AboutPage() {
       </section>
 
       {/* Values */}
-      <section className="px-4 sm:px-6 pb-24 flex justify-center">
-        <div className="max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-14">
+      <section className="px-8 sm:px-6 py-2 sm:py-6 flex justify-center">
+        <div className="max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-14">
           <div>
             <Eye className="text-mitti-brown mb-3" />
             <h3 className="text-lg font-semibold text-mitti-dark-brown mb-2">
@@ -164,13 +164,15 @@ export default function AboutPage() {
       </section>
 
       {/* Navigation */}
-      <section className="px-4 sm:px-6 pb-28 flex justify-center">
-        <div className="max-w-6xl text-center">
-          <p className="text-sm uppercase tracking-widest text-mitti-dark-brown/60 mb-8">
+      <section className="px-4 sm:px-6 py-8 sm:py-12 flex justify-center">
+        <div className="max-w-6xl text-center w-full">
+          <div className="h-px bg-mitti-dark-brown/20 mb-10" />
+
+          <p className="text-sm uppercase tracking-widest text-mitti-dark-brown/60 mb-6">
             Explore more about MITTI
           </p>
 
-          <div className="flex flex-wrap justify-center gap-10 text-lg font-medium text-mitti-brown">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-10 text-lg font-medium text-mitti-brown">
             {[
               { href: "/about/who-we-are", label: "Who We Are" },
               { href: "/about/mission", label: "Mission" },
