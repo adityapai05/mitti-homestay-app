@@ -25,7 +25,7 @@ export default function TopStatesChart({ data }: { data: StateCountPoint[] }) {
   const hasData = data.length > 0;
 
   return (
-    <Card className="p-6 border border-mitti-dark-brown/10 bg-white">
+    <Card className="p-6 mb-10 border border-mitti-dark-brown/10 bg-white">
       <div className="mb-3">
         <h2 className="text-lg font-semibold text-mitti-dark-brown">
           Top States by Homestays

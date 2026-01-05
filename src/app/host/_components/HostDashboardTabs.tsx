@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const tabs = [
   { label: "Homestays", href: "/host/homestays" },
   { label: "Bookings", href: "/host/bookings" },
+  { label: "Analytics", href: "/host/analytics" },
 ];
 
 export default function HostDashboardTabs() {
