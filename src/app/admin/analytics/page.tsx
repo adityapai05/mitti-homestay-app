@@ -1,29 +1,116 @@
-export default function AnalyticsPage() {
+import { prisma } from "@/lib/prisma";
+import { requireRole } from "@/lib/auth/requireRole";
+import UserGrowthChart from "./_components/UserGrowthChart";
+import BookingsOverTimeChart from "./_components/BookingsOverTimeChart";
+import HomestayStatusChart from "./_components/HomestayStatusChart";
+import RevenueOverTimeChart from "./_components/RevenueOverTimeChart";
+import TopStatesChart from "./_components/TopStatesChart";
+
+type MonthlyCountRow = {
+  month: string;
+  count: number;
+};
+
+type MonthlyRevenueRow = {
+  month: string;
+  revenue: number;
+};
+
+type HomestayStatusPoint = {
+  status: "Verified" | "Pending" | "Rejected";
+  count: number;
+};
+
+type StateCountPoint = {
+  state: string;
+  count: number;
+};
+
+export default async function AdminAnalyticsPage() {
+  await requireRole("ADMIN");
+
+  const userGrowth = await prisma.$queryRaw<MonthlyCountRow[]>`
+    SELECT
+      TO_CHAR(DATE_TRUNC('month', "createdAt"), 'YYYY-MM') AS month,
+      COUNT(*)::int AS count
+    FROM "User"
+    GROUP BY 1
+    ORDER BY 1 ASC
+  `;
+
+  const bookingsOverTime = await prisma.$queryRaw<MonthlyCountRow[]>`
+    SELECT
+      TO_CHAR(DATE_TRUNC('month', "createdAt"), 'YYYY-MM') AS month,
+      COUNT(*)::int AS count
+    FROM "Booking"
+    GROUP BY 1
+    ORDER BY 1 ASC
+  `;
+
+  const revenueOverTime = await prisma.$queryRaw<MonthlyRevenueRow[]>`
+    SELECT
+      TO_CHAR(DATE_TRUNC('month', "createdAt"), 'YYYY-MM') AS month,
+      COALESCE(SUM("totalPrice"), 0)::float AS revenue
+    FROM "Booking"
+    WHERE status = 'COMPLETED'
+    GROUP BY 1
+    ORDER BY 1 ASC
+  `;
+
+  const homestays = await prisma.homestay.findMany({
+    select: {
+      isVerified: true,
+      rejectionReason: true,
+      state: true,
+    },
+  });
+
+  const homestayStatusData: HomestayStatusPoint[] = [
+    {
+      status: "Verified",
+      count: homestays.filter((h) => h.isVerified).length,
+    },
+    {
+      status: "Pending",
+      count: homestays.filter(
+        (h) => !h.isVerified && h.rejectionReason === null
+      ).length,
+    },
+    {
+      status: "Rejected",
+      count: homestays.filter((h) => h.rejectionReason !== null).length,
+    },
+  ];
+
+  const stateMap = new Map<string, number>();
+
+  homestays.forEach((h) => {
+    if (!h.state) return;
+    stateMap.set(h.state, (stateMap.get(h.state) ?? 0) + 1);
+  });
+
+  const topStatesData: StateCountPoint[] = Array.from(stateMap.entries())
+    .map(([state, count]) => ({ state, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+
   return (
-    <div className="h-full flex items-center justify-center px-6">
-      <div className="max-w-md text-center">
+    <div className="h-full flex flex-col py-8 px-24 mb-10">
+      <div className="mb-10">
         <h1 className="text-3xl font-semibold text-mitti-dark-brown">
-          Analytics
+          Platform Analytics
         </h1>
-
-        <p className="mt-2 text-sm text-mitti-dark-brown/70">
-          Platform insights and performance metrics
+        <p className="mt-1 text-sm text-mitti-dark-brown/70">
+          Read-only insights across users, homestays, bookings, and revenue
         </p>
+      </div>
 
-        <div className="mt-10 rounded-xl border border-mitti-khaki bg-mitti-cream p-8">
-          <p className="text-lg font-medium text-mitti-dark-brown">
-            Coming soon
-          </p>
-
-          <p className="mt-2 text-sm text-mitti-dark-brown/70">
-            Meaningful analytics for admins, including bookings,
-            revenue, host performance, and platform growth.
-          </p>
-
-          <div className="mt-6 text-xs text-mitti-dark-brown/50">
-            This section will be available soon.
-          </div>
-        </div>
+      <div className="flex flex-col gap-4">
+        <UserGrowthChart data={userGrowth} />
+        <BookingsOverTimeChart data={bookingsOverTime} />
+        <HomestayStatusChart data={homestayStatusData} />
+        <RevenueOverTimeChart data={revenueOverTime} />
+        <TopStatesChart data={topStatesData} />
       </div>
     </div>
   );

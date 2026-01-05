@@ -17,14 +17,16 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-mitti-beige flex">
+    <div className="h-screen bg-mitti-beige flex overflow-hidden">
       {/* Sidebar */}
       <AdminSidebar />
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col">
+      {/* Main column */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
         <AdminHeader admin={user} />
 
+        {/* Scrollable content */}
         <main className="flex-1 px-6 py-6 overflow-y-auto">{children}</main>
       </div>
     </div>
