@@ -8,7 +8,7 @@ export default function HostBookingsPage() {
     <div className="min-h-[calc(100vh-4rem)] bg-mitti-beige px-4 sm:px-6 py-2">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col gap-2 mb-10">
+        <div className="flex flex-col gap-2 mb-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-semibold text-mitti-dark-brown">
               Your bookings

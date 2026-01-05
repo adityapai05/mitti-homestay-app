@@ -10,6 +10,7 @@ import {
   Wallet,
   Users,
   BarChart3,
+  ScrollText,
 } from "lucide-react";
 
 const navItems = [
@@ -28,6 +29,7 @@ const navItems = [
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Listings", href: "/admin/homestays", icon: Home },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+  { label: "Audit Logs", href: "/admin/audit-logs", icon: ScrollText },
 ];
 
 export default function AdminSidebar() {
