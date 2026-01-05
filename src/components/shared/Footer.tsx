@@ -67,17 +67,17 @@ const Footer = () => {
               </Link>
             </li>
             <li>
-              <Link href="/cancellation" className="hover:underline">
+              <Link href="/cancellation-policy" className="hover:underline">
                 Cancellation Policy
               </Link>
             </li>
             <li>
-              <Link href="/terms" className="hover:underline">
+              <Link href="/terms-of-service" className="hover:underline">
                 Terms of Service
               </Link>
             </li>
             <li>
-              <Link href="/privacy" className="hover:underline">
+              <Link href="/privacy-policy" className="hover:underline">
                 Privacy Policy
               </Link>
             </li>
