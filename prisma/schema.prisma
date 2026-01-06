@@ -98,6 +98,7 @@ model Homestay {
   category       Category
   isVerified     Boolean  @default(false)
   rejectionReason String?
+  cancellationPolicy CancellationPolicy @default(MODERATE)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -117,7 +118,9 @@ model Booking {
   status     BookingStatus @default(PENDING_HOST_APPROVAL)
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
-
+  cancelledAt   DateTime?
+  refundAmount  Decimal?
+  cancelledBy CancellationActor?
   user     User     @relation(fields: [userId], references: [id])
   homestay Homestay @relation(fields: [homestayId], references: [id], onDelete: Cascade)
   review   Review?
@@ -203,7 +206,8 @@ enum BookingStatus {
   PENDING_HOST_APPROVAL
   AWAITING_PAYMENT
   CONFIRMED
-  CANCELLED
+  CANCELLED_BY_GUEST
+  CANCELLED_BY_HOST
   COMPLETED
 }
 
@@ -230,6 +234,17 @@ enum HostPayoutStatus {
   FAILED
 }
 
+enum CancellationPolicy {
+  FLEXIBLE
+  MODERATE
+  STRICT
+}
+
+enum CancellationActor {
+  GUEST
+  HOST
+  SYSTEM
+}
 
 // generator erd {
 //  provider = "prisma-erd-generator"
