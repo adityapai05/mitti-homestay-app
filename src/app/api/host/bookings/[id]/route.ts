@@ -161,7 +161,8 @@ export async function PATCH(
       );
     }
 
-    const newStatus = action === "approve" ? "AWAITING_PAYMENT" : "CANCELLED";
+    const newStatus =
+      action === "approve" ? "AWAITING_PAYMENT" : "CANCELLED_BY_HOST";
 
     await prisma.booking.update({
       where: { id: booking.id },

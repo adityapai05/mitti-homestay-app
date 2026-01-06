@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
     if (past) {
       where.status = {
-        in: ["COMPLETED", "CANCELLED"],
+        in: ["COMPLETED", "CANCELLED_BY_GUEST", "CANCELLED_BY_HOST"],
       };
     }
 
@@ -90,10 +90,7 @@ export async function GET(req: NextRequest) {
         .join(", ");
 
       const bookingStatusMeta = {
-        canCancel:
-          booking.status === "PENDING_HOST_APPROVAL" ||
-          booking.status === "AWAITING_PAYMENT" ||
-          (booking.status === "CONFIRMED" && checkInDate > now),
+        canCancel: booking.status === "CONFIRMED" && checkInDate > now,
 
         canPay: booking.status === "AWAITING_PAYMENT",
 
@@ -106,7 +103,10 @@ export async function GET(req: NextRequest) {
           checkInDate <= now &&
           checkOutDate > now,
 
-        isPast: booking.status === "COMPLETED" || checkOutDate < now,
+        isPast:
+          booking.status === "COMPLETED" ||
+          booking.status === "CANCELLED_BY_GUEST" ||
+          booking.status === "CANCELLED_BY_HOST",
       };
 
       return {

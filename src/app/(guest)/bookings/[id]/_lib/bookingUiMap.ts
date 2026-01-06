@@ -11,19 +11,17 @@ interface BookingUiPermissions {
 
 export const BOOKING_UI_MAP: Record<BookingStatus, BookingUiPermissions> = {
   PENDING_HOST_APPROVAL: {
-    showCancel: true,
+    showCancel: false,
     showPayment: false,
     showReview: false,
-
     showHostInfo: false,
     showCheckInInfo: false,
   },
 
   AWAITING_PAYMENT: {
-    showCancel: true,
+    showCancel: false,
     showPayment: true,
     showReview: false,
-
     showHostInfo: false,
     showCheckInInfo: false,
   },
@@ -32,16 +30,22 @@ export const BOOKING_UI_MAP: Record<BookingStatus, BookingUiPermissions> = {
     showCancel: true,
     showPayment: false,
     showReview: false,
-
     showHostInfo: true,
     showCheckInInfo: true,
   },
 
-  CANCELLED: {
+  CANCELLED_BY_GUEST: {
     showCancel: false,
     showPayment: false,
     showReview: false,
+    showHostInfo: false,
+    showCheckInInfo: false,
+  },
 
+  CANCELLED_BY_HOST: {
+    showCancel: false,
+    showPayment: false,
+    showReview: false,
     showHostInfo: false,
     showCheckInInfo: false,
   },
@@ -50,7 +54,6 @@ export const BOOKING_UI_MAP: Record<BookingStatus, BookingUiPermissions> = {
     showCancel: false,
     showPayment: false,
     showReview: true,
-
     showHostInfo: false,
     showCheckInInfo: false,
   },

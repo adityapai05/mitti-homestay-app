@@ -1,6 +1,5 @@
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { prisma } from "@/lib/prisma";
-import { Decimal } from "@prisma/client/runtime/library";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -77,13 +76,10 @@ export async function GET(
     const bookingStatus = {
       isGuest,
 
-      canCancel:
-        isGuest &&
-        (booking.status === "PENDING_HOST_APPROVAL" ||
-          booking.status === "AWAITING_PAYMENT" ||
-          (booking.status === "CONFIRMED" && checkIn > now)),
+      canCancel: isGuest && booking.status === "CONFIRMED" && checkIn > now,
 
       awaitingHostApproval: booking.status === "PENDING_HOST_APPROVAL",
+
       awaitingPayment: booking.status === "AWAITING_PAYMENT",
 
       isActive:
@@ -93,7 +89,8 @@ export async function GET(
 
       isPast:
         booking.status === "COMPLETED" ||
-        (booking.status === "CONFIRMED" && checkOut < now),
+        booking.status === "CANCELLED_BY_GUEST" ||
+        booking.status === "CANCELLED_BY_HOST",
     };
 
     return NextResponse.json({
@@ -103,94 +100,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("[GET /api/bookings/[id]]", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(
-  _req: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
-  try {
-    const user = await getCurrentUser();
-    if (!user) {
-      return NextResponse.json(
-        { error: "Authentication required." },
-        { status: 401 }
-      );
-    }
-
-    const { id: bookingId } = await context.params;
-
-    const booking = await prisma.booking.findFirst({
-      where: {
-        id: bookingId,
-        userId: user.id,
-      },
-    });
-
-    if (!booking) {
-      return NextResponse.json(
-        { error: "Booking not found." },
-        { status: 404 }
-      );
-    }
-
-    if (booking.status === "CANCELLED" || booking.status === "COMPLETED") {
-      return NextResponse.json(
-        { error: "Booking cannot be cancelled." },
-        { status: 400 }
-      );
-    }
-
-    const checkIn = new Date(booking.checkIn);
-    const hoursUntilCheckIn =
-      (checkIn.getTime() - Date.now()) / (1000 * 60 * 60);
-
-    if (
-      booking.status === "CONFIRMED" &&
-      hoursUntilCheckIn < 24 &&
-      hoursUntilCheckIn > 0
-    ) {
-      return NextResponse.json(
-        { error: "Cannot cancel less than 24 hours before check-in." },
-        { status: 400 }
-      );
-    }
-
-    const cancelled = await prisma.booking.update({
-      where: { id: bookingId },
-      data: {
-        status: "CANCELLED",
-        updatedAt: new Date(),
-      },
-    });
-
-    let refundAmount: Decimal = new Decimal(0);
-    let refundPolicy: "full" | "partial" | "none" = "none";
-
-    if (hoursUntilCheckIn >= 24 * 7) {
-      refundAmount = booking.totalPrice;
-      refundPolicy = "full";
-    } else if (hoursUntilCheckIn >= 48) {
-      refundAmount = booking.totalPrice.mul(0.5);
-      refundPolicy = "partial";
-    }
-
-    return NextResponse.json({
-      message: "Booking cancelled successfully.",
-      booking: cancelled,
-      refundInfo: {
-        refundAmount: refundAmount.toString(),
-        refundPolicy,
-        processingTime: "3-5 business days",
-      },
-    });
-  } catch (error) {
-    console.error("[DELETE /api/bookings/[id]]", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }

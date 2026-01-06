@@ -11,11 +11,12 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from "@/components/ui/prebuilt-components/alert-dialog";
+import { BookingStatus } from "@prisma/client";
 
 interface HostBookingCardProps {
   booking: {
     id: string;
-    status: string;
+    status: BookingStatus;
     checkIn: Date;
     checkOut: Date;
     guests: number;
@@ -131,7 +132,9 @@ export default function HostBookingCard({ booking }: HostBookingCardProps) {
                   </AlertDialogHeader>
 
                   <AlertDialogFooter>
-                    <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
+                    <AlertDialogCancel className="cursor-pointer">
+                      Cancel
+                    </AlertDialogCancel>
                     <AlertDialogAction
                       onClick={() => handleAction("approve")}
                       className="bg-mitti-olive text-white hover:opacity-90 cursor-pointer"
@@ -161,7 +164,9 @@ export default function HostBookingCard({ booking }: HostBookingCardProps) {
                   </AlertDialogHeader>
 
                   <AlertDialogFooter>
-                    <AlertDialogCancel className="cursor-pointer">Keep booking</AlertDialogCancel>
+                    <AlertDialogCancel className="cursor-pointer">
+                      Keep booking
+                    </AlertDialogCancel>
                     <AlertDialogAction
                       onClick={() => handleAction("reject")}
                       className="bg-red-600 text-white hover:bg-red-600/90 cursor-pointer"
@@ -179,22 +184,32 @@ export default function HostBookingCard({ booking }: HostBookingCardProps) {
   );
 }
 
-function StatusPill({ status }: { status: string }) {
-  const map: Record<string, string> = {
+function StatusPill({ status }: { status: BookingStatus }) {
+  const map: Record<BookingStatus, string> = {
     PENDING_HOST_APPROVAL: "bg-mitti-khaki text-mitti-dark-brown",
     AWAITING_PAYMENT: "bg-mitti-cream text-mitti-dark-brown",
     CONFIRMED: "bg-mitti-olive text-white",
     COMPLETED: "bg-mitti-brown text-white",
-    CANCELLED: "bg-red-100 text-red-700",
+    CANCELLED_BY_GUEST: "bg-red-100 text-red-700",
+    CANCELLED_BY_HOST: "bg-red-200 text-red-800",
+  };
+
+  const labelMap: Record<BookingStatus, string> = {
+    PENDING_HOST_APPROVAL: "Pending approval",
+    AWAITING_PAYMENT: "Awaiting payment",
+    CONFIRMED: "Confirmed",
+    COMPLETED: "Completed",
+    CANCELLED_BY_GUEST: "Cancelled by guest",
+    CANCELLED_BY_HOST: "Cancelled by you",
   };
 
   return (
     <span
       className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-        map[status] ?? "bg-gray-100 text-gray-700"
+        map[status]
       }`}
     >
-      {status.replaceAll("_", " ").toLowerCase()}
+      {labelMap[status]}
     </span>
   );
 }

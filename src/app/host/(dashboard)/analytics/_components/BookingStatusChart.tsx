@@ -26,7 +26,8 @@ const STATUS_LABELS: Record<BookingStatus, string> = {
   PENDING_HOST_APPROVAL: "Pending approval",
   AWAITING_PAYMENT: "Awaiting payment",
   CONFIRMED: "Confirmed",
-  CANCELLED: "Cancelled",
+  CANCELLED_BY_GUEST: "Cancelled by guest",
+  CANCELLED_BY_HOST: "Cancelled by host",
   COMPLETED: "Completed",
 };
 
@@ -34,7 +35,8 @@ const STATUS_COLORS: Record<BookingStatus, string> = {
   PENDING_HOST_APPROVAL: "#D2B48C",
   AWAITING_PAYMENT: "#BDB76B",
   CONFIRMED: "#6B8E23",
-  CANCELLED: "#A0522D",
+  CANCELLED_BY_GUEST: "#A0522D",
+  CANCELLED_BY_HOST: "#8B0000",
   COMPLETED: "#8B4513",
 };
 

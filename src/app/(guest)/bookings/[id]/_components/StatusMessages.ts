@@ -24,15 +24,21 @@ export const STATUS_MESSAGES: Record<BookingStatus, StatusMessage> = {
   CONFIRMED: {
     badge: "Booking confirmed",
     title: "Your stay is confirmed.",
-    description:
-      "We have shared your booking details with the host. You can contact the host if you need any assistance before check in.",
+    description: "You can contact the host for any assistance before check-in.",
   },
 
-  CANCELLED: {
-    badge: "Booking cancelled",
-    title: "This booking has been cancelled.",
+  CANCELLED_BY_GUEST: {
+    badge: "Cancelled",
+    title: "You cancelled this booking.",
     description:
-      "No further action is required. If you have any questions, you may contact support.",
+      "Any applicable refund will be processed based on the cancellation policy.",
+  },
+
+  CANCELLED_BY_HOST: {
+    badge: "Cancelled by host",
+    title: "The host cancelled this booking.",
+    description:
+      "You will be notified about the next steps regarding refunds or alternatives.",
   },
 
   COMPLETED: {
@@ -43,7 +49,10 @@ export const STATUS_MESSAGES: Record<BookingStatus, StatusMessage> = {
   },
 };
 
-export const STATUS_STYLES: Record<BookingStatus, { badge: string; text: string }> = {
+export const STATUS_STYLES: Record<
+  BookingStatus,
+  { badge: string; text: string }
+> = {
   PENDING_HOST_APPROVAL: {
     badge: "bg-mitti-khaki",
     text: "text-mitti-dark-brown",
@@ -56,7 +65,11 @@ export const STATUS_STYLES: Record<BookingStatus, { badge: string; text: string 
     badge: "bg-mitti-olive",
     text: "text-white",
   },
-  CANCELLED: {
+  CANCELLED_BY_GUEST: {
+    badge: "bg-mitti-error/15",
+    text: "text-mitti-error",
+  },
+  CANCELLED_BY_HOST: {
     badge: "bg-mitti-error/15",
     text: "text-mitti-error",
   },

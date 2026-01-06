@@ -9,8 +9,9 @@ export default function HostBookingHeader({
     PENDING_HOST_APPROVAL: "Awaiting your approval",
     AWAITING_PAYMENT: "Awaiting guest payment",
     CONFIRMED: "Booking confirmed",
+    CANCELLED_BY_GUEST: "Cancelled by guest",
+    CANCELLED_BY_HOST: "You cancelled this booking",
     COMPLETED: "Stay completed",
-    CANCELLED: "Booking cancelled",
   };
 
   return (

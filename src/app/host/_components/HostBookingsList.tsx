@@ -5,10 +5,11 @@ import { useSearchParams } from "next/navigation";
 import HostBookingsCard from "../_components/HostBookingsCard";
 import HostBookingsEmpty from "../_components/HostBookingsEmpty";
 import HostBookingsLoading from "../_components/HostBookingsLoading";
+import { BookingStatus } from "@prisma/client";
 
 type HostBooking = {
   id: string;
-  status: string;
+  status: BookingStatus;
   guests: number;
   checkIn: string;
   checkOut: string;

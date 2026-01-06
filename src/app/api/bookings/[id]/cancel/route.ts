@@ -7,11 +7,12 @@ import { calculateRefund } from "@/lib/cancellation/calculateRefund";
 
 export const POST = async (
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) => {
   try {
     const user = await getCurrentUser();
-
+    const { id } = await params;
+    
     if (!user) {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
@@ -20,7 +21,7 @@ export const POST = async (
     }
 
     const booking = await prisma.booking.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         homestay: {
           select: {

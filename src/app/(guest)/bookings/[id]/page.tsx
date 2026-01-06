@@ -134,10 +134,7 @@ async function getBooking(id: string): Promise<BookingPageData> {
   );
 
   const bookingStatus = {
-    canCancel:
-      booking.status === "PENDING_HOST_APPROVAL" ||
-      booking.status === "AWAITING_PAYMENT" ||
-      (booking.status === "CONFIRMED" && checkIn > now),
+    canCancel: booking.status === "CONFIRMED" && checkIn > now,
 
     awaitingHostApproval: booking.status === "PENDING_HOST_APPROVAL",
     awaitingPayment: booking.status === "AWAITING_PAYMENT",
@@ -149,7 +146,8 @@ async function getBooking(id: string): Promise<BookingPageData> {
 
     isPast:
       booking.status === "COMPLETED" ||
-      (booking.status === "CONFIRMED" && checkOut < now),
+      booking.status === "CANCELLED_BY_GUEST" ||
+      booking.status === "CANCELLED_BY_HOST",
   };
 
   return {

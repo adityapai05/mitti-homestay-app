@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
 
     if (past) {
       where.status = {
-        in: ["COMPLETED", "CANCELLED"],
+        in: ["COMPLETED", "CANCELLED_BY_GUEST", "CANCELLED_BY_HOST"],
       };
     }
 
@@ -113,8 +113,8 @@ export async function GET(req: NextRequest) {
 
         isPast:
           booking.status === "COMPLETED" ||
-          booking.status === "CANCELLED" ||
-          checkOutDate < now,
+          booking.status === "CANCELLED_BY_GUEST" ||
+          booking.status === "CANCELLED_BY_HOST",
       };
 
       return {

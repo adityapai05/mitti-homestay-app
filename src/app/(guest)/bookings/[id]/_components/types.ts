@@ -4,7 +4,8 @@ export type BookingStatus =
   | "PENDING_HOST_APPROVAL"
   | "AWAITING_PAYMENT"
   | "CONFIRMED"
-  | "CANCELLED"
+  | "CANCELLED_BY_GUEST"
+  | "CANCELLED_BY_HOST"
   | "COMPLETED";
 
 export interface BookingStatusFlags {
