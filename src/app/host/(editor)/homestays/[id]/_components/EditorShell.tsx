@@ -1,14 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  SidebarProvider,
-  SidebarInset,
-} from "@/components/ui/prebuilt-components/sidebar";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import EditorSidebar from "./EditorSidebar";
 import EditorHeader from "./EditorHeader";
 import { HomestayEditorData } from "./types";
+
 import PhotosEditor from "./editors/PhotosEditors";
 import TitleEditor from "./editors/TitleEditor";
 import DescriptionEditor from "./editors/DescriptionEditor";
@@ -18,8 +17,6 @@ import AmenitiesEditor from "./editors/AmenitiesEditor";
 import LocationEditor from "./editors/LocationEditor";
 import ListingSettingsEditor from "./editors/ListingSettingsEditor";
 
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import DeleteListingDialog from "@/components/host/DeleteListingDialog";
 
 type EditorSection =
@@ -32,18 +29,15 @@ type EditorSection =
   | "location"
   | "settings";
 
-const DEFAULT_SECTION: EditorSection = "photos";
 const AUTOSAVE_DELAY = 1200;
 
 const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
   const router = useRouter();
+  const initialRef = useRef(homestay);
 
-  const initialRef = useRef<HomestayEditorData>(homestay);
-
-  const [activeSection, setActiveSection] =
-    useState<EditorSection>(DEFAULT_SECTION);
-
-  const [draft, setDraft] = useState<HomestayEditorData>(homestay);
+  const [activeSection, setActiveSection] = useState<EditorSection>("photos");
+  const [draft, setDraft] = useState(homestay);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
@@ -51,31 +45,26 @@ const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const isDirty = useMemo(() => {
-    return JSON.stringify(draft) !== JSON.stringify(initialRef.current);
-  }, [draft]);
+  const isDirty = useMemo(
+    () => JSON.stringify(draft) !== JSON.stringify(initialRef.current),
+    [draft]
+  );
 
   const handleSave = useCallback(async () => {
     if (!isDirty || isSaving) return;
 
     try {
       setIsSaving(true);
-
       const res = await fetch(`/api/host/homestays/${draft.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(draft),
       });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to save changes");
-      }
-
+      if (!res.ok) throw new Error();
       initialRef.current = draft;
       setLastSavedAt(new Date());
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Save failed");
+    } catch {
+      toast.error("Failed to save changes");
     } finally {
       setIsSaving(false);
     }
@@ -83,60 +72,43 @@ const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
 
   useEffect(() => {
     if (!isDirty) return;
-
-    const t = setTimeout(() => {
-      handleSave();
-    }, AUTOSAVE_DELAY);
-
+    const t = setTimeout(handleSave, AUTOSAVE_DELAY);
     return () => clearTimeout(t);
-  }, [handleSave, isDirty, draft]);
-
-  const handleSaveAndExit = async () => {
-    await handleSave();
-    router.push("/host/homestays");
-    toast.success("Changes saved successfully!");
-  };
-
-  const handleDelete = async () => {
-    try {
-      setDeleting(true);
-
-      const res = await fetch(`/api/host/homestays/${draft.id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to delete listing");
-      }
-
-      toast.success("Listing deleted");
-      router.push("/host/homestays");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Delete failed");
-    } finally {
-      setDeleting(false);
-      setDeleteOpen(false);
-    }
-  };
+  }, [handleSave, isDirty]);
 
   return (
-    <SidebarProvider defaultOpen>
+    <>
       <DeleteListingDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         loading={deleting}
-        onConfirm={handleDelete}
+        onConfirm={async () => {
+          setDeleting(true);
+          await fetch(`/api/host/homestays/${draft.id}`, { method: "DELETE" });
+          router.push("/host/homestays");
+        }}
       />
 
-      <div className="flex w-full bg-mitti-beige">
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <div className="flex h-[calc(100vh-64px)]">
         <EditorSidebar
-          activeSection={activeSection}
+          open={sidebarOpen}
           draft={draft}
-          onSectionChange={setActiveSection}
+          activeSection={activeSection}
+          onClose={() => setSidebarOpen(false)}
+          onSectionChange={(s) => {
+            setActiveSection(s);
+            setSidebarOpen(false);
+          }}
         />
 
-        <SidebarInset className="flex flex-col w-full min-h-screen">
+        <div className="flex flex-1 flex-col">
           <EditorHeader
             homestayId={draft.id}
             title={draft.name}
@@ -144,25 +116,27 @@ const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
             isSaving={isSaving}
             isDirty={isDirty}
             lastSavedAt={lastSavedAt}
-            onSaveAndExit={handleSaveAndExit}
+            onSaveAndExit={async () => {
+              await handleSave();
+              router.push("/host/homestays");
+            }}
+            onToggleSidebar={() => setSidebarOpen((v) => !v)}
           />
 
-          <main className="flex-1 px-4 sm:px-6 py-6">
-            <div className="max-w-4xl mx-auto space-y-10">
+          <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
+            <div className="mx-auto max-w-4xl space-y-10">
               {activeSection === "photos" && (
                 <PhotosEditor
                   images={draft.imageUrl}
                   onChange={(imageUrl) => setDraft((p) => ({ ...p, imageUrl }))}
                 />
               )}
-
               {activeSection === "title" && (
                 <TitleEditor
                   value={draft.name}
                   onChange={(name) => setDraft((p) => ({ ...p, name }))}
                 />
               )}
-
               {activeSection === "description" && (
                 <DescriptionEditor
                   value={draft.description}
@@ -171,7 +145,6 @@ const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
                   }
                 />
               )}
-
               {activeSection === "pricing" && (
                 <PricingEditor
                   value={draft.pricePerNight}
@@ -180,7 +153,6 @@ const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
                   }
                 />
               )}
-
               {activeSection === "basics" && (
                 <BasicsEditor
                   maxGuests={draft.maxGuests}
@@ -192,7 +164,6 @@ const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
                   onChange={(val) => setDraft((p) => ({ ...p, ...val }))}
                 />
               )}
-
               {activeSection === "amenities" && (
                 <AmenitiesEditor
                   value={draft.amenities}
@@ -201,12 +172,11 @@ const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
                   }
                 />
               )}
-
               {activeSection === "location" && (
                 <LocationEditor
                   value={{
-                    latitude: draft.latitude!,
-                    longitude: draft.longitude!,
+                    latitude: draft.latitude,
+                    longitude: draft.longitude,
                     flatno: draft.flatno,
                     street: draft.street,
                     landmark: draft.landmark,
@@ -218,21 +188,21 @@ const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
                   onChange={(loc) => setDraft((p) => ({ ...p, ...loc }))}
                 />
               )}
-
               {activeSection === "settings" && (
                 <ListingSettingsEditor
                   isVerified={draft.isVerified}
                   guideAvailable={draft.guideAvailable}
                   guideFee={draft.guideFee}
+                  cancellationPolicy={draft.cancellationPolicy}
                   onChange={(val) => setDraft((p) => ({ ...p, ...val }))}
                   onRequestDelete={() => setDeleteOpen(true)}
                 />
               )}
             </div>
           </main>
-        </SidebarInset>
+        </div>
       </div>
-    </SidebarProvider>
+    </>
   );
 };
 

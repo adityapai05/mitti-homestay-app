@@ -7,7 +7,7 @@ import {
   DrawerOverlay,
 } from "@/components/ui/prebuilt-components/drawer";
 import { Button } from "@/components/ui/prebuilt-components/button";
-import { X, IndianRupee, CalendarDays, Home } from "lucide-react";
+import { X, IndianRupee, Home } from "lucide-react";
 import { toast } from "sonner";
 import { processRefund } from "../actions";
 import type { RefundRowItem } from "./RefundRow";

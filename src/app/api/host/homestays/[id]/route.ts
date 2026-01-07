@@ -33,7 +33,6 @@ export async function GET(
       bedrooms: true,
       bathrooms: true,
       amenities: true,
-
       flatno: true,
       street: true,
       landmark: true,
@@ -41,7 +40,7 @@ export async function GET(
       district: true,
       state: true,
       pincode: true,
-
+      cancellationPolicy: true,
       latitude: true,
       longitude: true,
       guideAvailable: true,
@@ -89,10 +88,12 @@ const updateSchema = z.object({
   guideAvailable: z.boolean().optional(),
   guideFee: z.number().positive().nullable().optional(),
 
-  category: z.nativeEnum(Category).optional(),
+  category: z.enum(Category).optional(),
 
   checkInTime: z.string().optional(),
   checkOutTime: z.string().optional(),
+
+  cancellationPolicy: z.enum(["FLEXIBLE", "MODERATE", "STRICT"]).optional(),
 });
 
 export async function PUT(

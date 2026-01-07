@@ -48,6 +48,7 @@ export default async function HostHomestayEditorPage({ params }: PageProps) {
       checkInTime: true,
       checkOutTime: true,
       isVerified: true,
+      cancellationPolicy: true,
     },
   });
 
@@ -74,6 +75,7 @@ export default async function HostHomestayEditorPage({ params }: PageProps) {
 
         guideAvailable: homestay.guideAvailable,
         guideFee: homestay.guideFee ? Number(homestay.guideFee) : 500,
+        cancellationPolicy: homestay.cancellationPolicy,
       }}
     />
   );

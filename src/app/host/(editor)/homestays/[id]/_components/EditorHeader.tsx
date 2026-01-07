@@ -1,21 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { Eye, Save, ShieldCheck, Clock } from "lucide-react";
-import { SidebarTrigger } from "@/components/ui/prebuilt-components/sidebar";
+import { Eye, Save, ShieldCheck, Clock, Menu } from "lucide-react";
 
 type EditorHeaderProps = {
   homestayId: string;
   title: string;
   isVerified: boolean;
-
-  // save state
   isSaving: boolean;
   isDirty: boolean;
   lastSavedAt: Date | null;
-
-  // actions
   onSaveAndExit: () => void;
+  onToggleSidebar: () => void;
 };
 
 const EditorHeader = ({
@@ -26,23 +22,26 @@ const EditorHeader = ({
   isDirty,
   lastSavedAt,
   onSaveAndExit,
+  onToggleSidebar,
 }: EditorHeaderProps) => {
-  const showSavedText = !isSaving && !isDirty && lastSavedAt !== null;
+  const showSaved = !isSaving && !isDirty && lastSavedAt;
 
   return (
-    <div className="sticky top-0 z-40 bg-mitti-cream border-b border-mitti-khaki">
-      <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
+    <div className="sticky z-30 border-b border-mitti-khaki bg-mitti-cream">
+      <div className="flex items-center justify-between px-4 py-3 sm:px-6">
         {/* Left */}
         <div className="flex items-center gap-3 min-w-0">
-          {/* Mobile sidebar toggle */}
-          <div className="md:hidden">
-            <SidebarTrigger />
-          </div>
+          <button
+            onClick={onToggleSidebar}
+            className="lg:hidden rounded-md p-2 hover:bg-mitti-beige"
+          >
+            <Menu size={18} />
+          </button>
 
-          <div className="flex flex-col min-w-0">
-            <h1 className="text-base font-semibold truncate text-mitti-dark-brown">
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-mitti-dark-brown">
               {title || "Untitled homestay"}
-            </h1>
+            </p>
 
             <div className="flex items-center gap-2 text-xs">
               {isVerified ? (
@@ -51,24 +50,24 @@ const EditorHeader = ({
                   Published
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-muted-foreground">
+                <span className="inline-flex items-center gap-1 text-mitti-dark-brown/60">
                   <Clock size={14} />
                   Draft
                 </span>
               )}
 
-              {showSavedText && (
-                <span className="text-mitti-dark-brown/60">
+              {showSaved && (
+                <span className="text-mitti-dark-brown/50">
                   • Saved just now
                 </span>
               )}
 
               {isSaving && (
-                <span className="text-mitti-dark-brown/60">• Saving…</span>
+                <span className="text-mitti-dark-brown/50">• Saving…</span>
               )}
 
               {isDirty && !isSaving && (
-                <span className="text-mitti-dark-brown/60">
+                <span className="text-mitti-dark-brown/50">
                   • Unsaved changes
                 </span>
               )}
@@ -78,33 +77,27 @@ const EditorHeader = ({
 
         {/* Right */}
         <div className="flex items-center gap-3">
-          {/* View listing */}
           <Link
             href={`/homestays/${homestayId}`}
             target="_blank"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border
-                       text-sm hover:bg-mitti-beige cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm hover:bg-mitti-beige"
           >
             <Eye size={16} />
             View
           </Link>
 
-          {/* Save & exit */}
           <button
             onClick={onSaveAndExit}
             disabled={isSaving || !isDirty}
-            className={`
-              inline-flex items-center gap-2 px-5 py-2 rounded-lg
-              text-sm font-medium transition
+            className={`inline-flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-medium transition
               ${
                 isSaving || !isDirty
                   ? "bg-mitti-khaki text-mitti-dark-brown/60 cursor-not-allowed"
-                  : "bg-mitti-brown text-white hover:bg-mitti-brown/90 cursor-pointer"
-              }
-            `}
+                  : "bg-mitti-brown text-white hover:bg-mitti-brown/90"
+              }`}
           >
             <Save size={16} />
-            {isSaving ? "Saving…" : "Save & exit"}
+            Save & exit
           </button>
         </div>
       </div>

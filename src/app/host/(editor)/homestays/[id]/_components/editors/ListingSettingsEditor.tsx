@@ -1,22 +1,55 @@
 "use client";
 
-import { ShieldCheck, Clock, Trash2, User, IndianRupee } from "lucide-react";
+import {
+  ShieldCheck,
+  Clock,
+  Trash2,
+  User,
+  IndianRupee,
+  Shield,
+} from "lucide-react";
+
+type CancellationPolicy = "FLEXIBLE" | "MODERATE" | "STRICT";
 
 type ListingSettingsEditorProps = {
   isVerified: boolean;
   guideAvailable: boolean;
   guideFee: number | null;
+  cancellationPolicy: CancellationPolicy;
   onChange: (value: {
     guideAvailable: boolean;
     guideFee: number | null;
+    cancellationPolicy: CancellationPolicy;
   }) => void;
   onRequestDelete: () => void;
+};
+
+const POLICY_COPY: Record<
+  CancellationPolicy,
+  { title: string; description: string }
+> = {
+  FLEXIBLE: {
+    title: "Flexible",
+    description:
+      "Guests get a full refund if they cancel at least 7 days before check-in.",
+  },
+  MODERATE: {
+    title: "Moderate",
+    description:
+      "Guests get a full refund up to 14 days before check-in, and a 50% refund up to 7 days before.",
+  },
+  STRICT: {
+    title: "Strict",
+    description:
+      "Guests get a 50% refund only if they cancel at least 30 days before check-in.",
+  },
 };
 
 const ListingSettingsEditor = ({
   isVerified,
   guideAvailable,
   guideFee,
+  cancellationPolicy,
   onChange,
   onRequestDelete,
 }: ListingSettingsEditorProps) => {
@@ -28,7 +61,7 @@ const ListingSettingsEditor = ({
           Listing settings
         </h2>
         <p className="text-sm text-mitti-dark-brown/70">
-          Manage services, verification status, and listing actions.
+          Manage policies, services, and listing actions.
         </p>
       </div>
 
@@ -47,10 +80,60 @@ const ListingSettingsEditor = ({
             </p>
             <p className="text-sm text-mitti-dark-brown/70">
               {isVerified
-                ? "Your listing has been verified and is visible to guests."
+                ? "Your listing is live and visible to guests."
                 : "Your listing will be visible after admin verification."}
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Cancellation policy */}
+      <div className="rounded-xl border border-mitti-khaki bg-white p-4 space-y-4">
+        <div className="flex items-start gap-3">
+          <Shield size={18} className="mt-1 text-mitti-dark-brown" />
+          <div>
+            <p className="font-medium text-mitti-dark-brown">
+              Cancellation policy
+            </p>
+            <p className="text-sm text-mitti-dark-brown/70">
+              This policy applies to all guest cancellations.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {(Object.keys(POLICY_COPY) as CancellationPolicy[]).map((policy) => {
+            const selected = cancellationPolicy === policy;
+
+            return (
+              <button
+                key={policy}
+                type="button"
+                onClick={() =>
+                  onChange({
+                    guideAvailable,
+                    guideFee,
+                    cancellationPolicy: policy,
+                  })
+                }
+                className={`
+                  rounded-xl border p-4 text-left transition cursor-pointer
+                  ${
+                    selected
+                      ? "border-mitti-brown bg-mitti-beige"
+                      : "border-mitti-khaki bg-white hover:border-mitti-brown/50"
+                  }
+                `}
+              >
+                <p className="font-medium text-mitti-dark-brown">
+                  {POLICY_COPY[policy].title}
+                </p>
+                <p className="mt-1 text-sm text-mitti-dark-brown/70">
+                  {POLICY_COPY[policy].description}
+                </p>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -77,6 +160,7 @@ const ListingSettingsEditor = ({
               onChange({
                 guideAvailable: e.target.checked,
                 guideFee: e.target.checked ? guideFee : null,
+                cancellationPolicy,
               })
             }
             className="h-5 w-5 cursor-pointer"
@@ -98,6 +182,7 @@ const ListingSettingsEditor = ({
                   onChange({
                     guideAvailable: true,
                     guideFee: e.target.value ? Number(e.target.value) : null,
+                    cancellationPolicy,
                   })
                 }
                 className="w-40 rounded-lg border px-3 py-2"

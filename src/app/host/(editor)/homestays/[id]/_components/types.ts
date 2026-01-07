@@ -33,5 +33,7 @@ export type HomestayEditorData = {
   checkInTime: string | null;
   checkOutTime: string | null;
 
+  cancellationPolicy: "FLEXIBLE" | "MODERATE" | "STRICT";
+
   isVerified: boolean;
 };
