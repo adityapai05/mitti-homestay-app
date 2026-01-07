@@ -1,3 +1,4 @@
+import HostNavbar from "@/components/host/HostNavbar";
 import HostDashboardShell from "../_components/HostDashboardShell";
 
 export default function HostLayout({
@@ -7,6 +8,7 @@ export default function HostLayout({
 }) {
   return (
     <div className="min-h-screen bg-mitti-beige">
+      <HostNavbar />
       <HostDashboardShell>{children}</HostDashboardShell>
     </div>
   );

@@ -96,7 +96,7 @@ const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
         />
       )}
 
-      <div className="flex h-[calc(100vh-64px)]">
+      <div className="flex flex-1">
         <EditorSidebar
           open={sidebarOpen}
           draft={draft}
