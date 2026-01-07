@@ -1,4 +1,4 @@
-import { STATUS_MESSAGES, STATUS_STYLES } from "./statusMessages";
+import { STATUS_MESSAGES, STATUS_STYLES } from "./StatusMessages";
 import type { BookingStatus } from "./types";
 
 interface BookingStatusHeaderProps {

@@ -1,30 +1,35 @@
 import { notFound, redirect } from "next/navigation";
+import { Prisma, BookingStatus, RefundStatus, CancellationPolicy } from "@prisma/client";
+
 import BookingStatusHeader from "./_components/BookingStatusHeader";
 import HomestaySnapshot from "./_components/HomestaySnapshot";
 import BookingDetails from "./_components/BookingDetails";
 import PriceBreakdown from "./_components/PriceBreakdown";
 import BookingActionZone from "./_components/BookingActionZone";
-import { getCurrentUser } from "@/lib/auth/getCurrentUser";
-import { prisma } from "@/lib/prisma";
-import { Prisma, BookingStatus } from "@prisma/client";
 import PaymentInfo from "./_components/PaymentInfo";
 import BookingReview from "./_components/BookingReview";
 
+import { getCurrentUser } from "@/lib/auth/getCurrentUser";
+import { prisma } from "@/lib/prisma";
+
 interface BookingPageProps {
-  params: Promise<{
-    id: string;
-  }>;
+  params: Promise<{ id: string }>;
 }
 
 type BookingPageData = {
   id: string;
   status: BookingStatus;
+
   guests: number;
-  totalPrice: Prisma.Decimal;
+  nights: number;
+
   checkIn: Date;
   checkOut: Date;
+  totalPrice: Prisma.Decimal;
 
-  nights: number;
+  refundAmount: Prisma.Decimal | null;
+  refundStatus: RefundStatus;
+
   bookingStatus: {
     canCancel: boolean;
     awaitingHostApproval: boolean;
@@ -40,10 +45,11 @@ type BookingPageData = {
     imageUrl: string[];
     guideAvailable: boolean;
     guideFee: Prisma.Decimal | null;
-    pincode: string | null;
-    state: string | null;
+    cancellationPolicy: CancellationPolicy;
     village: string | null;
     district: string | null;
+    state: string | null;
+    pincode: string | null;
     owner: {
       id: string;
       name: string;
@@ -60,20 +66,17 @@ type BookingPageData = {
     createdAt: Date;
   };
 
-  review: {
+  review: null | {
     id: string;
     rating: number;
     comment: string | null;
     createdAt: Date;
-  } | null;
+  };
 };
 
 async function getBooking(id: string): Promise<BookingPageData> {
   const user = await getCurrentUser();
-
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login");
 
   const booking = await prisma.booking.findFirst({
     where: {
@@ -87,19 +90,14 @@ async function getBooking(id: string): Promise<BookingPageData> {
         select: {
           id: true,
           name: true,
-          flatno: true,
-          street: true,
-          landmark: true,
+          imageUrl: true,
+          guideAvailable: true,
+          guideFee: true,
+          cancellationPolicy: true,
           village: true,
           district: true,
           state: true,
           pincode: true,
-          imageUrl: true,
-          latitude: true,
-          longitude: true,
-          amenities: true,
-          guideAvailable: true,
-          guideFee: true,
           owner: {
             select: {
               id: true,
@@ -111,19 +109,10 @@ async function getBooking(id: string): Promise<BookingPageData> {
           },
         },
       },
-      user: {
-        select: {
-          id: true,
-          name: true,
-          image: true,
-        },
-      },
     },
   });
 
-  if (!booking) {
-    notFound();
-  }
+  if (!booking) notFound();
 
   const now = new Date();
   const checkIn = new Date(booking.checkIn);
@@ -153,24 +142,30 @@ async function getBooking(id: string): Promise<BookingPageData> {
   return {
     id: booking.id,
     status: booking.status,
+
     guests: booking.guests,
-    totalPrice: booking.totalPrice,
+    nights,
+
     checkIn: booking.checkIn,
     checkOut: booking.checkOut,
+    totalPrice: booking.totalPrice,
 
-    nights,
+    refundAmount: booking.refundAmount,
+    refundStatus: booking.refundStatus,
+
     bookingStatus,
 
     homestay: {
       id: booking.homestay.id,
       name: booking.homestay.name,
-      pincode: booking.homestay.pincode,
-      state: booking.homestay.state,
-      district: booking.homestay.district,
-      village: booking.homestay.village,
       imageUrl: booking.homestay.imageUrl,
       guideAvailable: booking.homestay.guideAvailable,
       guideFee: booking.homestay.guideFee,
+      cancellationPolicy: booking.homestay.cancellationPolicy,
+      village: booking.homestay.village,
+      district: booking.homestay.district,
+      state: booking.homestay.state,
+      pincode: booking.homestay.pincode,
       owner: booking.homestay.owner,
     },
 
@@ -198,17 +193,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
   const { id } = await params;
   const booking = await getBooking(id);
 
-  const {
-    status,
-    nights,
-    bookingStatus,
-    homestay,
-    checkIn,
-    checkOut,
-    guests,
-    totalPrice,
-  } = booking;
-
+  // Auto-complete booking if checkout passed
   if (
     booking.status === "CONFIRMED" &&
     new Date(booking.checkOut) < new Date()
@@ -225,54 +210,55 @@ export default async function BookingPage({ params }: BookingPageProps) {
     <main className="bg-mitti-beige min-h-screen">
       <div className="mx-auto max-w-6xl px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left column */}
+          {/* Left */}
           <div className="lg:col-span-2 space-y-6">
-            <BookingStatusHeader status={status} />
-            <HomestaySnapshot homestay={homestay} />
+            <BookingStatusHeader status={booking.status} />
+
+            <HomestaySnapshot homestay={booking.homestay} />
+
             <BookingDetails
-              checkIn={checkIn}
-              checkOut={checkOut}
-              nights={nights}
-              guests={guests}
-              guideAvailable={homestay.guideAvailable}
+              checkIn={booking.checkIn}
+              checkOut={booking.checkOut}
+              nights={booking.nights}
+              guests={booking.guests}
+              guideAvailable={booking.homestay.guideAvailable}
+              cancellationPolicy={booking.homestay.cancellationPolicy}
               host={{
-                name: homestay.owner.name,
-                phone: homestay.owner.phone,
-                email: homestay.owner.email,
+                name: booking.homestay.owner.name,
+                phone: booking.homestay.owner.phone,
+                email: booking.homestay.owner.email,
               }}
             />
+
             <BookingActionZone
               bookingId={booking.id}
-              status={status}
-              bookingStatus={bookingStatus}
-              homestayOwner={homestay.owner}
-              homestayId={homestay.id}
+              status={booking.status}
+              bookingStatus={booking.bookingStatus}
+              homestayOwner={booking.homestay.owner}
+              homestayId={booking.homestay.id}
+              refundAmount={
+                booking.refundAmount ? Number(booking.refundAmount) : null
+              }
+              refundStatus={booking.refundStatus}
               review={booking.review}
             />
           </div>
 
-          {/* Right column */}
+          {/* Right */}
           <div className="lg:col-span-1">
             <div className="lg:sticky lg:top-24 space-y-6">
               <PriceBreakdown
-                totalPrice={totalPrice}
-                guideFee={homestay.guideFee}
+                totalPrice={booking.totalPrice}
+                guideFee={booking.homestay.guideFee}
               />
-              {booking.payment && (
-                <PaymentInfo
-                  payment={{
-                    amount: booking.payment.amount,
-                    currency: booking.payment.currency,
-                    razorpayPaymentId: booking.payment.razorpayPaymentId,
-                    createdAt: booking.payment.createdAt,
-                  }}
-                />
-              )}
+
+              {booking.payment && <PaymentInfo payment={booking.payment} />}
+
               {booking.review && (
                 <BookingReview
                   review={booking.review}
                   bookingId={booking.id}
-                  homestayId={homestay.id}
+                  homestayId={booking.homestay.id}
                 />
               )}
             </div>

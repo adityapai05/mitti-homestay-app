@@ -12,7 +12,7 @@ export const POST = async (
   try {
     const user = await getCurrentUser();
     const { id } = await params;
-    
+
     if (!user) {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
@@ -24,10 +24,7 @@ export const POST = async (
       where: { id },
       include: {
         homestay: {
-          select: {
-            cancellationPolicy: true,
-            ownerId: true,
-          },
+          select: { cancellationPolicy: true },
         },
       },
     });
@@ -54,7 +51,6 @@ export const POST = async (
     }
 
     const now = new Date();
-
     if (now >= booking.checkIn) {
       return NextResponse.json(
         { success: false, error: "Cannot cancel after check-in" },
@@ -73,27 +69,26 @@ export const POST = async (
     });
 
     await prisma.booking.update({
-      where: { id: booking.id },
+      where: { id },
       data: {
         status: "CANCELLED_BY_GUEST",
         cancelledAt: new Date(),
-        refundAmount,
         cancelledBy: "GUEST",
+        refundAmount,
+        refundStatus: refundAmount > 0 ? "PENDING" : "NOT_APPLICABLE",
       },
     });
 
     return NextResponse.json({
       success: true,
       refundAmount,
+      refundStatus: refundAmount > 0 ? "PENDING" : "NOT_APPLICABLE",
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[POST /bookings/[id]/cancel]", error);
 
     return NextResponse.json(
-      {
-        success: false,
-        error: (error as Error).message || "Internal Server Error",
-      },
+      { success: false, error: "Internal Server Error" },
       { status: 500 }
     );
   }

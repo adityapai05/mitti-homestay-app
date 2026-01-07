@@ -120,6 +120,8 @@ model Booking {
   updatedAt  DateTime      @updatedAt
   cancelledAt   DateTime?
   refundAmount  Decimal?
+  refundStatus  RefundStatus @default(NOT_APPLICABLE)
+  refundProcessedAt DateTime?
   cancelledBy CancellationActor?
   user     User     @relation(fields: [userId], references: [id])
   homestay Homestay @relation(fields: [homestayId], references: [id], onDelete: Cascade)
@@ -186,6 +188,13 @@ enum PaymentStatus {
   SUCCESS
   FAILED
   REFUNDED
+}
+
+enum RefundStatus {
+  NOT_APPLICABLE
+  PENDING
+  PROCESSED
+  FAILED
 }
 
 enum Category {
