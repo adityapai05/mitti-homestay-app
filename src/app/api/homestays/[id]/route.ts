@@ -45,6 +45,8 @@ export async function GET(
         guideAvailable: true,
         guideFee: true,
 
+        cancellationPolicy: true,
+
         owner: {
           select: {
             id: true,

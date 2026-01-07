@@ -2,13 +2,18 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Users } from "lucide-react";
+import { Users, ShieldCheck, ChevronDown, ChevronUp } from "lucide-react";
 import { format, differenceInDays, isBefore } from "date-fns";
 import { toast } from "sonner";
 
 import { Homestay } from "@/types";
 import DateRangePicker from "@/components/ui/prebuilt-components/date-range-picker";
 import { Button } from "@/components/ui/prebuilt-components/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/prebuilt-components/collapsible";
 import { useAuthModal } from "@/hooks/useAuthModal";
 
 interface Props {
@@ -17,18 +22,30 @@ interface Props {
 
 const bookingErrorMessages: Record<string, string> = {
   HOMESTAY_NOT_FOUND: "This homestay no longer exists or is unavailable.",
-
   HOMESTAY_NOT_VERIFIED:
     "This homestay is not verified yet. Please try again later.",
-
   CANNOT_BOOK_OWN_HOMESTAY:
     "You cannot book your own homestay. Switch to a guest account to continue.",
-
   MAX_GUESTS_EXCEEDED:
     "The number of guests exceeds the maximum allowed for this homestay.",
-
   DATES_NOT_AVAILABLE:
     "These dates have just been booked by someone else. Please select different dates.",
+};
+
+const cancellationPolicySummary: Record<string, string> = {
+  FLEXIBLE: "Free cancellation up to 7 days before check-in",
+  MODERATE:
+    "Free cancellation up to 14 days before check-in, 50% refund up to 7 days",
+  STRICT: "50% refund only if cancelled at least 30 days before check-in",
+};
+
+const cancellationPolicyDescription: Record<string, string> = {
+  FLEXIBLE:
+    "Guests will receive a full refund if they cancel at least 7 days before check-in. Cancellations made closer to check-in are non-refundable.",
+  MODERATE:
+    "Guests will receive a full refund if they cancel at least 14 days before check-in. If cancelled between 7 and 14 days before check-in, a 50% refund is issued. No refund is provided for cancellations within 7 days.",
+  STRICT:
+    "Guests will receive a 50% refund only if they cancel at least 30 days before check-in. Cancellations made after that period are non-refundable.",
 };
 
 const PricingBookingSection = ({ homestay }: Props) => {
@@ -49,38 +66,24 @@ const PricingBookingSection = ({ homestay }: Props) => {
   });
 
   const [bookedDates, setBookedDates] = useState<Date[]>([]);
-
   const [guests, setGuests] = useState(
     Math.min(Math.max(initialGuests, 1), homestay.maxGuests)
   );
-
-  const [includeGuide, setIncludeGuide] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [policyOpen, setPolicyOpen] = useState(false);
+  const includeGuide = false;
 
   useEffect(() => {
-    let ignore = false;
-
     const fetchBookedDates = async () => {
       try {
         const res = await fetch(`/api/homestays/${homestay.id}/booked-dates`);
-
         if (!res.ok) return;
-
         const data: { dates: string[] } = await res.json();
-
-        if (ignore) return;
-
         setBookedDates(data.dates.map((d) => new Date(d)));
-      } catch {
-        // Silent fail: calendar still works, booking API is final authority
-      }
+      } catch {}
     };
 
     fetchBookedDates();
-
-    return () => {
-      ignore = true;
-    };
   }, [homestay.id]);
 
   const nights = useMemo(() => {
@@ -126,32 +129,26 @@ const PricingBookingSection = ({ homestay }: Props) => {
       });
 
       if (res.status === 401) {
-        toast.error("Please log in to continue with your booking.");
+        toast.error("Please log in to continue.");
         openModal("login");
         return;
       }
 
       if (res.status === 400 || res.status === 403 || res.status === 409) {
         const data = await res.json();
-
-        const backendError =
+        const key =
           typeof data.error === "string" ? data.error : data.error?.message;
-
-        const friendlyMessage =
-          bookingErrorMessages[backendError] ||
-          "This booking could not be completed. Please review your details and try again.";
-
-        toast.error(friendlyMessage);
+        toast.error(
+          bookingErrorMessages[key] ||
+            "Booking could not be completed. Please try again."
+        );
         return;
       }
 
-      if (!res.ok) {
-        throw new Error("Booking failed");
-      }
+      if (!res.ok) throw new Error();
 
       const data = await res.json();
-
-      toast.success("Booking confirmed. Your stay is reserved.");
+      toast.success("Booking confirmed.");
       router.push(`/bookings/${data.booking.id}`);
     } catch {
       toast.error("Something went wrong. Please try again.");
@@ -163,7 +160,7 @@ const PricingBookingSection = ({ homestay }: Props) => {
   return (
     <aside className="lg:sticky lg:top-24">
       <div className="rounded-2xl border border-mitti-khaki bg-mitti-cream p-6 shadow-sm space-y-6">
-        {/* Price header */}
+        {/* Price */}
         <div className="flex items-baseline gap-2">
           <span className="text-2xl font-semibold text-mitti-dark-brown">
             ₹{basePrice}
@@ -177,7 +174,7 @@ const PricingBookingSection = ({ homestay }: Props) => {
             Dates
           </label>
           <DateRangePicker
-            className="mt-2 cursor-pointer"
+            className="mt-2"
             bookedDates={bookedDates}
             initialRange={dateRange}
             onChange={(range) =>
@@ -191,59 +188,48 @@ const PricingBookingSection = ({ homestay }: Props) => {
           <label className="text-sm font-medium text-mitti-dark-brown">
             Guests
           </label>
-
           <div className="mt-2 flex items-center gap-2 border border-mitti-khaki rounded-lg px-3 py-2">
             <Users size={18} />
-
             <input
               type="number"
               min={1}
               max={homestay.maxGuests}
               value={guests}
-              onChange={(e) => {
-                const value = Number(e.target.value) || 1;
-
-                if (value > homestay.maxGuests) {
-                  toast.error(
-                    `This homestay allows a maximum of ${
-                      homestay.maxGuests
-                    } guest${homestay.maxGuests > 1 ? "s" : ""}.`
-                  );
-                  setGuests(homestay.maxGuests);
-                  return;
-                }
-
-                if (value < 1) {
-                  setGuests(1);
-                  return;
-                }
-
-                setGuests(value);
-              }}
+              onChange={(e) => setGuests(Number(e.target.value) || 1)}
               className="w-full bg-transparent outline-none"
             />
           </div>
-
-          <p className="mt-1 text-xs text-mitti-dark-brown/60">
-            Maximum {homestay.maxGuests} guest
-            {homestay.maxGuests > 1 ? "s" : ""}
-          </p>
         </div>
 
-        {/* Guide */}
-        {homestay.guideAvailable && (
-          <div className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              checked={includeGuide}
-              onChange={(e) => setIncludeGuide(e.target.checked)}
-              className="h-4 w-4 accent-mitti-olive"
-            />
-            <span className="text-sm text-mitti-dark-brown">
-              Include local guide (₹{guideFee}/night)
-            </span>
+        {/* Cancellation policy */}
+        <Collapsible open={policyOpen} onOpenChange={setPolicyOpen}>
+          <div className="border-t border-mitti-khaki pt-4">
+            <CollapsibleTrigger className="w-full">
+              <div className="flex items-center justify-between text-left">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck size={18} className="text-mitti-olive" />
+                  <div>
+                    <p className="text-sm font-medium text-mitti-dark-brown">
+                      Cancellation policy
+                    </p>
+                    <p className="text-xs text-mitti-dark-brown/70">
+                      {cancellationPolicySummary[homestay.cancellationPolicy]}
+                    </p>
+                  </div>
+                </div>
+                {policyOpen ? (
+                  <ChevronUp size={18} />
+                ) : (
+                  <ChevronDown size={18} />
+                )}
+              </div>
+            </CollapsibleTrigger>
+
+            <CollapsibleContent className="mt-3 text-sm text-mitti-dark-brown/80 leading-relaxed">
+              {cancellationPolicyDescription[homestay.cancellationPolicy]}
+            </CollapsibleContent>
           </div>
-        )}
+        </Collapsible>
 
         {/* Price breakdown */}
         {nights > 0 && (
@@ -273,7 +259,7 @@ const PricingBookingSection = ({ homestay }: Props) => {
         <Button
           onClick={handleBooking}
           disabled={submitting || nights < 1}
-          className="w-full rounded-xl bg-mitti-brown text-white hover:bg-mitti-brown/90 cursor-pointer"
+          className="w-full rounded-xl bg-mitti-brown text-white hover:bg-mitti-brown/90"
         >
           {submitting ? "Booking…" : "Reserve"}
         </Button>

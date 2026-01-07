@@ -124,6 +124,8 @@ export interface Homestay {
   bedrooms: number;
   bathrooms: number;
 
+  cancellationPolicy: "FLEXIBLE" | "MODERATE" | "STRICT";
+
   type: HomestayType;
   maxGuests: number;
 
