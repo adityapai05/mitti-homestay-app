@@ -33,6 +33,8 @@ const homestaySchema = z.object({
   guideAvailable: z.boolean().optional().default(false),
   guideFee: z.number().positive().optional(),
 
+  cancellationPolicy: z.enum(["FLEXIBLE", "MODERATE", "STRICT"]),
+
   category: z.enum([
     "FARM_STAY",
     "ECO_LODGE",
@@ -108,6 +110,7 @@ export async function POST(req: NextRequest) {
 
           checkInTime: parsed.data.checkInTime,
           checkOutTime: parsed.data.checkOutTime,
+          cancellationPolicy: parsed.data.cancellationPolicy,
 
           ownerId: user.id,
         },

@@ -14,6 +14,7 @@ import {
   TreePalm,
   CookingPot,
   Clock,
+  ShieldCheck,
 } from "lucide-react";
 
 import type { AddressValue } from "./StepAddress";
@@ -30,6 +31,7 @@ type ReviewData = {
   name?: string;
   description?: string;
   pricePerNight?: number;
+  cancellationPolicy?: "FLEXIBLE" | "MODERATE" | "STRICT";
 };
 
 type Props = {
@@ -61,6 +63,21 @@ const formatAddress = (address?: AddressValue) => {
     .filter(Boolean)
     .join(", ");
 };
+
+const formatPolicyTitle = (policy?: "FLEXIBLE" | "MODERATE" | "STRICT") => {
+  if (!policy) return "—";
+  return policy.charAt(0) + policy.slice(1).toLowerCase();
+};
+
+const policyDescriptionMap: Record<"FLEXIBLE" | "MODERATE" | "STRICT", string> =
+  {
+    FLEXIBLE:
+      "Guests get a full refund if they cancel at least 7 days before check-in.",
+    MODERATE:
+      "Guests get a full refund up to 14 days before check-in, and a 50% refund up to 7 days before.",
+    STRICT:
+      "Guests get a 50% refund only if they cancel at least 30 days before check-in.",
+  };
 
 const amenityIconMap: Record<string, JSX.Element> = {
   wifi: <Wifi size={16} />,
@@ -184,6 +201,27 @@ const StepReview = ({ data }: Props) => {
                     {formatAmenity(a)}
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Cancellation policy */}
+          {data.cancellationPolicy && (
+            <div className="bg-mitti-cream border border-mitti-khaki rounded-2xl p-6">
+              <h3 className="font-medium text-mitti-dark-brown mb-2">
+                Cancellation policy
+              </h3>
+
+              <div className="flex items-start gap-3 text-mitti-dark-brown">
+                <ShieldCheck size={20} className="mt-0.5 text-mitti-olive" />
+                <div>
+                  <p className="font-medium">
+                    {formatPolicyTitle(data.cancellationPolicy)} policy
+                  </p>
+                  <p className="text-sm text-mitti-dark-brown/80 mt-1">
+                    {policyDescriptionMap[data.cancellationPolicy]}
+                  </p>
+                </div>
               </div>
             </div>
           )}

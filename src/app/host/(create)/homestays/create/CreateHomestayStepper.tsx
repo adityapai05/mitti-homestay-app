@@ -11,6 +11,7 @@ import StepPhotos from "./steps/StepPhotos";
 import StepAbout from "./steps/StepAbout";
 import StepPricing from "./steps/StepPricing";
 import StepReview from "./steps/StepReview";
+import StepCancellationPolicy from "./steps/StepCancellationPolicy";
 import MapConfirmModal from "./MapConfirmModal";
 
 import type { LocationValue } from "./steps/StepLocationMap";
@@ -20,7 +21,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
-const TOTAL_STEPS = 10;
+const TOTAL_STEPS = 11;
 
 const CreateHomestayStepper = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -38,6 +39,7 @@ const CreateHomestayStepper = () => {
     name?: string;
     description?: string;
     pricePerNight?: number;
+    cancellationPolicy?: "FLEXIBLE" | "MODERATE" | "STRICT";
   }>({});
 
   const router = useRouter();
@@ -94,14 +96,16 @@ const CreateHomestayStepper = () => {
           longitude: formData.location?.longitude,
 
           pricePerNight: formData.pricePerNight,
-
+          
           maxGuests: basics.guests,
           beds: basics.beds,
           bedrooms: basics.bedrooms,
           bathrooms: basics.bathrooms,
-
+          
           imageUrl: formData.images,
           amenities: formData.amenities,
+
+          cancellationPolicy: formData.cancellationPolicy,
         }),
       });
 
@@ -215,6 +219,16 @@ const CreateHomestayStepper = () => {
         );
 
       case 9:
+        return (
+          <StepCancellationPolicy
+            value={formData.cancellationPolicy}
+            onChange={(v) =>
+              setFormData((p) => ({ ...p, cancellationPolicy: v }))
+            }
+          />
+        );
+
+      case 10:
         return <StepReview data={formData} />;
 
       default:
@@ -228,26 +242,30 @@ const CreateHomestayStepper = () => {
     currentStep === 0
       ? Boolean(formData.category)
       : currentStep === 1
-      ? Boolean(formData.type)
-      : currentStep === 2
-      ? Boolean(formData.location)
-      : currentStep === 3
-      ? Boolean(
-          formData.address?.village &&
-            formData.address?.state &&
-            /^[0-9]{6}$/.test(formData.address?.pincode || "")
-        )
-      : currentStep === 6
-      ? (formData.images?.length || 0) >= 5
-      : currentStep === 7
-      ? Boolean(formData.name && formData.description)
-      : currentStep === 8
-      ? Boolean(
-          formData.pricePerNight &&
-            formData.pricePerNight >= 150 &&
-            formData.pricePerNight <= 10000
-        )
-      : true;
+        ? Boolean(formData.type)
+        : currentStep === 2
+          ? Boolean(formData.location)
+          : currentStep === 3
+            ? Boolean(
+                formData.address?.village &&
+                formData.address?.state &&
+                formData.address?.flatno &&
+                formData.address?.street &&
+                /^[0-9]{6}$/.test(formData.address?.pincode || "")
+              )
+            : currentStep === 6
+              ? (formData.images?.length || 0) >= 5
+              : currentStep === 7
+                ? Boolean(formData.name && formData.description)
+                : currentStep === 8
+                  ? Boolean(
+                      formData.pricePerNight &&
+                      formData.pricePerNight >= 150 &&
+                      formData.pricePerNight <= 10000
+                    )
+                  : currentStep === 9
+                    ? Boolean(formData.cancellationPolicy)
+                    : true;
 
   /* ---------------- render ---------------- */
 
