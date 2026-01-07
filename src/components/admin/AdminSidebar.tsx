@@ -12,6 +12,7 @@ import {
   BarChart3,
   ScrollText,
   Mail,
+  RotateCcw,
 } from "lucide-react";
 
 const navItems = [
@@ -27,11 +28,12 @@ const navItems = [
     icon: Home,
   },
   { label: "Payouts", href: "/admin/payouts", icon: Wallet },
+  { label: "Refunds", href: "/admin/refunds", icon: RotateCcw },
+  { label: "Contact Messages", href: "/admin/contact", icon: Mail },
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Listings", href: "/admin/homestays", icon: Home },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { label: "Audit Logs", href: "/admin/audit-logs", icon: ScrollText },
-  { label: "Contact Messages", href: "/admin/contact", icon: Mail }
 ];
 
 export default function AdminSidebar() {
