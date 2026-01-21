@@ -1,4 +1,4 @@
-import { resend, EMAIL_FROM } from "./client";
+import { sendEmail } from "./utils";
 import { ContactEmailTemplate } from "./ContactEmailTemplate";
 
 export async function sendContactEmail(data: {
@@ -7,9 +7,8 @@ export async function sendContactEmail(data: {
   subject: string;
   message: string;
 }) {
-  await resend.emails.send({
-    from: EMAIL_FROM,
-    to: process.env.CONTACT_RECEIVER_EMAIL as string,
+  await sendEmail({
+    to: process.env.CONTACT_RECEIVER_EMAIL!,
     subject: `MITTI Contact: ${data.subject}`,
     react: ContactEmailTemplate(data),
   });

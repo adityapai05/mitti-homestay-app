@@ -1,6 +1,5 @@
-import { resend, EMAIL_FROM } from "./client";
-import { resolveEmail } from "./utils";
 import { prisma } from "@/lib/prisma";
+import { sendEmail, resolveEmail } from "./utils";
 
 import { BookingRequestedEmail } from "./templates/booking/BookingRequested";
 import { BookingApprovedEmail } from "./templates/booking/BookingApproved";
@@ -23,20 +22,16 @@ export async function sendBookingEmail(
 
   if (!booking) return;
 
-  const guest = booking.user;
-  const host = booking.homestay.owner;
-
-  const guestTo = resolveEmail(guest.email);
-  const hostTo = resolveEmail(host.email);
+  const guestEmail = resolveEmail(booking.user.email);
+  const hostEmail = resolveEmail(booking.homestay.owner.email);
 
   if (type === "BOOKING_REQUESTED") {
-    if (guestTo) {
-      await resend.emails.send({
-        from: EMAIL_FROM,
-        to: guestTo,
+    if (guestEmail) {
+      await sendEmail({
+        to: guestEmail,
         subject: "MITTI: Booking request placed",
         react: BookingRequestedEmail({
-          recipientName: guest.name,
+          recipientName: booking.user.name,
           homestayName: booking.homestay.name,
           checkIn: booking.checkIn.toDateString(),
           checkOut: booking.checkOut.toDateString(),
@@ -44,13 +39,12 @@ export async function sendBookingEmail(
       });
     }
 
-    if (hostTo) {
-      await resend.emails.send({
-        from: EMAIL_FROM,
-        to: hostTo,
+    if (hostEmail) {
+      await sendEmail({
+        to: hostEmail,
         subject: "MITTI: New booking request",
         react: BookingRequestedEmail({
-          recipientName: host.name,
+          recipientName: booking.homestay.owner.name,
           homestayName: booking.homestay.name,
           checkIn: booking.checkIn.toDateString(),
           checkOut: booking.checkOut.toDateString(),
@@ -59,38 +53,35 @@ export async function sendBookingEmail(
     }
   }
 
-  if (type === "BOOKING_APPROVED" && guestTo) {
-    await resend.emails.send({
-      from: EMAIL_FROM,
-      to: guestTo,
+  if (type === "BOOKING_APPROVED" && guestEmail) {
+    await sendEmail({
+      to: guestEmail,
       subject: "MITTI: Booking approved",
       react: BookingApprovedEmail({
-        recipientName: guest.name,
+        recipientName: booking.user.name,
         homestayName: booking.homestay.name,
       }),
     });
   }
 
   if (type === "BOOKING_CONFIRMED") {
-    if (guestTo) {
-      await resend.emails.send({
-        from: EMAIL_FROM,
-        to: guestTo,
+    if (guestEmail) {
+      await sendEmail({
+        to: guestEmail,
         subject: "MITTI: Booking confirmed",
         react: PaymentConfirmedEmail({
-          recipientName: guest.name,
+          recipientName: booking.user.name,
           homestayName: booking.homestay.name,
         }),
       });
     }
 
-    if (hostTo) {
-      await resend.emails.send({
-        from: EMAIL_FROM,
-        to: hostTo,
+    if (hostEmail) {
+      await sendEmail({
+        to: hostEmail,
         subject: "MITTI: Booking confirmed",
         react: PaymentConfirmedEmail({
-          recipientName: host.name,
+          recipientName: booking.homestay.owner.name,
           homestayName: booking.homestay.name,
         }),
       });
@@ -98,25 +89,23 @@ export async function sendBookingEmail(
   }
 
   if (type === "BOOKING_CANCELLED") {
-    if (guestTo) {
-      await resend.emails.send({
-        from: EMAIL_FROM,
-        to: guestTo,
+    if (guestEmail) {
+      await sendEmail({
+        to: guestEmail,
         subject: "MITTI: Booking cancelled",
         react: BookingCancelledEmail({
-          recipientName: guest.name,
+          recipientName: booking.user.name,
           homestayName: booking.homestay.name,
         }),
       });
     }
 
-    if (hostTo) {
-      await resend.emails.send({
-        from: EMAIL_FROM,
-        to: hostTo,
+    if (hostEmail) {
+      await sendEmail({
+        to: hostEmail,
         subject: "MITTI: Booking cancelled",
         react: BookingCancelledEmail({
-          recipientName: host.name,
+          recipientName: booking.homestay.owner.name,
           homestayName: booking.homestay.name,
         }),
       });

@@ -1,5 +1,1 @@
-import { Resend } from "resend";
-
-export const resend = new Resend(process.env.RESEND_API_KEY);
-
-export const EMAIL_FROM = "MITTI <no-reply@resend.dev>";
+export const EMAIL_FROM = `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`;

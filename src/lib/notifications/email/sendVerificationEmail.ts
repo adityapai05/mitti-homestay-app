@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { resend, EMAIL_FROM } from "./client";
-import { canSendEmail, resolveEmail } from "./utils";
+import { sendEmail, resolveEmail } from "./utils";
 
 import { HostVerifiedEmail } from "./templates/verification/HostVerified";
 import { HostRejectedEmail } from "./templates/verification/HostRejected";
@@ -24,29 +23,23 @@ export async function sendVerificationEmail(
       where: { id: payload.userId },
     });
 
-    if (!user || !canSendEmail(user.email)) return;
-
-    const to = resolveEmail(user.email);
-    if (!to) return; 
+    const to = resolveEmail(user?.email);
+    if (!to) return;
 
     if (type === "HOST_VERIFIED") {
-      await resend.emails.send({
-        from: EMAIL_FROM,
+      await sendEmail({
         to,
         subject: "MITTI: Host verification approved",
-        react: HostVerifiedEmail({
-          name: user.name,
-        }),
+        react: HostVerifiedEmail({ name: user!.name }),
       });
     }
 
     if (type === "HOST_REJECTED") {
-      await resend.emails.send({
-        from: EMAIL_FROM,
+      await sendEmail({
         to,
         subject: "MITTI: Host verification rejected",
         react: HostRejectedEmail({
-          name: user.name,
+          name: user!.name,
           reason: payload.reason ?? "",
         }),
       });
@@ -58,36 +51,30 @@ export async function sendVerificationEmail(
 
     const homestay = await prisma.homestay.findUnique({
       where: { id: payload.homestayId },
-      include: {
-        owner: true,
-      },
+      include: { owner: true },
     });
 
-    if (!homestay || !canSendEmail(homestay.owner.email)) return;
-
-    const to = resolveEmail(homestay.owner.email);
-    if (!to) return; 
+    const to = resolveEmail(homestay?.owner.email);
+    if (!to) return;
 
     if (type === "HOMESTAY_VERIFIED") {
-      await resend.emails.send({
-        from: EMAIL_FROM,
+      await sendEmail({
         to,
         subject: "MITTI: Homestay verified",
         react: HomestayVerifiedEmail({
-          name: homestay.owner.name,
-          homestayName: homestay.name,
+          name: homestay!.owner.name,
+          homestayName: homestay!.name,
         }),
       });
     }
 
     if (type === "HOMESTAY_REJECTED") {
-      await resend.emails.send({
-        from: EMAIL_FROM,
+      await sendEmail({
         to,
         subject: "MITTI: Homestay verification rejected",
         react: HomestayRejectedEmail({
-          name: homestay.owner.name,
-          homestayName: homestay.name,
+          name: homestay!.owner.name,
+          homestayName: homestay!.name,
           reason: payload.reason ?? "",
         }),
       });
