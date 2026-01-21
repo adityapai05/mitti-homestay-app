@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
+import { sendBookingEmail } from "@/lib/notifications/email/sendBookingEmail";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
       bookingId,
     } = await req.json();
 
-    // 1️⃣ Verify signature
+    // 1️⃣ Verify Razorpay signature
     const body = `${razorpay_order_id}|${razorpay_payment_id}`;
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2️⃣ Fetch booking (SOURCE OF TRUTH)
+    // 2️⃣ Fetch booking (source of truth)
     const booking = await prisma.booking.findFirst({
       where: {
         id: bookingId,
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3️⃣ Atomic transaction
+    // 3️⃣ Atomic DB transaction
     await prisma.$transaction([
       prisma.payment.create({
         data: {
@@ -70,6 +71,8 @@ export async function POST(req: NextRequest) {
       }),
     ]);
 
+    await sendBookingEmail(booking.id, "BOOKING_CONFIRMED");
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[RAZORPAY_VERIFY]", error);
@@ -79,3 +82,5 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export const dynamic = "force-dynamic";

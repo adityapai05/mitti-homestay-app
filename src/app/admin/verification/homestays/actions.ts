@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { revalidatePath } from "next/cache";
 import { logAdminAction } from "@/lib/admin/logAdminAction";
+import { sendVerificationEmail } from "@/lib/notifications/email/sendVerificationEmail";
 
 export async function approveHomestay(homestayId: string) {
   const admin = await getCurrentUser();
@@ -16,6 +17,8 @@ export async function approveHomestay(homestayId: string) {
       rejectionReason: null,
     },
   });
+
+  await sendVerificationEmail("HOMESTAY_VERIFIED", { homestayId });
 
   await logAdminAction({
     adminId: admin.id,
@@ -38,6 +41,11 @@ export async function rejectHomestay(homestayId: string, reason: string) {
       isVerified: false,
       rejectionReason: reason,
     },
+  });
+
+  await sendVerificationEmail("HOMESTAY_REJECTED", {
+    homestayId,
+    reason,
   });
 
   await logAdminAction({

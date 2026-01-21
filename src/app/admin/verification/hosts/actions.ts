@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { revalidatePath } from "next/cache";
 import { logAdminAction } from "@/lib/admin/logAdminAction";
+import { sendVerificationEmail } from "@/lib/notifications/email/sendVerificationEmail";
 
 export async function approveHost(userId: string) {
   const admin = await getCurrentUser();
@@ -16,6 +17,8 @@ export async function approveHost(userId: string) {
       rejectionReason: null,
     },
   });
+
+  await sendVerificationEmail("HOST_VERIFIED", { userId });
 
   await logAdminAction({
     adminId: admin.id,
@@ -38,6 +41,11 @@ export async function rejectHost(userId: string, reason: string) {
       verificationStatus: "REJECTED",
       rejectionReason: reason,
     },
+  });
+
+  await sendVerificationEmail("HOST_REJECTED", {
+    userId,
+    reason,
   });
 
   await logAdminAction({

@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { prisma } from "@/lib/prisma";
+import { sendBookingEmail } from "@/lib/notifications/email/sendBookingEmail";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -126,6 +127,7 @@ export async function PATCH(
 ) {
   try {
     const user = await getCurrentUser();
+
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -135,7 +137,6 @@ export async function PATCH(
     }
 
     const { id } = await context.params;
-
     const body = await req.json();
     const { action } = body;
 
@@ -169,9 +170,17 @@ export async function PATCH(
       data: { status: newStatus },
     });
 
+    if (action === "approve") {
+      await sendBookingEmail(booking.id, "BOOKING_APPROVED");
+    }
+
+    if (action === "reject") {
+      await sendBookingEmail(booking.id, "BOOKING_CANCELLED");
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[HOST_BOOKING_ACTION]", error);
+    console.error("[PATCH /api/host/bookings/[id]]", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }

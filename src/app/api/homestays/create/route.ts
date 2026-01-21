@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { Decimal } from "@prisma/client/runtime/library";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import {
+  sendAdminHomestayPendingEmail,
+  sendAdminHostPendingEmail,
+} from "@/lib/notifications/email/sendAdminEmail";
 
 const homestaySchema = z.object({
   name: z.string().min(3),
@@ -79,7 +83,6 @@ export async function POST(req: NextRequest) {
         data: {
           name: parsed.data.name,
           description: parsed.data.description,
-
           flatno: parsed.data.flatno,
           street: parsed.data.street,
           landmark: parsed.data.landmark,
@@ -87,36 +90,28 @@ export async function POST(req: NextRequest) {
           district: parsed.data.district,
           state: parsed.data.state,
           pincode: parsed.data.pincode,
-
           latitude: parsed.data.latitude,
           longitude: parsed.data.longitude,
-
           pricePerNight: new Decimal(parsed.data.pricePerNight),
           maxGuests: parsed.data.maxGuests,
           beds: parsed.data.beds,
           bedrooms: parsed.data.bedrooms,
           bathrooms: parsed.data.bathrooms,
-
           imageUrl: parsed.data.imageUrl,
           amenities: parsed.data.amenities,
-
           category: parsed.data.category,
           type: parsed.data.type,
-
           guideAvailable: parsed.data.guideAvailable,
           guideFee: parsed.data.guideFee
             ? new Decimal(parsed.data.guideFee)
             : null,
-
           checkInTime: parsed.data.checkInTime,
           checkOutTime: parsed.data.checkOutTime,
           cancellationPolicy: parsed.data.cancellationPolicy,
-
           ownerId: user.id,
         },
       });
 
-      // Promote role if needed
       if (user.role === "USER") {
         await tx.user.update({
           where: { id: user.id },
@@ -124,7 +119,6 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Ensure HostProfile exists
       await tx.hostProfile.upsert({
         where: { userId: user.id },
         update: {},
@@ -135,6 +129,15 @@ export async function POST(req: NextRequest) {
       });
 
       return created;
+    });
+
+    await sendAdminHomestayPendingEmail({
+      homestayName: homestay.name,
+      hostName: user.name,
+    });
+
+    await sendAdminHostPendingEmail({
+      hostName: user.name,
     });
 
     return NextResponse.json(homestay, { status: 201 });

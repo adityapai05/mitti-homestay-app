@@ -71,7 +71,7 @@ const PricingBookingSection = ({ homestay }: Props) => {
   );
   const [submitting, setSubmitting] = useState(false);
   const [policyOpen, setPolicyOpen] = useState(false);
-  const includeGuide = false;
+  const [includeGuide, setIncludeGuide] = useState(false);
 
   useEffect(() => {
     const fetchBookedDates = async () => {
@@ -200,6 +200,20 @@ const PricingBookingSection = ({ homestay }: Props) => {
             />
           </div>
         </div>
+
+        {homestay.guideAvailable && (
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={includeGuide}
+              onChange={(e) => setIncludeGuide(e.target.checked)}
+              className="h-4 w-4 accent-mitti-olive"
+            />
+            <span className="text-sm text-mitti-dark-brown">
+              Include local guide (₹{guideFee}/night)
+            </span>
+          </div>
+        )}
 
         {/* Cancellation policy */}
         <Collapsible open={policyOpen} onOpenChange={setPolicyOpen}>

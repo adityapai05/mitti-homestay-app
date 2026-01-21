@@ -1,9 +1,8 @@
-export const dynamic = "force-dynamic";
-
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { calculateRefund } from "@/lib/cancellation/calculateRefund";
+import { sendBookingEmail } from "@/lib/notifications/email/sendBookingEmail";
 
 export const POST = async (
   req: NextRequest,
@@ -24,7 +23,9 @@ export const POST = async (
       where: { id },
       include: {
         homestay: {
-          select: { cancellationPolicy: true },
+          select: {
+            cancellationPolicy: true,
+          },
         },
       },
     });
@@ -79,6 +80,9 @@ export const POST = async (
       },
     });
 
+    // 🔔 Send cancellation emails AFTER update
+    await sendBookingEmail(booking.id, "BOOKING_CANCELLED");
+
     return NextResponse.json({
       success: true,
       refundAmount,
@@ -86,7 +90,6 @@ export const POST = async (
     });
   } catch (error) {
     console.error("[POST /bookings/[id]/cancel]", error);
-
     return NextResponse.json(
       { success: false, error: "Internal Server Error" },
       { status: 500 }

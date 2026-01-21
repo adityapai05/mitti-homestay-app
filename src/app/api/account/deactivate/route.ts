@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { sendAccountDeactivatedEmail } from "@/lib/notifications/email/sendAccountEmail";
 
 export async function POST() {
   try {
@@ -17,10 +18,15 @@ export async function POST() {
 
     await prisma.user.update({
       where: { id: user.id },
-      data: {
-        isActive: false,
-      },
+      data: { isActive: false },
     });
+
+    if (user.email) {
+      await sendAccountDeactivatedEmail({
+        name: user.name,
+        email: user.email,
+      });
+    }
 
     const response = NextResponse.json({ success: true });
     response.cookies.set("__session", "", {

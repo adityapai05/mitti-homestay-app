@@ -1,4 +1,5 @@
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
+import { sendBookingEmail } from "@/lib/notifications/email/sendBookingEmail";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
@@ -95,7 +96,7 @@ export async function POST(req: NextRequest) {
         },
       });
     });
-
+    await sendBookingEmail(booking.id, "BOOKING_REQUESTED");
     return NextResponse.json(
       {
         message: "Booking request sent to host.",
