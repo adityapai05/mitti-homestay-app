@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/prebuilt-components/button";
 import { loadRazorpay } from "@/lib/razorpay/loadRazorpay";
 import ReviewModal from "./ReviewModal";
 import { toast } from "sonner";
+import { Download } from "lucide-react";
 
 /* ---------- Razorpay global typing ---------- */
 
@@ -112,11 +113,29 @@ export default function BookingActionZone({
     }
   }
 
+  const showPdf =
+    status === "CONFIRMED" ||
+    status === "COMPLETED" ||
+    status === "CANCELLED_BY_GUEST" ||
+    status === "CANCELLED_BY_HOST";
+
   return (
     <section className="rounded-xl border border-mitti-khaki bg-mitti-cream p-5 space-y-5 shadow-sm">
       <h2 className="text-base font-semibold text-mitti-dark-brown">
         Next steps
       </h2>
+
+      {showPdf && (
+        <a
+          href={`/api/bookings/${bookingId}/pdf`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-md border border-mitti-khaki bg-white px-4 py-2 text-sm font-medium text-mitti-dark-brown hover:bg-mitti-beige transition"
+        >
+          <Download className="h-4 w-4" />
+          Download Booking Confirmation
+        </a>
+      )}
 
       {/* ---------------- PENDING ---------------- */}
       {status === "PENDING_HOST_APPROVAL" && (

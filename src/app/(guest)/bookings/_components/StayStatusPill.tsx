@@ -1,25 +1,51 @@
 import { Stay } from "./types";
 
 export default function StayStatusPill({ stay }: { stay: Stay }) {
-  let label = "Confirmed";
-  let color = "bg-mitti-olive/10 text-mitti-olive";
+  let label: string;
+  let color: string;
 
-  if (stay.bookingStatus.isActive) {
-    label = "Ongoing";
-  }
+  switch (stay.status) {
+    case "PENDING_HOST_APPROVAL":
+      label = "Waiting for host approval";
+      color = "bg-mitti-error/10 text-mitti-error";
+      break;
 
-  if (stay.bookingStatus.isPast) {
-    label = "Completed";
-  }
+    case "AWAITING_PAYMENT":
+      label = "Payment pending";
+      color = "bg-mitti-error/10 text-mitti-error";
+      break;
 
-  if (stay.status === "CANCELLED_BY_GUEST") {
-    label = "Cancelled by you";
-    color = "bg-mitti-error/10 text-mitti-error";
-  }
+    case "CONFIRMED":
+      if (stay.bookingStatus.isActive) {
+        label = "Ongoing";
+        color = "bg-mitti-olive/10 text-mitti-olive";
+      } else if (stay.bookingStatus.isPast) {
+        label = "Completed";
+        color = "bg-mitti-muted/10 text-mitti-muted";
+      } else {
+        label = "Confirmed";
+        color = "bg-mitti-olive/10 text-mitti-olive";
+      }
+      break;
 
-  if (stay.status === "CANCELLED_BY_HOST") {
-    label = "Cancelled by host";
-    color = "bg-mitti-error/10 text-mitti-error";
+    case "COMPLETED":
+      label = "Completed";
+      color = "bg-mitti-muted/10 text-mitti-muted";
+      break;
+
+    case "CANCELLED_BY_GUEST":
+      label = "Cancelled by you";
+      color = "bg-mitti-error/10 text-mitti-error";
+      break;
+
+    case "CANCELLED_BY_HOST":
+      label = "Cancelled by host";
+      color = "bg-mitti-error/10 text-mitti-error";
+      break;
+
+    default:
+      label = "Unknown";
+      color = "bg-gray-200 text-gray-700";
   }
 
   return (
