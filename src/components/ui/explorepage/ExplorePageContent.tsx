@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import qs from "query-string";
 import axios from "axios";
 import SidebarFilters from "@/components/ui/explorepage/ExploreSidebar";
-import ExploreSearch from "@/components/ui/explorepage/ExploreSearch";
+import ExploreSearch from "@/components/ui/explorepage/ExploreSearchBar";
 import HomestaysGrid from "@/components/ui/explorepage/HomestayGrid";
 import {
   Pagination,

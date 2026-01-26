@@ -5,7 +5,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import FadeContent from "@/components/ui/prebuilt-components/FadeContent";
 
-const SearchModal = dynamic(() => import("../search-bar/SearchModal"), {
+const SearchModal = dynamic(() => import("@/components/shared/search/SearchModal"), {
   ssr: false,
 });
 
