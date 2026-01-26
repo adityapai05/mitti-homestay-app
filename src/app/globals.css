@@ -13,8 +13,8 @@
   --color-mitti-cream: #FBE8D0;
   --color-mitti-beige: #F4F1E1;
   --color-mitti-dark-brown: #4B2C20;
-  --color-mitti-muted: #8C8E98;
   --color-mitti-error: #F75555;
+  --color-mitti-muted: #8C8E98;
 
   --font-sans: var(--font-poppins);
 
@@ -173,5 +173,32 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@keyframes slowZoom {
+  0% { transform: scale(1.05); }
+  100% { transform: scale(1.12); }
+}
+
+html:not(.js-ready) .pre-hydration-hidden {
+  opacity: 0;
+}
+
+@layer utilities {
+  @keyframes heroFloat {
+    0% {
+      transform: scale(1.05) translateY(0px);
+    }
+    50% {
+      transform: scale(1.08) translateY(-12px);
+    }
+    100% {
+      transform: scale(1.05) translateY(0px);
+    }
+  }
+
+  .animate-heroFloat {
+    animation: heroFloat 40s ease-in-out infinite;
   }
 }

@@ -6,6 +6,7 @@ import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/prebuilt-components/sonner";
 import AuthProvider from "@/components/shared/AuthProvider";
 import GlobalModals from "@/components/auth/GlobalModals";
+import ClientBoot from "@/components/system/ClientBoot";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -40,6 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={poppins.className} suppressHydrationWarning>
+        <ClientBoot />
         <Providers>
           <AuthProvider />
           <Toaster />
