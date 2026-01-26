@@ -8,8 +8,6 @@ import { CancellationPolicy, Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
 
-/* -------------------- helpers -------------------- */
-
 function getPolicyCopy(policy: CancellationPolicy) {
   switch (policy) {
     case "FLEXIBLE":
@@ -35,9 +33,7 @@ function getPolicyCopy(policy: CancellationPolicy) {
 
 function getGstRate(pricePerNight: number) {
   return pricePerNight >= 7500 ? 18 : 12;
-}
-
-/* -------------------- route -------------------- */
+} 
 
 export async function GET(
   _req: NextRequest,
@@ -47,7 +43,7 @@ export async function GET(
   const user = await getCurrentUser();
 
   if (!user) {
-    return new NextResponse("Unauthorized", { status: 401 });
+    return new NextResponse("Authentication required", { status: 401 });
   }
 
   const booking = await prisma.booking.findFirst({
@@ -101,8 +97,6 @@ export async function GET(
     return new NextResponse("Not found", { status: 404 });
   }
 
-  /* -------------------- pricing -------------------- */
-
   const nights = Math.ceil(
     (booking.checkOut.getTime() - booking.checkIn.getTime()) /
       (1000 * 60 * 60 * 24),
@@ -113,8 +107,6 @@ export async function GET(
   const gstRate = getGstRate(pricePerNight);
   const gstAmount = subtotal * (gstRate / 100);
   const total = subtotal + gstAmount;
-
-  /* -------------------- render -------------------- */
 
   const { renderToStaticMarkup } = await import("react-dom/server");
 

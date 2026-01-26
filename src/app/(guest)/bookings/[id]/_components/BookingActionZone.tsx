@@ -77,6 +77,7 @@ export default function BookingActionZone({
   status,
   bookingStatus,
   homestayOwner,
+  homestayId,
   refundAmount,
   refundStatus,
   review,
@@ -279,7 +280,7 @@ export default function BookingActionZone({
 
             <ReviewModal
               bookingId={bookingId}
-              homestayId={homestayOwner.id}
+              homestayId={homestayId}
               mode="create"
               onSuccess={() => {
                 setOpenReview(false);

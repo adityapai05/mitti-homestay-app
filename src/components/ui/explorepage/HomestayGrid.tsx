@@ -15,7 +15,7 @@ const HomestayGrid = ({ homestays, loading }: HomestaysGridProps) => {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {Array.from({ length: 8 }).map((_, idx) => (
-          <HomestayCardSkeleton key={idx} size="compact" />
+          <HomestayCardSkeleton key={idx}  />
         ))}
       </div>
     );
@@ -36,7 +36,6 @@ const HomestayGrid = ({ homestays, loading }: HomestaysGridProps) => {
           imageSrc={home.imageUrl}
           price={Number(home.pricePerNight)}
           rating={home.rating}
-          size="compact"
           className="w-full max-w-[280px] mx-auto"
         />
       ))}

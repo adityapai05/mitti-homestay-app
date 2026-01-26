@@ -10,13 +10,17 @@ import { BookingEmailType } from "./types";
 
 export async function sendBookingEmail(
   bookingId: string,
-  type: BookingEmailType
+  type: BookingEmailType,
 ) {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
       user: true,
-      homestay: { include: { owner: true } },
+      homestay: {
+        include: {
+          owner: true,
+        },
+      },
     },
   });
 
@@ -24,6 +28,18 @@ export async function sendBookingEmail(
 
   const guestEmail = resolveEmail(booking.user.email);
   const hostEmail = resolveEmail(booking.homestay.owner.email);
+
+  const location = [
+    booking.homestay.village,
+    booking.homestay.district,
+    booking.homestay.state,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const pdfUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/bookings/${booking.id}/pdf`;
+
+  /* ---------------- BOOKING REQUESTED ---------------- */
 
   if (type === "BOOKING_REQUESTED") {
     if (guestEmail) {
@@ -53,6 +69,8 @@ export async function sendBookingEmail(
     }
   }
 
+  /* ---------------- BOOKING APPROVED ---------------- */
+
   if (type === "BOOKING_APPROVED" && guestEmail) {
     await sendEmail({
       to: guestEmail,
@@ -64,6 +82,8 @@ export async function sendBookingEmail(
     });
   }
 
+  /* ---------------- BOOKING CONFIRMED ---------------- */
+
   if (type === "BOOKING_CONFIRMED") {
     if (guestEmail) {
       await sendEmail({
@@ -72,6 +92,10 @@ export async function sendBookingEmail(
         react: PaymentConfirmedEmail({
           recipientName: booking.user.name,
           homestayName: booking.homestay.name,
+          location,
+          checkIn: booking.checkIn.toDateString(),
+          checkOut: booking.checkOut.toDateString(),
+          pdfUrl,
         }),
       });
     }
@@ -83,10 +107,16 @@ export async function sendBookingEmail(
         react: PaymentConfirmedEmail({
           recipientName: booking.homestay.owner.name,
           homestayName: booking.homestay.name,
+          location,
+          checkIn: booking.checkIn.toDateString(),
+          checkOut: booking.checkOut.toDateString(),
+          pdfUrl,
         }),
       });
     }
   }
+
+  /* ---------------- BOOKING CANCELLED ---------------- */
 
   if (type === "BOOKING_CANCELLED") {
     if (guestEmail) {

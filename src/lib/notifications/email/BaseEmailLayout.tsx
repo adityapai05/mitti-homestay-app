@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element */
+
 import * as React from "react";
 
 type BaseEmailLayoutProps = {
@@ -24,6 +26,20 @@ export function BaseEmailLayout({ title, children }: BaseEmailLayoutProps) {
           padding: "24px",
         }}
       >
+        <img
+          src={`${process.env.NEXT_PUBLIC_ASSETS_URL}/mitti-logo-stacked.png`}
+          alt="MITTI"
+          width="96"
+          height="28"
+          style={{
+            display: "block",
+            marginBottom: "16px",
+            border: "0",
+            outline: "none",
+            textDecoration: "none",
+          }}
+        />
+
         <h1
           style={{
             fontSize: "20px",

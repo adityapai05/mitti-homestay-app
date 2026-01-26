@@ -10,7 +10,7 @@ type ReviewOrderByInput =
 
 export async function GET(
   req: NextRequest,
-  context: { params: Promise<{ homestayId: string }> }
+  context: { params: Promise<{ homestayId: string }> },
 ) {
   try {
     const { homestayId } = await context.params;
@@ -23,8 +23,8 @@ export async function GET(
         ...(user?.role === "ADMIN"
           ? {}
           : user?.role === "HOST"
-          ? { OR: [{ isVerified: true }, { ownerId: user.id }] }
-          : { isVerified: true }),
+            ? { OR: [{ isVerified: true }, { ownerId: user.id }] }
+            : { isVerified: true }),
       },
       select: { id: true, name: true },
     });
@@ -32,7 +32,7 @@ export async function GET(
     if (!homestay) {
       return NextResponse.json(
         { error: "Homestay not found." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -98,7 +98,7 @@ export async function GET(
     console.error("[GET /reviews]", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -111,7 +111,7 @@ const createReviewSchema = z.object({
 
 export async function POST(
   req: NextRequest,
-  context: { params: Promise<{ homestayId: string }> }
+  context: { params: Promise<{ homestayId: string }> },
 ) {
   try {
     const user = await getCurrentUser();
@@ -134,21 +134,28 @@ export async function POST(
     if (!booking) {
       return NextResponse.json(
         { error: "Booking not found." },
-        { status: 404 }
+        { status: 404 },
+      );
+    }
+
+    if (booking.homestayId !== homestayId) {
+      return NextResponse.json(
+        { error: "Booking does not belong to this homestay." },
+        { status: 400 },
       );
     }
 
     if (booking.userId !== user.id) {
       return NextResponse.json(
         { error: "You can only review your own booking." },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     if (booking.status !== "COMPLETED") {
       return NextResponse.json(
         { error: "You can only review completed stays." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -159,7 +166,7 @@ export async function POST(
     if (existing) {
       return NextResponse.json(
         { error: "Review already exists." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -175,13 +182,15 @@ export async function POST(
       });
 
       const avg = await tx.review.aggregate({
-        where: { homestayId },
+        where: { homestayId: booking.homestayId },
         _avg: { rating: true },
       });
 
       await tx.homestay.update({
-        where: { id: homestayId },
-        data: { rating: Number(avg._avg.rating?.toFixed(1) ?? 0) },
+        where: { id: booking.homestayId },
+        data: {
+          rating: Number(avg._avg.rating?.toFixed(1) ?? 0),
+        },
       });
 
       return created;
@@ -192,14 +201,14 @@ export async function POST(
     console.error("[POST /reviews]", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: Promise<{ homestayId: string }> }
+  context: { params: Promise<{ homestayId: string }> },
 ) {
   try {
     const user = await getCurrentUser();
@@ -217,7 +226,7 @@ export async function PATCH(
     if (!review || review.userId !== user.id) {
       return NextResponse.json(
         { error: "Review not found or forbidden." },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -243,7 +252,7 @@ export async function PATCH(
   } catch {
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
