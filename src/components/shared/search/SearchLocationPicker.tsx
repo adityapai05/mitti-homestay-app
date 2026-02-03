@@ -190,7 +190,7 @@ export default function SearchLocationPicker({ value, onChange }: Props) {
             zoom={12}
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-mitti-muted">
+          <div className="flex h-full items-center justify-center text-mitti-dark-brown">
             <LocationEdit size={24} className="mr-3"/>
             Search to preview location
           </div>

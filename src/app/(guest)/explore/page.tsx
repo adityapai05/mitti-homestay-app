@@ -1,21 +1,25 @@
-import ExplorePageContent from "@/components/ui/explorepage/ExplorePageContent";
+import ExploreShell from "./_components/ExploreShell";
+import ExploreSearchBar from "./_components/ExploreSearchBar";
+import ExploreFilters from "./_components/ExploreFilters";
+import ExploreSort from "./_components/ExploreSort";
+import ExploreGrid from "./_components/ExploreGrid";
+import ExplorePagination from "./_components/ExplorePagination";
 import { Suspense } from "react";
+import ExploreSkeleton from "./_components/ExploreSkeleton";
 
 export default function ExplorePage() {
   return (
-    <Suspense
-      fallback={
-        <div className="p-6 text-center" role="alert" aria-live="polite">
-          <div className="animate-pulse flex flex-col items-center gap-4">
-            <div className="w-16 h-16 bg-mitti-khaki rounded-full" />
-            <div className="h-6 bg-mitti-cream rounded w-3/4 mx-auto" />
-            <div className="h-4 bg-mitti-beige rounded w-1/2 mx-auto" />
-          </div>
-          <p className="mt-4 text-mitti-muted">Loading your rural escapes...</p>
+    <Suspense fallback={<ExploreSkeleton />}>
+      <ExploreShell>
+        <ExploreSearchBar />
+        <div className="flex items-center justify-between gap-4">
+          <ExploreFilters />
+          <ExploreSort />
         </div>
-      }
-    >
-      <ExplorePageContent />
+
+        <ExploreGrid />
+        <ExplorePagination />
+      </ExploreShell>
     </Suspense>
   );
 }

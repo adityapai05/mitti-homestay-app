@@ -95,8 +95,10 @@ export default function SearchModal({ onClose, initialLocation, initialCheckIn, 
           </div>
 
           {/* BODY */}
+          
           <div className="px-8 py-8">
             {step === 1 && (
+              
               <SearchLocationPicker value={location} onChange={setLocation} />
             )}
 

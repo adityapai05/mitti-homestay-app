@@ -29,7 +29,6 @@ export default function UserDropdown() {
 
   const displayName = user?.name || user?.email || user?.phone || "User";
   const avatarUrl = user?.image || "/default-avatar.png";
-  console.log(user);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

@@ -15,7 +15,7 @@ const SearchTrigger = () => {
   return (
     <>
       <div className="pre-hydration-hidden">
-        <FadeContent delay={0.2} duration={700} initialOpacity={0}>
+        <FadeContent duration={600} initialOpacity={0}>
           <button
             onClick={() => setOpen(true)}
             className="group w-full max-w-md bg-white border border-black/5 backdrop-blur-md rounded-2xl px-5 py-4 flex items-center gap-4 shadow-lg hover:shadow-xl transition-all cursor-pointer hover:scale-[102%]"

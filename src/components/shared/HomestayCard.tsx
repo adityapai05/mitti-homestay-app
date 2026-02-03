@@ -34,9 +34,11 @@ const HomestayCard = ({
     <Link
       href={href}
       className={clsx(
-        "group block w-full max-w-sm overflow-hidden rounded-3xl bg-white",
+        "group block w-full overflow-hidden bg-white",
+        "rounded-2xl sm:rounded-3xl",
         "shadow-md hover:shadow-xl transition-all duration-300",
-        "hover:-translate-y-1",
+        "sm:hover:-translate-y-1",
+        "sm:max-w-sm",
         className,
       )}
     >
