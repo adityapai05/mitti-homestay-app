@@ -1,21 +1,14 @@
 "use client";
 
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/prebuilt-components/sidebar";
-
-import { User, Shield, BadgeCheck, Wallet } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { User, Shield, BadgeCheck, Wallet, X } from "lucide-react";
+
+type Props = {
+  open: boolean;
+  onClose: () => void;
+};
 
 const accountItems = [
   { href: "/settings/profile", label: "Profile", icon: User },
@@ -27,74 +20,90 @@ const hostItems = [
   { href: "/settings/payouts", label: "Payouts", icon: Wallet },
 ];
 
-export default function SettingsSidebar() {
+export default function SettingsSidebar({ open, onClose }: Props) {
   const pathname = usePathname();
-  const { isMobile, setOpenMobile } = useSidebar();
 
   const renderItem = (item: {
     href: string;
     label: string;
-    icon: LucideIcon;
+    icon: React.ElementType;
   }) => {
     const Icon = item.icon;
     const isActive = pathname === item.href;
 
     return (
-      <SidebarMenuItem key={item.href}>
-        <SidebarMenuButton
-          asChild
-          isActive={isActive}
-          onClick={() => isMobile && setOpenMobile(false)}
-          className={`
-            rounded-xl px-4 py-2.5 transition
-            hover:bg-mitti-beige
-            ${
-              isActive
-                ? "bg-mitti-beige text-mitti-dark-brown font-medium"
-                : "text-mitti-dark-brown/70"
-            }
-          `}
-        >
-          <Link href={item.href} className="flex items-center gap-3">
-            <Icon size={18} className="shrink-0" />
-            <span className="text-sm">{item.label}</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
+      <Link
+        key={item.href}
+        href={item.href}
+        onClick={onClose}
+        className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition
+          ${
+            isActive
+              ? "bg-mitti-beige font-semibold text-mitti-dark-brown"
+              : "text-mitti-dark-brown/80 hover:bg-mitti-beige"
+          }`}
+      >
+        <Icon size={18} />
+        <span>{item.label}</span>
+      </Link>
     );
   };
 
   return (
-    <Sidebar
-      variant="sidebar"
-      collapsible="offcanvas"
-      className="bg-mitti-cream border-r border-mitti-khaki px-3 pt-20"
+    <aside
+      className={`
+        fixed inset-y-0 left-0 z-40 w-64
+        bg-mitti-cream border-r border-mitti-khaki
+        transform transition-transform duration-200
+        md:static md:translate-x-0
+        ${open ? "translate-x-0" : "-translate-x-full"}
+      `}
     >
-      <SidebarContent className="flex flex-col gap-10">
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-3 text-xs tracking-wide text-mitti-dark-brown/50">
-            ACCOUNT
-          </SidebarGroupLabel>
+      <div className="flex h-full flex-col px-4 py-6">
+        {/* Header */}
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/mitti-logo-icon.png"
+              alt="MITTI"
+              width={40}
+              height={40}
+            />
+            <div>
+              <p className="text-sm font-semibold text-mitti-dark-brown">
+                MITTI
+              </p>
+              <p className="text-xs text-mitti-dark-brown/70">
+                Account Settings
+              </p>
+            </div>
+          </div>
 
-          <SidebarGroupContent>
-            <SidebarMenu className="flex flex-col gap-2">
-              {accountItems.map(renderItem)}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+          <button
+            onClick={onClose}
+            className="md:hidden rounded-md p-2 hover:bg-mitti-beige"
+          >
+            <X size={18} />
+          </button>
+        </div>
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-3 text-xs tracking-wide text-mitti-dark-brown/50">
-            HOST
-          </SidebarGroupLabel>
+        {/* Navigation */}
+        <div className="space-y-6 overflow-y-auto">
+          <div>
+            <p className="px-3 pb-2 text-xs tracking-wide text-mitti-dark-brown/50">
+              ACCOUNT
+            </p>
+            <nav className="space-y-1">{accountItems.map(renderItem)}</nav>
+          </div>
 
-          <SidebarGroupContent>
-            <SidebarMenu className="flex flex-col gap-2">
-              {hostItems.map(renderItem)}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+          <div>
+            <p className="px-3 pb-2 text-xs tracking-wide text-mitti-dark-brown/50">
+              HOST
+            </p>
+            <nav className="space-y-1">{hostItems.map(renderItem)}</nav>
+          </div>
+        </div>
+      </div>
+    </aside>
   );
 }

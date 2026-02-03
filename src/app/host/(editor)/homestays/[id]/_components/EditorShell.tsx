@@ -47,7 +47,7 @@ const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
 
   const isDirty = useMemo(
     () => JSON.stringify(draft) !== JSON.stringify(initialRef.current),
-    [draft]
+    [draft],
   );
 
   const handleSave = useCallback(async () => {
@@ -118,6 +118,9 @@ const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
             lastSavedAt={lastSavedAt}
             onSaveAndExit={async () => {
               await handleSave();
+              router.push("/host/homestays");
+            }}
+            onExit={() => {
               router.push("/host/homestays");
             }}
             onToggleSidebar={() => setSidebarOpen((v) => !v)}

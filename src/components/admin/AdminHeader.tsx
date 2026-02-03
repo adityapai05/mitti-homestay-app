@@ -4,8 +4,21 @@ import { User } from "@/types";
 import { LogOut } from "lucide-react";
 import { logout } from "@/lib/firebase/authActions";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function AdminHeader({ admin }: { admin: User }) {
+  const router = useRouter();
+
+  async function handleLogout() {
+    try {
+      await logout();
+      toast.success("Logged out successfully");
+      router.replace("/");
+    } catch {
+      toast.error("Failed to logout");
+    }
+  }
+
   return (
     <header className="h-14 border-b border-mitti-khaki bg-mitti-cream px-6 flex items-center justify-end">
       <div className="flex items-center gap-4">
@@ -21,11 +34,8 @@ export default function AdminHeader({ admin }: { admin: User }) {
         </div>
 
         <button
-          onClick={async () => {
-            await logout();
-            toast.success("Logged out successfully");
-          }}
-          className="text-mitti-dark-brown/70 hover:text-mitti-error transition"
+          onClick={handleLogout}
+          className="text-mitti-dark-brown/70 hover:text-mitti-error transition cursor-pointer"
           title="Logout"
         >
           <LogOut size={18} />

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Eye, Save, ShieldCheck, Clock, Menu } from "lucide-react";
+import { Eye, Save, ShieldCheck, Clock, Menu, ArrowLeft } from "lucide-react";
 
 type EditorHeaderProps = {
   homestayId: string;
@@ -11,6 +11,7 @@ type EditorHeaderProps = {
   isDirty: boolean;
   lastSavedAt: Date | null;
   onSaveAndExit: () => void;
+  onExit: () => void;
   onToggleSidebar: () => void;
 };
 
@@ -22,6 +23,7 @@ const EditorHeader = ({
   isDirty,
   lastSavedAt,
   onSaveAndExit,
+  onExit,
   onToggleSidebar,
 }: EditorHeaderProps) => {
   const showSaved = !isSaving && !isDirty && lastSavedAt;
@@ -29,7 +31,7 @@ const EditorHeader = ({
   return (
     <div className="sticky z-30 border-b border-mitti-khaki bg-mitti-cream">
       <div className="flex items-center justify-between px-4 py-3 sm:px-6">
-        {/* Left */}
+        {/* LEFT */}
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={onToggleSidebar}
@@ -57,9 +59,7 @@ const EditorHeader = ({
               )}
 
               {showSaved && (
-                <span className="text-mitti-dark-brown/50">
-                  • Saved just now
-                </span>
+                <span className="text-mitti-dark-brown/50">• Saved</span>
               )}
 
               {isSaving && (
@@ -75,7 +75,7 @@ const EditorHeader = ({
           </div>
         </div>
 
-        {/* Right */}
+        {/* RIGHT */}
         <div className="flex items-center gap-3">
           <Link
             href={`/homestays/${homestayId}`}
@@ -86,18 +86,21 @@ const EditorHeader = ({
             View
           </Link>
 
+          {/* EXIT BUTTON */}
           <button
-            onClick={onSaveAndExit}
-            disabled={isSaving || !isDirty}
+            onClick={isDirty ? onSaveAndExit : onExit}
+            disabled={isSaving}
             className={`inline-flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-medium transition
               ${
-                isSaving || !isDirty
+                isSaving
                   ? "bg-mitti-khaki text-mitti-dark-brown/60 cursor-not-allowed"
-                  : "bg-mitti-brown text-white hover:bg-mitti-brown/90"
+                  : isDirty
+                    ? "bg-mitti-brown text-white hover:bg-mitti-brown/90"
+                    : "border border-mitti-khaki text-mitti-dark-brown hover:bg-mitti-beige"
               }`}
           >
-            <Save size={16} />
-            Save & exit
+            {isDirty ? <Save size={16} /> : <ArrowLeft size={16} />}
+            {isDirty ? "Save & exit" : "Exit"}
           </button>
         </div>
       </div>

@@ -270,7 +270,7 @@ const CreateHomestayStepper = () => {
   /* ---------------- render ---------------- */
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-mitti-beige flex flex-col">
+    <div className="min-h-screen bg-mitti-beige flex flex-col">
       <div className="flex-1 flex items-center justify-center px-4 pb-32">
         <div className="w-full">{renderStep()}</div>
       </div>
