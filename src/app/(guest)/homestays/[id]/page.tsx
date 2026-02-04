@@ -8,7 +8,8 @@ import Gallery from "./_components/gallery/Gallery";
 import Overview from "./_components/overview/Overview";
 import Description from "./_components/description/Description";
 import Amenities from "./_components/amenities/Amenities";
-import HostSection from "./_components/host/HostOverview";
+import HostOverview from "./_components/host/HostOverview";
+import LocationOverview from "./_components/location/LocationOverview";
 
 async function getHomestay(id: string): Promise<HomestayDetailsDTO> {
   const homestay = await prisma.homestay.findFirst({
@@ -199,7 +200,8 @@ export default async function HomestayPage({
           <Overview homestay={homestay} />
           <Description homestay={homestay} />
           <Amenities homestay={homestay} />
-          <HostSection homestay={homestay} />
+          <HostOverview homestay={homestay} />
+          <LocationOverview homestay={homestay} />
         </div>
 
         {/* Right booking column */}
