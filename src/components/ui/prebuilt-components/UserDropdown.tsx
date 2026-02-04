@@ -23,8 +23,20 @@ import Link from "next/link";
 import { useUserStore } from "@/stores/useUserStore";
 import { toast } from "sonner";
 import { logout } from "@/lib/firebase/authActions";
+import { useRouter } from "next/navigation";
 
 export default function UserDropdown() {
+  const router = useRouter();
+  async function handleLogout() {
+    try {
+      await logout();
+      toast.success("Logged out successfully");
+      router.replace("/");
+    } catch {
+      toast.error("Failed to logout");
+    }
+  }
+
   const user = useUserStore((state) => state.user);
 
   const displayName = user?.name || user?.email || user?.phone || "User";
@@ -100,10 +112,7 @@ export default function UserDropdown() {
         <DropdownMenuSeparator className="bg-mitti-dark-brown/70" />
 
         <DropdownMenuItem
-          onClick={async () => {
-            await logout();
-            toast.success("Logged out successfully");
-          }}
+          onClick={handleLogout}
           className="text-red-600 hover:!bg-red-100 cursor-pointer"
         >
           <LogOut size={16} className="opacity-60" />
