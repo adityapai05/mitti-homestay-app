@@ -6,6 +6,8 @@ import { HomestayDetailsDTO } from "./types";
 
 import Gallery from "./_components/gallery/Gallery";
 import Overview from "./_components/overview/Overview";
+import Description from "./_components/description/Description";
+import Amenities from "./_components/amenities/Amenities";
 
 async function getHomestay(id: string): Promise<HomestayDetailsDTO> {
   const homestay = await prisma.homestay.findFirst({
@@ -153,12 +155,25 @@ export default async function HomestayPage({
   const homestay = await getHomestay(id);
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-10 pb-20">
       <Gallery images={homestay.images} name={homestay.name} />
 
-      <section className="space-y-4">
-        <Overview homestay={homestay} />
-      </section>
+      {/* Main content grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-12">
+        {/* Left content */}
+        <div className="space-y-8">
+          <Overview homestay={homestay} />
+          <Description homestay={homestay} />
+          <Amenities homestay={homestay} />
+        </div>
+
+        {/* Right booking column */}
+        <aside className="hidden lg:block">
+          <div className="sticky top-24">
+            {/* BookingCard will live here */}
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }
