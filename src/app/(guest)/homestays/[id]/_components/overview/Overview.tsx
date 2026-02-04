@@ -51,7 +51,9 @@ export default function Overview({ homestay }: OverviewProps) {
           {homestay.name}
         </h1>
 
-        <p className="text-base font-medium text-mitti-dark-brown">{locationText}</p>
+        <p className="text-base font-medium text-mitti-dark-brown">
+          {locationText}
+        </p>
 
         <p className="text-sm text-mitti-dark-brown">
           {stayTypeLabel} · {homestay.capacity.bedrooms} Bedroom ·{" "}
@@ -60,7 +62,9 @@ export default function Overview({ homestay }: OverviewProps) {
       </div>
 
       {/* Trust Card */}
-      <div className="rounded-xl bg-mitti-khaki/25 border border-mitti-dark-brown/30 px-6 py-5">
+      <div
+        className="rounded-2xl border border-mitti-khaki bg-mitti-beige p-6 shadow-sm"
+      >
         <div className="grid grid-cols-3 items-center text-center">
           {/* Rating */}
           <div className="flex flex-col items-center gap-1">

@@ -60,7 +60,7 @@ export default function HostCard({ host }: { host: Host }) {
               {host.isUserVerified && (
                 <div className="flex items-center gap-1 text-sm text-mitti-olive">
                   <ShieldCheck className="h-4 w-4" />
-                  Verified Host
+                  MITTI Verified Host
                 </div>
               )}
             </div>

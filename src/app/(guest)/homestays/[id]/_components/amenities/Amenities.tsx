@@ -40,7 +40,7 @@ export default function Amenities({ homestay }: AmenitiesProps) {
     return (
       <section className="max-w-4xl px-4 pt-8 space-y-4 border-t border-mitti-dark-brown/20">
         <h2 className="text-2xl font-semibold text-mitti-dark-brown">
-          What this place offers
+          What’s included in your stay
         </h2>
 
         <p className="text-mitti-dark-brown/70 text-base max-w-md">
@@ -60,7 +60,7 @@ export default function Amenities({ homestay }: AmenitiesProps) {
   return (
     <section className="max-w-4xl px-4 pt-8 space-y-4 border-t border-mitti-dark-brown/20">
       <h2 className="text-2xl font-semibold text-mitti-dark-brown">
-        What this place offers
+        What’s included in your stay
       </h2>
 
       {/* Desktop layout */}

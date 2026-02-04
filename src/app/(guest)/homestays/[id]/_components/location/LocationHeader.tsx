@@ -11,7 +11,7 @@ export default function LocationHeader({ location }: { location: Location }) {
   return (
     <div className="space-y-1">
       <h2 className="text-2xl font-semibold text-mitti-dark-brown">
-        Where You'll Be
+        Where this Homestay is located
       </h2>
 
       <div className="flex items-center gap-2 text-mitti-dark-brown/70">

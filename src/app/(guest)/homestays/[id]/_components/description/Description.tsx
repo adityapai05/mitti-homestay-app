@@ -23,7 +23,7 @@ export default function Description({ homestay }: DescriptionProps) {
     return (
       <section className="max-w-4xl px-4 pt-8 space-y-4 border-t border-mitti-dark-brown/20">
         <h2 className="text-2xl font-semibold text-mitti-dark-brown">
-          About this Stay
+          About this Homestay
         </h2>
 
         <p className="text-mitti-dark-brown/70 text-base max-w-md">
@@ -37,7 +37,7 @@ export default function Description({ homestay }: DescriptionProps) {
     <section className="max-w-4xl px-4 pt-8 space-y-4 border-t border-mitti-dark-brown/20">
       {/* Heading */}
       <h2 className="text-2xl font-semibold text-mitti-dark-brown">
-        About this Stay
+        About this Homestay
       </h2>
 
       {/* Content */}
