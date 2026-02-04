@@ -33,6 +33,7 @@ const HomestayCard = ({
   return (
     <Link
       href={href}
+      target="_blank"
       className={clsx(
         "group block w-full overflow-hidden bg-white",
         "rounded-2xl sm:rounded-3xl",
