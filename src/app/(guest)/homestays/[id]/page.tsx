@@ -8,6 +8,7 @@ import Gallery from "./_components/gallery/Gallery";
 import Overview from "./_components/overview/Overview";
 import Description from "./_components/description/Description";
 import Amenities from "./_components/amenities/Amenities";
+import HostSection from "./_components/host/HostOverview";
 
 async function getHomestay(id: string): Promise<HomestayDetailsDTO> {
   const homestay = await prisma.homestay.findFirst({
@@ -61,9 +62,18 @@ async function getHomestay(id: string): Promise<HomestayDetailsDTO> {
           about: true,
           languages: true,
           isVerified: true,
+          createdAt: true,
           hostProfile: {
             select: {
               verificationStatus: true,
+            },
+          },
+          homestays: {
+            select: {
+              rating: true,
+              _count: {
+                select: { reviews: true },
+              },
             },
           },
         },
@@ -80,6 +90,24 @@ async function getHomestay(id: string): Promise<HomestayDetailsDTO> {
   if (!homestay) {
     notFound();
   }
+
+  const hostHomestays = homestay.owner.homestays;
+
+  const reviewCount = hostHomestays.reduce(
+    (sum, h) => sum + h._count.reviews,
+    0,
+  );
+
+  const ratings = hostHomestays
+    .map((h) => h.rating)
+    .filter((r): r is number => r !== null);
+
+  const averageRating =
+    ratings.length > 0
+      ? Number((ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(2))
+      : null;
+
+  const hostingSince = homestay.owner.createdAt.getFullYear();
 
   return {
     id: homestay.id,
@@ -137,6 +165,12 @@ async function getHomestay(id: string): Promise<HomestayDetailsDTO> {
       isUserVerified: homestay.owner.isVerified,
       verificationStatus:
         homestay.owner.hostProfile?.verificationStatus ?? "PENDING",
+
+      stats: {
+        hostingSince,
+        reviewCount,
+        averageRating,
+      },
     },
 
     meta: {
@@ -165,6 +199,7 @@ export default async function HomestayPage({
           <Overview homestay={homestay} />
           <Description homestay={homestay} />
           <Amenities homestay={homestay} />
+          <HostSection homestay={homestay} />
         </div>
 
         {/* Right booking column */}

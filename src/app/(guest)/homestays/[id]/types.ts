@@ -77,6 +77,12 @@ export type HomestayDetailsDTO = {
     languages: string[];
     isUserVerified: boolean;
     verificationStatus: HostVerificationStatus;
+
+    stats: {
+      hostingSince: number;
+      reviewCount: number;
+      averageRating: number | null;
+    };
   };
 
   meta: {
@@ -84,7 +90,6 @@ export type HomestayDetailsDTO = {
     createdAt: string;
   };
 };
-
 
 export const ESSENTIALS = [
   { key: "drinking_water", label: "Drinking water", icon: Droplets },
@@ -105,7 +110,11 @@ export const EXPERIENCES = [
 
 export const SAFETY = [
   { key: "first_aid", label: "First aid kit", icon: ShieldPlus },
-  { key: "fire_extinguisher", label: "Fire extinguisher", icon: FireExtinguisher },
+  {
+    key: "fire_extinguisher",
+    label: "Fire extinguisher",
+    icon: FireExtinguisher,
+  },
   { key: "smoke_alarm", label: "Smoke alarm", icon: BellRing },
   { key: "cctv", label: "CCTV (common areas)", icon: Camera },
 ];
