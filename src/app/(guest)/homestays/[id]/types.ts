@@ -118,3 +118,46 @@ export const SAFETY = [
   { key: "smoke_alarm", label: "Smoke alarm", icon: BellRing },
   { key: "cctv", label: "CCTV (common areas)", icon: Camera },
 ];
+
+export type ReviewDTO = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    image: string | null;
+  };
+  booking: {
+    id: string;
+    checkIn: string;
+    checkOut: string;
+    guests: number;
+  };
+};
+
+export type ReviewsStatsDTO = {
+  totalReviews: number;
+  averageRating: number;
+  ratingDistribution: {
+    rating: number;
+    count: number;
+  }[];
+};
+
+export type ReviewsResponseDTO = {
+  reviews: ReviewDTO[];
+  homestay: {
+    id: string;
+    name: string;
+  };
+  stats: ReviewsStatsDTO;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    limit: number;
+  };
+  aiSummary?: string;
+};

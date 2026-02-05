@@ -62,9 +62,7 @@ export default function Overview({ homestay }: OverviewProps) {
       </div>
 
       {/* Trust Card */}
-      <div
-        className="rounded-2xl border border-mitti-khaki bg-mitti-beige p-6 shadow-sm"
-      >
+      <div className="rounded-2xl border border-mitti-khaki bg-white p-6 shadow-sm">
         <div className="grid grid-cols-3 items-center text-center">
           {/* Rating */}
           <div className="flex flex-col items-center gap-1">
@@ -79,7 +77,10 @@ export default function Overview({ homestay }: OverviewProps) {
             <span className="text-3xl font-semibold text-mitti-dark-brown">
               {homestay.rating.reviewCount}
             </span>
-            <span className="text-sm text-mitti-dark-brown">Reviews</span>
+            <span className="text-sm text-mitti-dark-brown">
+              {" "}
+              {homestay.rating.reviewCount === 1 ? "Review" : "Reviews"}
+            </span>
           </div>
 
           {/* Verified */}

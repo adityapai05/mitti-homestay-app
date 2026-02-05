@@ -17,7 +17,7 @@ function Stat({ value, label }: { value: React.ReactNode; label: string }) {
 export default function HostCard({ host }: { host: Host }) {
   return (
     <div
-      className="relative rounded-2xl border border-mitti-khaki bg-mitti-beige p-6
+      className="relative rounded-2xl border border-mitti-khaki bg-white p-6
                  transition  hover:border-mitti-olive/40"
     >
       {/* View profile action */}
