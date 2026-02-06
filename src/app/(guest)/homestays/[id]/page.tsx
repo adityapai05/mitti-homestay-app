@@ -12,7 +12,6 @@ import HostOverview from "./_components/host/HostOverview";
 import LocationOverview from "./_components/location/LocationOverview";
 import ThingsToKnow from "./_components/things-to-know/ThingsToKnow";
 import ReviewsOverview from "./_components/reviews/ReviewsOverview";
-import Booking from "./_components/booking-card/Booking";
 import DesktopBookingCard from "./_components/booking-card/DesktopBookingCard";
 import MobileBookingBar from "./_components/booking-card/MobileBookingBar";
 
@@ -191,23 +190,26 @@ export default async function HomestayPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: {
+  searchParams: Promise<{
     checkIn?: string;
     checkOut?: string;
     guests?: string;
-  };
+  }>;
 }) {
   const { id } = await params;
+  const resolvedSearchParams = await searchParams;
   const homestay = await getHomestay(id);
   const initialDateRange =
-    searchParams.checkIn && searchParams.checkOut
+    resolvedSearchParams.checkIn && resolvedSearchParams.checkOut
       ? {
-          from: new Date(searchParams.checkIn),
-          to: new Date(searchParams.checkOut),
+          from: new Date(resolvedSearchParams.checkIn),
+          to: new Date(resolvedSearchParams.checkOut),
         }
       : undefined;
 
-  const initialGuests = searchParams.guests ? Number(searchParams.guests) : 1;
+  const initialGuests = resolvedSearchParams.guests
+    ? Number(resolvedSearchParams.guests)
+    : 1;
 
   return (
     <div className="space-y-10 pb-20">

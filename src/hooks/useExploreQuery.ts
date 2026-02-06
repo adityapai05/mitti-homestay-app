@@ -128,11 +128,12 @@ export function serializeExploreQuery(
 }
 
 export function useExploreQuery(): ExploreQuery {
-  const params = useSearchParams();
-
-  const paramsKey = params.toString();
+  const searchParams = useSearchParams();
+  const paramsKey = searchParams.toString();
 
   return useMemo(() => {
+    const params = new URLSearchParams(paramsKey);
+
     const parseNumber = (value: string | null) => {
       if (!value) return undefined;
       const num = Number(value);
@@ -142,17 +143,21 @@ export function useExploreQuery(): ExploreQuery {
     const getArrayParam = (key: string) => {
       const raw = params.get(key);
       if (!raw) return undefined;
+
       const items = raw
         .split(",")
         .map((item) => item.trim())
         .filter(Boolean);
+
       return items.length > 0 ? items : undefined;
     };
 
     return {
       destination: params.get("destination") ?? undefined,
+
       lat: parseNumber(params.get("lat")),
       lng: parseNumber(params.get("lng")),
+
       checkIn: params.get("checkIn") ?? undefined,
       checkOut: params.get("checkOut") ?? undefined,
 

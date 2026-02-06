@@ -34,7 +34,6 @@ export default function PriceBreakdown({
       : 0;
 
   const guideTotal = includeGuide ? nights * guideFeePerNight : 0;
-  const total = stayTotal + guideTotal;
 
   const gstAmount = Math.round(stayTotal * gstRate);
   const platformFeeAmount = Math.round(stayTotal * platformFeeRate);
@@ -66,7 +65,7 @@ export default function PriceBreakdown({
         <span>₹{platformFeeAmount}</span>
       </div>
 
-      <div className="flex justify-between font-semibold pt-2 border-t border-mitti-khaki pt-4">
+      <div className="flex justify-between font-semibold border-t border-mitti-khaki pt-4">
         <span>Total</span>
         <span>₹{grandTotal}</span>
       </div>
