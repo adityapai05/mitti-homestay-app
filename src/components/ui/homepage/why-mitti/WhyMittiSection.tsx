@@ -58,7 +58,6 @@ const WHY_MITTI_ITEMS = [
 
 const WhyMittiSection = () => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const ActiveIcon = WHY_MITTI_ITEMS[activeIndex].icon;
 
   return (
     <section className="bg-mitti-beige px-6 py-12">
