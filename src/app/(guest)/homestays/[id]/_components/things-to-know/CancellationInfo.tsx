@@ -41,7 +41,7 @@ export default function CancellationInfo({
   const copy = getCancellationCopy(policies.cancellationPolicy);
 
   return (
-    <div className="space-y-2 text-sm text-mitti-dark-brown/80">
+    <div className="space-y-2 text-sm text-mitti-dark-brown/80 bg-white p-5 rounded-xl border border-mitti-khaki">
       <CalendarX className="h-5 w-5 text-mitti-olive" />
 
       <h3 className="font-medium text-mitti-dark-brown">{copy.title}</h3>

@@ -10,7 +10,7 @@ export default function HouseRules({
   maxGuests: number;
 }) {
   return (
-    <div className="space-y-2 text-sm text-mitti-dark-brown/80">
+    <div className="space-y-2 text-sm text-mitti-dark-brown/80 bg-white p-5 rounded-xl border border-mitti-khaki">
       <Key className="h-5 w-5 text-mitti-olive" />
 
       <h3 className="font-medium text-mitti-dark-brown">House Rules</h3>
@@ -18,7 +18,9 @@ export default function HouseRules({
       <ul className="space-y-1">
         <li>Check-in after {checkIn}</li>
         <li>Check-out before {checkOut}</li>
-        <li>{maxGuests} {maxGuests === 1 ? "guest" : "guests"} maximum</li>
+        <li>
+          {maxGuests} {maxGuests === 1 ? "guest" : "guests"} maximum
+        </li>
       </ul>
     </div>
   );

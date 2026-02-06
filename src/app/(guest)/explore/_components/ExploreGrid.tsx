@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useExploreData } from "@/hooks/useExploreData";
 import HomestayCard from "@/components/shared/HomestayCard";
 import ExploreEmptyState from "./ExploreEmptyState";
@@ -7,7 +8,8 @@ import ExploreSkeleton from "./ExploreSkeleton";
 
 export default function ExploreGrid() {
   const { homestays, loading, error } = useExploreData();
-  console.log("bgrid: ", homestays);
+  const searchParams = useSearchParams();
+
   if (loading) return <ExploreSkeleton />;
 
   if (error) {
@@ -22,6 +24,8 @@ export default function ExploreGrid() {
     return <ExploreEmptyState />;
   }
 
+  const queryString = searchParams.toString();
+
   return (
     <div className="grid grid-cols-1 gap-6 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {homestays.map((home) => (
@@ -33,6 +37,7 @@ export default function ExploreGrid() {
           imageSrc={home.imageUrl}
           price={Number(home.pricePerNight)}
           rating={home.rating}
+          href={`/homestays/${home.id}${queryString ? `?${queryString}` : ""}`}
         />
       ))}
     </div>

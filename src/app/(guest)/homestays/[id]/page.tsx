@@ -12,6 +12,9 @@ import HostOverview from "./_components/host/HostOverview";
 import LocationOverview from "./_components/location/LocationOverview";
 import ThingsToKnow from "./_components/things-to-know/ThingsToKnow";
 import ReviewsOverview from "./_components/reviews/ReviewsOverview";
+import Booking from "./_components/booking-card/Booking";
+import DesktopBookingCard from "./_components/booking-card/DesktopBookingCard";
+import MobileBookingBar from "./_components/booking-card/MobileBookingBar";
 
 async function getHomestay(id: string): Promise<HomestayDetailsDTO> {
   const homestay = await prisma.homestay.findFirst({
@@ -185,19 +188,32 @@ async function getHomestay(id: string): Promise<HomestayDetailsDTO> {
 
 export default async function HomestayPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: {
+    checkIn?: string;
+    checkOut?: string;
+    guests?: string;
+  };
 }) {
   const { id } = await params;
   const homestay = await getHomestay(id);
+  const initialDateRange =
+    searchParams.checkIn && searchParams.checkOut
+      ? {
+          from: new Date(searchParams.checkIn),
+          to: new Date(searchParams.checkOut),
+        }
+      : undefined;
+
+  const initialGuests = searchParams.guests ? Number(searchParams.guests) : 1;
 
   return (
     <div className="space-y-10 pb-20">
       <Gallery images={homestay.images} name={homestay.name} />
 
-      {/* Main content grid */}
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-12">
-        {/* Left content */}
         <div className="space-y-8">
           <Overview homestay={homestay} />
           <Description homestay={homestay} />
@@ -208,13 +224,24 @@ export default async function HomestayPage({
           <ReviewsOverview homestay={homestay} />
         </div>
 
-        {/* Right booking column */}
         <aside className="hidden lg:block">
           <div className="sticky top-24">
-            {/* BookingCard will live here */}
+            <DesktopBookingCard
+              homestay={homestay}
+              initialDateRange={initialDateRange}
+              initialGuests={initialGuests}
+            />
           </div>
         </aside>
       </div>
+
+      {/* MOBILE ONLY – outside layout */}
+
+      <MobileBookingBar
+        homestay={homestay}
+        initialDateRange={initialDateRange}
+        initialGuests={initialGuests}
+      />
     </div>
   );
 }
