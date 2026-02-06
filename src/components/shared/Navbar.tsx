@@ -117,7 +117,7 @@ const Navbar = () => {
             ) : (
               <Button
                 onClick={() => openModal("login")}
-                className="bg-mitti-brown text-mitti-beige font-medium hover:bg-mitti-brown/80 active:scale-[0.97] transition-transform"
+                className="bg-mitti-brown text-mitti-beige font-medium hover:bg-mitti-brown/80 active:scale-[0.97] transition-transform cursor-pointer"
               >
                 <LogIn className="mr-2 size-4" />
                 Login or Signup
