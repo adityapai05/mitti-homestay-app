@@ -2,7 +2,9 @@ import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { sendBookingEmail } from "@/lib/notifications/email/sendBookingEmail";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { calculateBookingPrice } from "@/lib/pricing/calculateBookingPrice";
 import z from "zod";
+import { Prisma } from "@prisma/client";
 
 const createBookingSchema = z
   .object({
@@ -26,7 +28,7 @@ export async function POST(req: NextRequest) {
     if (!user) {
       return NextResponse.json(
         { error: "Authentication required." },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -36,7 +38,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: z.treeifyError(parsed.error) },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -79,10 +81,19 @@ export async function POST(req: NextRequest) {
       if (overlapping) throw new Error("DATES_NOT_AVAILABLE");
 
       const nights = Math.ceil(
-        (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)
+        (checkOutDate.getTime() - checkInDate.getTime()) /
+          (1000 * 60 * 60 * 24),
       );
 
-      const totalPrice = homestay.pricePerNight.mul(nights);
+      const pricing = calculateBookingPrice({
+        pricePerNight: homestay.pricePerNight.toNumber(),
+        nights,
+        guests,
+        includeGuide: false,
+        guideFeePerNight: 0,
+      });
+
+      const totalPrice = pricing.breakdown.total;
 
       return tx.booking.create({
         data: {
@@ -91,7 +102,7 @@ export async function POST(req: NextRequest) {
           checkIn: checkInDate,
           checkOut: checkOutDate,
           guests,
-          totalPrice,
+          totalPrice: new Prisma.Decimal(totalPrice),
           status: "PENDING_HOST_APPROVAL",
         },
       });
@@ -102,7 +113,7 @@ export async function POST(req: NextRequest) {
         message: "Booking request sent to host.",
         booking,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error: unknown) {
     console.error("[POST /bookings/create]", error);
@@ -111,7 +122,7 @@ export async function POST(req: NextRequest) {
       {
         error: (error as Error).message || "Internal Server Error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

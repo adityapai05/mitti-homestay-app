@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronUp } from "lucide-react";
+import { differenceInDays } from "date-fns";
 
 import type { HomestayDetailsDTO } from "../../types";
 import BookingForm from "./BookingForm";
 import { Button } from "@/components/ui/prebuilt-components/button";
-import { differenceInDays } from "date-fns";
+import { calculateBookingPrice } from "@/lib/pricing/calculateBookingPrice";
 
 interface MobileBookingBarProps {
   homestay: HomestayDetailsDTO;
@@ -21,53 +22,49 @@ export default function MobileBookingBar({
   initialGuests = 1,
 }: MobileBookingBarProps) {
   const [open, setOpen] = useState(false);
-
-  const [dateRange, setDateRange] = useState<{
-    from?: Date;
-    to?: Date;
-  }>(initialDateRange ?? {});
-
+  const [dateRange, setDateRange] = useState(initialDateRange ?? {});
   const [guests, setGuests] = useState(initialGuests);
 
   if (typeof window === "undefined") return null;
+
   const nights =
     dateRange.from && dateRange.to
       ? differenceInDays(dateRange.to, dateRange.from)
       : 0;
 
-  const pricePerNight = Number(homestay.pricing.pricePerNight);
-  const stayCost = nights * pricePerNight;
+  const estimate =
+    nights > 0
+      ? calculateBookingPrice({
+          pricePerNight: Number(homestay.pricing.pricePerNight),
+          nights,
+          guests,
+          includeGuide: false,
+          guideFeePerNight: homestay.pricing.guideFee
+            ? Number(homestay.pricing.guideFee)
+            : 0,
+        })
+      : null;
 
-  // Placeholder until we add fees:
-  const taxRate = 0.18; // example GST 18%
-  const gst = Math.round(stayCost * taxRate);
-
-  const platformFee = Math.round(stayCost * 0.05); // example 5% convenience fee
-
-  const totalEstimate = stayCost + gst + platformFee;
   return (
     <>
-      {/* Bottom booking bar */}
+      {/* Bottom bar */}
       <div
         role="button"
-        aria-label="Open booking sheet"
         onClick={() => setOpen(true)}
         className="
-    fixed inset-x-0 bottom-0 z-[60] lg:hidden
-    bg-white border-t border-mitti-khaki
-    px-5 py-5
-    pb-[calc(env(safe-area-inset-bottom)+20px)]
-    flex items-center justify-between
-    shadow-[0_-8px_24px_rgba(0,0,0,0.12)]
-    active:bg-mitti-beige/60
-  "
+          fixed inset-x-0 bottom-0 z-[60] lg:hidden
+          bg-white border-t border-mitti-khaki
+          px-5 py-5
+          pb-[calc(env(safe-area-inset-bottom)+20px)]
+          flex items-center justify-between
+          shadow-[0_-8px_24px_rgba(0,0,0,0.12)]
+        "
       >
-        {/* Price info */}
         <div>
-          {nights > 0 ? (
+          {estimate ? (
             <>
               <p className="text-base font-semibold text-mitti-dark-brown">
-                ₹{totalEstimate.toLocaleString()} total
+                ₹{estimate.breakdown.total.toLocaleString()} total
               </p>
               <p className="text-xs text-mitti-dark-brown/60">
                 {nights} nights — {guests} guest{guests > 1 ? "s" : ""}
@@ -85,64 +82,50 @@ export default function MobileBookingBar({
           )}
         </div>
 
-        {/* Right action */}
         <div className="flex items-center gap-3">
           <Button
             onClick={(e) => {
               e.stopPropagation();
               setOpen(true);
             }}
-            className="rounded-xl bg-mitti-brown text-white hover:bg-mitti-brown/90 px-6 h-11"
+            className="rounded-xl bg-mitti-brown text-white px-6 h-11"
           >
             Reserve
           </Button>
-
           <ChevronUp className="h-5 w-5 text-mitti-dark-brown/60" />
         </div>
       </div>
 
-      {/* Slide-up booking sheet */}
+      {/* Sheet */}
       <AnimatePresence>
         {open && (
           <>
-            {/* Backdrop */}
             <motion.div
               className="fixed inset-0 z-[60] bg-black/40"
+              onClick={() => setOpen(false)}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setOpen(false)}
             />
 
-            {/* Sheet */}
             <motion.div
-              className="
-                fixed inset-x-0 bottom-0 z-[70]
-                bg-white rounded-t-2xl
-                max-h-[92vh] overflow-y-auto
-              "
+              className="fixed inset-x-0 bottom-0 z-[70] bg-white rounded-t-2xl max-h-[92vh] overflow-y-auto"
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 280, damping: 28 }}
             >
-              {/* Header */}
-              <div className="p-4 border-b border-mitti-khaki flex items-center justify-between">
-                <p className="text-base font-semibold text-mitti-dark-brown">
-                  Book your stay
-                </p>
-
+              <div className="p-4 border-b border-mitti-khaki flex justify-between">
+                <p className="font-semibold">Book your stay</p>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setOpen(false)}
                 >
-                  <X className="h-5 w-5 text-mitti-dark-brown" />
+                  <X className="h-5 w-5" />
                 </Button>
               </div>
 
-              {/* Content */}
-              <div className="p-6 pb-[calc(env(safe-area-inset-bottom)+32px)]">
+              <div className="p-6">
                 <BookingForm
                   homestay={homestay}
                   dateVariant="sheet"
