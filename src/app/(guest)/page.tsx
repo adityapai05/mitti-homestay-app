@@ -1,8 +1,8 @@
 "use client";
 import AuthModal from "@/components/auth/AuthModal";
-import CategoriesSection from "@/components/ui/homepage/CategoriesSection";
+import CategoriesSection from "@/components/ui/homepage/categories/CategoriesSection";
 import HeroSection from "@/components/ui/homepage/hero/HeroSection";
-import RecommendedSection from "@/components/ui/homepage/RecommendedSection";
+import RecommendedSection from "@/components/ui/homepage/recommended/RecommendedSection";
 import TestimonialsSection from "@/components/ui/homepage/TestimonialsSection";
 import WhyMittiSection from "@/components/ui/homepage/WhyMittiSection";
 
