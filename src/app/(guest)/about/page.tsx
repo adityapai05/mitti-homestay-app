@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -9,6 +11,26 @@ import {
   Heart,
   Cpu,
 } from "lucide-react";
+import { motion, cubicBezier } from "framer-motion";
+
+const EASE_OUT = cubicBezier(0.16, 1, 0.3, 1);
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: EASE_OUT },
+  },
+};
+
+const stagger = {
+  visible: {
+    transition: {
+      staggerChildren: 0.12,
+    },
+  },
+};
 
 export default function AboutPage() {
   return (
@@ -25,7 +47,12 @@ export default function AboutPage() {
 
         <div className="absolute inset-0 bg-mitti-dark-brown/70" />
 
-        <div className="absolute inset-0 flex items-center justify-center px-4">
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center px-4"
+          initial="hidden"
+          animate="visible"
+          variants={fadeUp}
+        >
           <div className="max-w-5xl text-center">
             <p className="text-sm tracking-widest text-mitti-khaki uppercase mb-4">
               About MITTI
@@ -38,13 +65,19 @@ export default function AboutPage() {
               communities, and real experiences across Bharat.
             </p>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Narrative */}
-      <section className="px-6 py-12 sm:py-16 flex justify-center">
+      <motion.section
+        className="px-6 py-14 sm:py-20 flex justify-center"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={fadeUp}
+      >
         <div className="max-w-5xl relative">
-          <span className="absolute -top-10 sm:-top-12 -left-4 sm:-left-6 text-[96px] sm:text-[140px] leading-none font-serif text-mitti-brown/30 select-none">
+          <span className="absolute -top-12 -left-6 text-[120px] font-serif text-mitti-brown/25 select-none">
             “
           </span>
 
@@ -53,57 +86,69 @@ export default function AboutPage() {
             appear on mainstream travel platforms.
           </p>
 
-          <p className="mt-6 sm:mt-8 text-mitti-dark-brown/80 leading-relaxed max-w-4xl text-justify">
+          <p className="mt-8 text-mitti-dark-brown/80 leading-relaxed max-w-4xl text-justify">
             Yet many homestays remain digitally invisible due to complex systems
             and urban-centric design. MITTI was built to bridge this gap by
             focusing on clarity over complexity, trust over volume, and people
             over platforms.
           </p>
         </div>
-      </section>
+      </motion.section>
 
       {/* Capabilities */}
-      <section className="px-8 sm:px-6 py-2 sm:py-6 flex justify-center">
-        <div className="max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-16">
-          <div>
-            <Compass className="text-mitti-brown mb-4" />
-            <h3 className="text-xl font-semibold text-mitti-dark-brown mb-3">
-              Discover
-            </h3>
-            <p className="text-mitti-dark-brown/80 leading-relaxed">
-              Explore verified rural homestays offering genuine local
-              experiences across India.
-            </p>
-          </div>
-
-          <div>
-            <Handshake className="text-mitti-brown mb-4" />
-            <h3 className="text-xl font-semibold text-mitti-dark-brown mb-3">
-              Empower
-            </h3>
-            <p className="text-mitti-dark-brown/80 leading-relaxed">
-              Enable homestay owners to list and manage properties without
-              technical barriers.
-            </p>
-          </div>
-
-          <div>
-            <ShieldCheck className="text-mitti-brown mb-4" />
-            <h3 className="text-xl font-semibold text-mitti-dark-brown mb-3">
-              Build Trust
-            </h3>
-            <p className="text-mitti-dark-brown/80 leading-relaxed">
-              Create confidence through verification, transparent policies, and
-              clear communication.
-            </p>
-          </div>
+      <motion.section
+        className="px-6 py-10 flex justify-center"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={stagger}
+      >
+        <div className="max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-10">
+          {[
+            {
+              icon: Compass,
+              title: "Discover",
+              text: "Explore verified rural homestays offering genuine local experiences across India.",
+            },
+            {
+              icon: Handshake,
+              title: "Empower",
+              text: "Enable homestay owners to list and manage properties without technical barriers.",
+            },
+            {
+              icon: ShieldCheck,
+              title: "Build Trust",
+              text: "Create confidence through verification, transparent policies, and clear communication.",
+            },
+          ].map((item) => (
+            <motion.div
+              key={item.title}
+              variants={fadeUp}
+              whileHover={{ y: -6 }}
+              transition={{ duration: 0.25 }}
+            >
+              <item.icon className="text-mitti-brown mb-4" />
+              <h3 className="text-xl font-semibold text-mitti-dark-brown mb-3">
+                {item.title}
+              </h3>
+              <p className="text-mitti-dark-brown/80 leading-relaxed">
+                {item.text}
+              </p>
+            </motion.div>
+          ))}
         </div>
-      </section>
+      </motion.section>
 
       {/* Rural First */}
-      <section className="px-6 sm:px-6 py-10 sm:py-12 flex justify-center">
-        <div className="max-w-6xl bg-mitti-cream rounded-2xl p-8 sm:p-12">
-          <div className="flex items-center gap-3 mb-4">
+      <motion.section
+        className="px-6 py-14 flex justify-center"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={fadeUp}
+      >
+        <div className="max-w-6xl bg-mitti-cream rounded-2xl p-10 sm:p-14">
+          <div className="flex items-center gap-3 mb-6">
             <Leaf className="text-mitti-brown" />
             <h2 className="text-2xl font-semibold text-mitti-dark-brown">
               A Rural-First Approach
@@ -116,63 +161,71 @@ export default function AboutPage() {
             platform avoids unnecessary features and prioritizes usability.
           </p>
         </div>
-      </section>
+      </motion.section>
 
       {/* Values */}
-      <section className="px-8 sm:px-6 py-2 sm:py-6 flex justify-center">
-        <div className="max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-14">
-          <div>
-            <Eye className="text-mitti-brown mb-3" />
-            <h3 className="text-lg font-semibold text-mitti-dark-brown mb-2">
-              Transparency
-            </h3>
-            <p className="text-mitti-dark-brown/80">
-              Honest information, clear policies, and visible expectations.
-            </p>
-          </div>
-
-          <div>
-            <Cpu className="text-mitti-brown mb-3" />
-            <h3 className="text-lg font-semibold text-mitti-dark-brown mb-2">
-              Purposeful Technology
-            </h3>
-            <p className="text-mitti-dark-brown/80">
-              Technology used as a support system, not a barrier.
-            </p>
-          </div>
-
-          <div>
-            <Heart className="text-mitti-brown mb-3" />
-            <h3 className="text-lg font-semibold text-mitti-dark-brown mb-2">
-              Respect
-            </h3>
-            <p className="text-mitti-dark-brown/80">
-              Deep respect for local communities, culture, and livelihoods.
-            </p>
-          </div>
-
-          <div>
-            <ShieldCheck className="text-mitti-brown mb-3" />
-            <h3 className="text-lg font-semibold text-mitti-dark-brown mb-2">
-              Simplicity
-            </h3>
-            <p className="text-mitti-dark-brown/80">
-              Clear flows and minimal friction instead of feature overload.
-            </p>
-          </div>
+      <motion.section
+        className="px-6 py-10 flex justify-center"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={stagger}
+      >
+        <div className="max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-12">
+          {[
+            {
+              icon: Eye,
+              title: "Transparency",
+              text: "Honest information, clear policies, and visible expectations.",
+            },
+            {
+              icon: Cpu,
+              title: "Purposeful Technology",
+              text: "Technology used as a support system, not a barrier.",
+            },
+            {
+              icon: Heart,
+              title: "Respect",
+              text: "Deep respect for local communities, culture, and livelihoods.",
+            },
+            {
+              icon: ShieldCheck,
+              title: "Simplicity",
+              text: "Clear flows and minimal friction instead of feature overload.",
+            },
+          ].map((item) => (
+            <motion.div
+              key={item.title}
+              variants={fadeUp}
+              whileHover={{ y: -4 }}
+              transition={{ duration: 0.25 }}
+            >
+              <item.icon className="text-mitti-brown mb-3" />
+              <h3 className="text-lg font-semibold text-mitti-dark-brown mb-2">
+                {item.title}
+              </h3>
+              <p className="text-mitti-dark-brown/80">{item.text}</p>
+            </motion.div>
+          ))}
         </div>
-      </section>
+      </motion.section>
 
       {/* Navigation */}
-      <section className="px-4 sm:px-6 py-8 sm:py-12 flex justify-center">
+      <motion.section
+        className="px-6 py-16 flex justify-center"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={fadeUp}
+      >
         <div className="max-w-6xl text-center w-full">
-          <div className="h-px bg-mitti-dark-brown/20 mb-10" />
+          <div className="h-px bg-mitti-dark-brown/20 mb-12" />
 
-          <p className="text-sm uppercase tracking-widest text-mitti-dark-brown/60 mb-6">
+          <p className="text-sm uppercase tracking-widest text-mitti-dark-brown/60 mb-8">
             Explore more about MITTI
           </p>
 
-          <div className="flex flex-wrap justify-center gap-4 sm:gap-10 text-lg font-medium text-mitti-brown">
+          <div className="flex flex-wrap justify-center gap-8 text-lg font-medium text-mitti-brown">
             {[
               { href: "/about/who-we-are", label: "Who We Are" },
               { href: "/about/mission", label: "Mission" },
@@ -182,14 +235,14 @@ export default function AboutPage() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="transition-all duration-200 hover:text-mitti-dark-brown hover:-translate-y-[1px]"
+                className="relative after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-full after:scale-x-0 after:origin-left after:bg-mitti-brown after:transition-transform hover:after:scale-x-100"
               >
                 {link.label}
               </Link>
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
     </main>
   );
 }
