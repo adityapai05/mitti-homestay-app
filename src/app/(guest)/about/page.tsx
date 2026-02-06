@@ -77,7 +77,7 @@ export default function AboutPage() {
         variants={fadeUp}
       >
         <div className="max-w-5xl relative">
-          <span className="absolute -top-12 -left-6 text-[120px] font-serif text-mitti-brown/25 select-none">
+          <span className="absolute -top-16 -left-7 text-[120px] font-serif text-mitti-brown/25 select-none">
             “
           </span>
 
