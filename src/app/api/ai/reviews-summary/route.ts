@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
 const GEMINI_ENDPOINT =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
 type ReviewsSummaryRequest = {
   homestayId: string;
@@ -21,8 +22,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ summary: null }, { status: 200 });
     }
 
-    const MAX_REVIEWS = 12;
-    const MAX_CHARS_PER_REVIEW = 300;
+    const MAX_REVIEWS = 6;
+    const MAX_CHARS_PER_REVIEW = 180;
 
     const sanitizedReviews = body.reviews
       .filter((r) => typeof r === "string" && r.trim().length > 0)
@@ -34,22 +35,14 @@ export async function POST(req: NextRequest) {
     }
 
     const prompt = `
-You are summarizing guest reviews for a rural homestay booking platform.
+Write EXACTLY two complete sentences summarizing these guest reviews.
+Each sentence MUST end with a period.
 
-Write a neutral, trustworthy summary in 2 short sentences.
-Focus on:
-- hospitality
-- cleanliness
-- comfort
-- surroundings or location
+Focus on hospitality, cleanliness, comfort, and surroundings.
+Do not mention people, ratings, numbers, or emojis.
+Do not add anything beyond the two sentences.
 
-Rules:
-- Do not mention individual people
-- Do not exaggerate
-- Do not use emojis
-- Do not mention ratings or numbers
-
-Guest reviews:
+Reviews:
 ${sanitizedReviews.map((r) => `- ${r}`).join("\n")}
 `;
 
@@ -64,25 +57,33 @@ ${sanitizedReviews.map((r) => `- ${r}`).join("\n")}
           },
         ],
         generationConfig: {
-          temperature: 0.4,
-          maxOutputTokens: 120,
+          temperature: 0.25,
+          maxOutputTokens: 1024,
         },
       }),
     });
 
     if (!geminiRes.ok) {
+      const errorText = await geminiRes.text();
+      console.error("Gemini error:", errorText);
       return NextResponse.json({ summary: null }, { status: 200 });
     }
 
     const json = await geminiRes.json();
 
-    const summary: string | undefined =
-      json?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const parts = json?.candidates?.[0]?.content?.parts;
 
-    return NextResponse.json(
-      { summary: summary?.trim() || null },
-      { status: 200 },
-    );
+    const summary = Array.isArray(parts)
+      ? parts
+          .map((p) => p.text)
+          .join("")
+          .trim()
+      : null;
+
+    console.log("Gemini Response: ", summary);
+    console.log("Finish reason:", json?.candidates?.[0]?.finishReason);
+
+    return NextResponse.json({ summary }, { status: 200 });
   } catch (error) {
     console.error("[POST /api/ai/reviews-summary]", error);
     return NextResponse.json({ summary: null }, { status: 200 });
