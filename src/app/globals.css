@@ -86,7 +86,8 @@
 }
 
 body {
-  background-color: var(--background);
+  background-color: #F4F1E1;
+  color: #4B2C20;
   font-family: var(--font-sans), sans-serif;
 }
 
