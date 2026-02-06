@@ -21,7 +21,7 @@ export default function EmptyState({ type }: { type: "upcoming" | "past" }) {
       </p>
 
       <Link
-        href="/homestays"
+        href="/explore"
         className="inline-block rounded-lg bg-mitti-brown px-5 py-2.5 text-sm font-medium text-white hover:bg-mitti-brown/90 cursor-pointer"
       >
         Explore homestays
