@@ -1,114 +1,164 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import NewsletterForm from "./NewsletterForm";
+import { motion, cubicBezier } from "framer-motion";
+
+const EASE_OUT = cubicBezier(0.16, 1, 0.3, 1);
+
+const footerVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: EASE_OUT,
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const columnVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: EASE_OUT,
+    },
+  },
+};
+
+const linkHover =
+  "relative inline-block after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-full after:origin-left after:scale-x-0 after:bg-mitti-beige after:transition-transform after:duration-300 hover:after:scale-x-100";
 
 const Footer = () => {
   return (
-    <footer className="bg-mitti-brown text-mitti-beige px-6 py-8">
-      <NewsletterForm />
+    <motion.footer
+      className="bg-mitti-brown text-mitti-beige pt-12 pb-8"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      variants={footerVariants}
+    >
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Top grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-14">
+          {/* Brand */}
+          <motion.div
+            variants={columnVariants}
+            className="lg:col-span-2 space-y-6"
+          >
+            <Link href="/" className="inline-block">
+              <div className="inline-flex items-center rounded-2xl bg-mitti-beige/95 px-4 py-3">
+                <Image
+                  src="/mitti-logo.png"
+                  alt="MITTI logo"
+                  width={140}
+                  height={44}
+                  className="object-contain"
+                  priority
+                />
+              </div>
+            </Link>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-sm px-4 mt-10">
-        {/* About */}
-        <div>
-          <h4 className="font-semibold text-lg mb-3">About</h4>
-          <ul className="space-y-2">
-            <li>
-              <Link href="/about" className="hover:underline">
-                About MITTI
-              </Link>
-            </li>
-            <li>
-              <Link href="/about/who-we-are" className="hover:underline">
-                Who We Are
-              </Link>
-            </li>
-            <li>
-              <Link href="/about/mission" className="hover:underline">
-                Mission
-              </Link>
-            </li>
-            <li>
-              <Link href="/about/vision" className="hover:underline">
-                Vision
-              </Link>
-            </li>
-            <li>
-              <Link href="/about/objectives" className="hover:underline">
-                Objectives
-              </Link>
-            </li>
-          </ul>
+            <p className="max-w-md text-base leading-relaxed text-mitti-beige/90">
+              MITTI is a rural homestay platform focused on helping travelers
+              experience India slowly and honestly, while supporting local
+              families through meaningful tourism.
+            </p>
+          </motion.div>
+
+          {/* About */}
+          <motion.div variants={columnVariants} className="space-y-5">
+            <h4 className="text-sm font-semibold tracking-wider uppercase text-mitti-beige/75">
+              About
+            </h4>
+            <ul className="space-y-3 text-base">
+              <li>
+                <Link href="/about" className={linkHover}>
+                  About MITTI
+                </Link>
+              </li>
+              <li>
+                <Link href="/about/who-we-are" className={linkHover}>
+                  Who We Are
+                </Link>
+              </li>
+              <li>
+                <Link href="/about/mission" className={linkHover}>
+                  Mission
+                </Link>
+              </li>
+              <li>
+                <Link href="/about/vision" className={linkHover}>
+                  Vision
+                </Link>
+              </li>
+            </ul>
+          </motion.div>
+
+          {/* Explore */}
+          <motion.div variants={columnVariants} className="space-y-5">
+            <h4 className="text-sm font-semibold tracking-wider uppercase text-mitti-beige/75">
+              Explore
+            </h4>
+            <ul className="space-y-3 text-base">
+              <li>
+                <Link href="/explore" className={linkHover}>
+                  Homestays
+                </Link>
+              </li>
+              <li>
+                <Link href="/host/start" className={linkHover}>
+                  Become a Host
+                </Link>
+              </li>
+            </ul>
+          </motion.div>
+
+          {/* Support */}
+          <motion.div variants={columnVariants} className="space-y-5">
+            <h4 className="text-sm font-semibold tracking-wider uppercase text-mitti-beige/75">
+              Support
+            </h4>
+            <ul className="space-y-3 text-base">
+              <li>
+                <Link href="/contact" className={linkHover}>
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link href="/cancellation-policy" className={linkHover}>
+                  Cancellation Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms-of-service" className={linkHover}>
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy-policy" className={linkHover}>
+                  Privacy Policy
+                </Link>
+              </li>
+            </ul>
+          </motion.div>
         </div>
 
-        {/* Explore */}
-        <div>
-          <h4 className="font-semibold text-lg mb-3">Explore</h4>
-          <ul className="space-y-2">
-            <li>
-              <Link href="/explore" className="hover:underline">
-                Homestays
-              </Link>
-            </li>
-            <li>
-              <Link href="/host/start" className="hover:underline">
-                Become a Host
-              </Link>
-            </li>
-          </ul>
-        </div>
+        {/* Divider */}
+        <div className="my-8 h-px w-full bg-mitti-beige/20" />
 
-        {/* Support */}
-        <div>
-          <h4 className="font-semibold text-lg mb-3">Support</h4>
-          <ul className="space-y-2">
-            <li>
-              <Link href="/contact" className="hover:underline">
-                Contact
-              </Link>
-            </li>
-            <li>
-              <Link href="/cancellation-policy" className="hover:underline">
-                Cancellation Policy
-              </Link>
-            </li>
-            <li>
-              <Link href="/terms-of-service" className="hover:underline">
-                Terms of Service
-              </Link>
-            </li>
-            <li>
-              <Link href="/privacy-policy" className="hover:underline">
-                Privacy Policy
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        {/* Connect */}
-        <div className="flex flex-col items-center text-center">
-          <div className="bg-mitti-beige rounded-xl px-3 py-2 mb-4 flex items-center justify-center">
-            <Image
-              src="/mitti-logo-icon.png"
-              alt="MITTI logo"
-              width={40}
-              height={15}
-              className="object-contain"
-              priority
-            />
-          </div>
-
-          <p className="text-xs text-mitti-beige/90 leading-relaxed">
-            MITTI is an academic project developed as part of the B. Sc. I.T.
-            program. It focuses on promoting rural tourism through a simple,
-            ethical, and community oriented platform.
-          </p>
+        {/* Bottom bar */}
+        <div className="flex items-center justify-center text-md text-mitti-beige/75">
+          © 2025 <span className="mx-1 font-medium">MITTI</span>. All rights
+          reserved.
         </div>
       </div>
-
-      <div className="text-center mt-10 text-mitti-beige/90">
-        © 2025 <strong>MITTI</strong>. All rights reserved.
-      </div>
-    </footer>
+    </motion.footer>
   );
 };
 
