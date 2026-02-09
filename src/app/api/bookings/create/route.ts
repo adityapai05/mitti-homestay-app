@@ -2,7 +2,7 @@ import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { sendBookingEmail } from "@/lib/notifications/email/sendBookingEmail";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { calculateBookingPrice } from "@/lib/pricing/calculateBookingPrice";
+import { serverCalculateBookingPrice } from "@/lib/pricing/serverCalculateBookingPrice";
 import z from "zod";
 import { Prisma } from "@prisma/client";
 
@@ -80,20 +80,14 @@ export async function POST(req: NextRequest) {
 
       if (overlapping) throw new Error("DATES_NOT_AVAILABLE");
 
-      const nights = Math.ceil(
-        (checkOutDate.getTime() - checkInDate.getTime()) /
-          (1000 * 60 * 60 * 24),
-      );
-
-      const pricing = calculateBookingPrice({
-        pricePerNight: homestay.pricePerNight.toNumber(),
-        nights,
+      const pricing = await serverCalculateBookingPrice({
+        homestayId,
+        checkIn: checkInDate,
+        checkOut: checkOutDate,
         guests,
         includeGuide: false,
-        guideFeePerNight: 0,
+        prismaClient: tx,
       });
-
-      const totalPrice = pricing.breakdown.total;
 
       return tx.booking.create({
         data: {
@@ -102,7 +96,13 @@ export async function POST(req: NextRequest) {
           checkIn: checkInDate,
           checkOut: checkOutDate,
           guests,
-          totalPrice: new Prisma.Decimal(totalPrice),
+          nights: pricing.nights,
+          stayBase: new Prisma.Decimal(pricing.stayBase),
+          guideFee: new Prisma.Decimal(pricing.guideFee),
+          platformFee: new Prisma.Decimal(pricing.platformFee),
+          gst: new Prisma.Decimal(pricing.gst),
+          subtotal: new Prisma.Decimal(pricing.subtotal),
+          totalPrice: new Prisma.Decimal(pricing.total),
           status: "PENDING_HOST_APPROVAL",
         },
       });

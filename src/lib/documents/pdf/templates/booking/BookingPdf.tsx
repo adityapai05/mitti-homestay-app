@@ -115,18 +115,40 @@ export function BookingPdf({ data }: { data: BookingPdfData }) {
                     <tbody>
                       <tr>
                         <td>
-                          ₹{data.pricing.pricePerNight.toString()} ×{" "}
-                          {data.pricing.nights} nights
+                          Stay base ({data.pricing.nights} nights)
                         </td>
                         <td style={{ textAlign: "right" }}>
-                          ₹{data.pricing.subtotal.toString()}
+                          â‚¹{data.pricing.stayBase.toString()}
+                        </td>
+                      </tr>
+
+                      {data.pricing.guideFee.toString() !== "0" && (
+                        <tr>
+                          <td>Guide fee</td>
+                          <td style={{ textAlign: "right" }}>
+                            â‚¹{data.pricing.guideFee.toString()}
+                          </td>
+                        </tr>
+                      )}
+
+                      <tr>
+                        <td>Platform fee</td>
+                        <td style={{ textAlign: "right" }}>
+                          â‚¹{data.pricing.platformFee.toString()}
                         </td>
                       </tr>
 
                       <tr>
-                        <td>GST ({data.pricing.gstRate}%)</td>
+                        <td>GST</td>
                         <td style={{ textAlign: "right" }}>
-                          ₹{data.pricing.gstAmount.toString()}
+                          â‚¹{data.pricing.gst.toString()}
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td>Subtotal</td>
+                        <td style={{ textAlign: "right" }}>
+                          â‚¹{data.pricing.subtotal.toString()}
                         </td>
                       </tr>
 
@@ -143,7 +165,7 @@ export function BookingPdf({ data }: { data: BookingPdfData }) {
                         <td
                           style={{ textAlign: "right", fontWeight: 700 }}
                         >
-                          ₹{data.pricing.total.toString()}
+                          â‚¹{data.pricing.total.toString()}
                         </td>
                       </tr>
                     </tbody>
@@ -199,7 +221,7 @@ export function BookingPdf({ data }: { data: BookingPdfData }) {
         {/* FLEX SPACER */}
         <div style={{ flexGrow: 1 }} />
 
-        {/* LEGAL – STUCK TO BOTTOM */}
+        {/* LEGAL â€“ STUCK TO BOTTOM */}
         <p style={{ fontSize: 10, color: "#8C8E98" }}>
           Please carry a valid government-issued ID during check-in. MITTI acts
           as a booking platform. All cancellations and refunds are governed by

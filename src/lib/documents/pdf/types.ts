@@ -16,11 +16,12 @@ export type BookingPdfData = {
   guests: number;
 
   pricing: {
-    pricePerNight: Prisma.Decimal;
     nights: number;
+    stayBase: Prisma.Decimal;
+    guideFee: Prisma.Decimal;
+    platformFee: Prisma.Decimal;
+    gst: Prisma.Decimal;
     subtotal: Prisma.Decimal;
-    gstRate: number;
-    gstAmount: Prisma.Decimal;
     total: Prisma.Decimal;
   };
 

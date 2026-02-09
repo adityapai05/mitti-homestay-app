@@ -10,14 +10,14 @@ const HostNavbar = () => {
       <div className="h-full px-4 sm:px-6 flex items-center justify-between">
         {/* Left: Logo */}
         <Link href="/host/homestays" className="flex items-center gap-2">
-          <Image
-            src="/mitti-logo.png"
-            alt="MITTI"
-            width={75}
-            height={30}
-            className="h-auto w-auto object-contain"
-            priority
-          />
+            <Image
+              src="/mitti-logo-icon.png"
+              alt="MITTI logo"
+              width={40}
+              height={20}
+              className="object-contain md:ml-5"
+              priority
+            />
         </Link>
 
         {/* Right: actions */}

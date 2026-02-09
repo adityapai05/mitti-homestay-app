@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Razorpay from "razorpay";
-import { Prisma } from "@prisma/client";
 
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { prisma } from "@/lib/prisma";
-import { calculateBookingPrice } from "@/lib/pricing/calculateBookingPrice";
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,15 +30,6 @@ export async function POST(req: NextRequest) {
         userId: user.id,
         status: "AWAITING_PAYMENT",
       },
-      include: {
-        homestay: {
-          select: {
-            pricePerNight: true,
-            guideAvailable: true,
-            guideFee: true,
-          },
-        },
-      },
     });
 
     if (!booking) {
@@ -50,25 +39,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const nights = Math.ceil(
-      (booking.checkOut.getTime() - booking.checkIn.getTime()) /
-        (1000 * 60 * 60 * 24),
-    );
-
-    const pricing = calculateBookingPrice({
-      pricePerNight: booking.homestay.pricePerNight.toNumber(),
-      nights,
-      guests: booking.guests,
-      includeGuide: false, // wire later if you add it to booking
-      guideFeePerNight: booking.homestay.guideFee
-        ? booking.homestay.guideFee.toNumber()
-        : 0,
-    });
-
     const razorpay = new Razorpay({ key_id, key_secret });
+    const amountInPaise = Math.round(booking.totalPrice.toNumber() * 100);
 
     const order = await razorpay.orders.create({
-      amount: pricing.breakdown.total * 100, // paise
+      amount: amountInPaise,
       currency: "INR",
       receipt: `bk_${booking.id.slice(0, 12)}`,
       notes: {
