@@ -1,23 +1,30 @@
-import { Decimal } from "@prisma/client/runtime/library";
-
-interface PriceBreakdownProps {
-  totalPrice: Decimal;
-  guideFee: Decimal | null;
-}
-
-function formatINR(amount: Decimal) {
-  return `INR ${amount.toNumber().toLocaleString("en-IN")}`;
+interface Pricing {
+  nights: number;
+  stayBase: number;
+  guideFee: number;
+  platformFee: number;
+  gst: number;
+  subtotal: number;
+  total: number;
 }
 
 export default function PriceBreakdown({
-  totalPrice,
-  guideFee,
-}: PriceBreakdownProps) {
-  const hasGuideFee = guideFee && guideFee.greaterThan(0);
+  pricing,
+}: {
+  pricing: Pricing | null | undefined;
+}) {
+  if (!pricing) {
+    return (
+      <section className="rounded-xl border border-mitti-khaki bg-white p-5 shadow-sm">
+        <h2 className="text-base font-semibold text-mitti-dark-brown mb-4">
+          Price breakdown
+        </h2>
+        <p className="text-sm text-mitti-dark-brown/60">Loading pricing…</p>
+      </section>
+    );
+  }
 
-  const stayCost = hasGuideFee
-    ? totalPrice.minus(guideFee as Decimal)
-    : totalPrice;
+  const format = (v: number) => `₹${v.toLocaleString("en-IN")}`;
 
   return (
     <section className="rounded-xl border border-mitti-khaki bg-white p-5 shadow-sm">
@@ -26,21 +33,31 @@ export default function PriceBreakdown({
       </h2>
 
       <div className="space-y-3 text-sm">
-        <div className="flex justify-between text-mitti-dark-brown/80">
-          <span>Stay cost</span>
-          <span>{formatINR(stayCost)}</span>
+        <div className="flex justify-between">
+          <span>Stay ({pricing.nights} nights)</span>
+          <span>{format(pricing.stayBase)}</span>
         </div>
 
-        {hasGuideFee ? (
-          <div className="flex justify-between text-mitti-dark-brown/80">
+        {pricing.guideFee > 0 && (
+          <div className="flex justify-between">
             <span>Guide fee</span>
-            <span>{formatINR(guideFee as Decimal)}</span>
+            <span>{format(pricing.guideFee)}</span>
           </div>
-        ) : null}
+        )}
 
-        <div className="border-t border-mitti-khaki/60 pt-3 flex justify-between font-semibold text-mitti-dark-brown">
-          <span>Total amount</span>
-          <span>{formatINR(totalPrice)}</span>
+        <div className="flex justify-between">
+          <span>Platform fee</span>
+          <span>{format(pricing.platformFee)}</span>
+        </div>
+
+        <div className="flex justify-between">
+          <span>GST</span>
+          <span>{format(pricing.gst)}</span>
+        </div>
+
+        <div className="flex justify-between font-semibold border-t pt-3">
+          <span>Total</span>
+          <span>{format(pricing.total)}</span>
         </div>
       </div>
     </section>

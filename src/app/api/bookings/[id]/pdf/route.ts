@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { BookingPdf } from "@/lib/documents/pdf/templates/booking/BookingPdf";
 import { generatePdf } from "@/lib/documents/pdf/generatePdf";
-import { CancellationPolicy, Prisma } from "@prisma/client";
+import { CancellationPolicy } from "@prisma/client";
 
 export const runtime = "nodejs";
 
@@ -31,13 +31,9 @@ function getPolicyCopy(policy: CancellationPolicy) {
   }
 }
 
-function getGstRate(pricePerNight: number) {
-  return pricePerNight >= 7500 ? 18 : 12;
-} 
-
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
   const user = await getCurrentUser();
@@ -52,61 +48,19 @@ export async function GET(
       OR: [{ userId: user.id }, { homestay: { ownerId: user.id } }],
     },
     include: {
-      user: {
-        select: {
-          name: true,
-          email: true,
-          phone: true,
-        },
-      },
+      user: true,
       homestay: {
-        select: {
-          name: true,
-          imageUrl: true,
-          village: true,
-          district: true,
-          state: true,
-          category: true,
-          pricePerNight: true,
-          cancellationPolicy: true,
-          checkInTime: true,
-          checkOutTime: true,
-          owner: {
-            select: {
-              name: true,
-              email: true,
-              phone: true,
-            },
-          },
+        include: {
+          owner: true,
         },
       },
-      payment: {
-        select: {
-          amount: true,
-          currency: true,
-          status: true,
-          razorpayOrderId: true,
-          razorpayPaymentId: true,
-          createdAt: true,
-        },
-      },
+      payment: true,
     },
   });
 
   if (!booking) {
     return new NextResponse("Not found", { status: 404 });
   }
-
-  const nights = Math.ceil(
-    (booking.checkOut.getTime() - booking.checkIn.getTime()) /
-      (1000 * 60 * 60 * 24),
-  );
-
-  const pricePerNight = Number(booking.homestay.pricePerNight);
-  const subtotal = pricePerNight * nights;
-  const gstRate = getGstRate(pricePerNight);
-  const gstAmount = subtotal * (gstRate / 100);
-  const total = subtotal + gstAmount;
 
   const { renderToStaticMarkup } = await import("react-dom/server");
 
@@ -119,16 +73,17 @@ export async function GET(
 
         checkIn: booking.checkIn,
         checkOut: booking.checkOut,
-        nights,
+        nights: booking.nights,
         guests: booking.guests,
 
         pricing: {
-          pricePerNight: booking.homestay.pricePerNight,
-          nights,
-          subtotal: new Prisma.Decimal(subtotal),
-          gstRate,
-          gstAmount: new Prisma.Decimal(gstAmount),
-          total: new Prisma.Decimal(total),
+          nights: booking.nights,
+          stayBase: booking.stayBase,
+          guideFee: booking.guideFee,
+          platformFee: booking.platformFee,
+          gst: booking.gst,
+          subtotal: booking.subtotal,
+          total: booking.totalPrice,
         },
 
         refundAmount: booking.refundAmount,
@@ -147,7 +102,7 @@ export async function GET(
           category: booking.homestay.category,
           cancellationPolicy: booking.homestay.cancellationPolicy,
           cancellationPolicyText: getPolicyCopy(
-            booking.homestay.cancellationPolicy,
+            booking.homestay.cancellationPolicy
           ),
           checkInTime: booking.homestay.checkInTime,
           checkOutTime: booking.homestay.checkOutTime,
@@ -174,18 +129,15 @@ export async function GET(
             }
           : null,
       },
-    }),
+    })
   );
 
   const pdfBuffer = await generatePdf(html);
-  const fileName = `MITTI-Booking-${booking.checkIn
-    .toISOString()
-    .slice(0, 10)}.pdf`;
 
   return new NextResponse(Buffer.from(pdfBuffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${fileName}"`,
+      "Content-Disposition": `inline; filename="MITTI-Booking-${booking.id}.pdf"`,
     },
   });
 }

@@ -30,7 +30,7 @@ export function BaseEmailLayout({ title, children }: BaseEmailLayoutProps) {
           src={`${process.env.NEXT_PUBLIC_ASSETS_URL}/mitti-logo-stacked.png`}
           alt="MITTI"
           width="96"
-          height="28"
+          height="40"
           style={{
             display: "block",
             marginBottom: "16px",

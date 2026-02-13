@@ -1,5 +1,10 @@
 import { notFound, redirect } from "next/navigation";
-import { Prisma, BookingStatus, RefundStatus, CancellationPolicy } from "@prisma/client";
+import {
+  Prisma,
+  BookingStatus,
+  RefundStatus,
+  CancellationPolicy,
+} from "@prisma/client";
 
 import BookingStatusHeader from "./_components/BookingStatusHeader";
 import HomestaySnapshot from "./_components/HomestaySnapshot";
@@ -72,6 +77,16 @@ type BookingPageData = {
     comment: string | null;
     createdAt: Date;
   };
+
+  pricing: {
+    nights: number;
+    stayBase: number;
+    guideFee: number;
+    platformFee: number;
+    gst: number;
+    subtotal: number;
+    total: number;
+  };
 };
 
 async function getBooking(id: string): Promise<BookingPageData> {
@@ -118,9 +133,7 @@ async function getBooking(id: string): Promise<BookingPageData> {
   const checkIn = new Date(booking.checkIn);
   const checkOut = new Date(booking.checkOut);
 
-  const nights = Math.ceil(
-    (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  const nights = booking.nights;
 
   const bookingStatus = {
     canCancel: booking.status === "CONFIRMED" && checkIn > now,
@@ -186,6 +199,15 @@ async function getBooking(id: string): Promise<BookingPageData> {
           createdAt: booking.review.createdAt,
         }
       : null,
+    pricing: {
+      nights: booking.nights,
+      stayBase: Number(booking.stayBase),
+      guideFee: Number(booking.guideFee),
+      platformFee: Number(booking.platformFee),
+      gst: Number(booking.gst),
+      subtotal: Number(booking.subtotal),
+      total: Number(booking.totalPrice),
+    },
   };
 }
 
@@ -247,10 +269,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
           {/* Right */}
           <div className="lg:col-span-1">
             <div className="lg:sticky lg:top-24 space-y-6">
-              <PriceBreakdown
-                totalPrice={booking.totalPrice}
-                guideFee={booking.homestay.guideFee}
-              />
+              <PriceBreakdown pricing={booking.pricing} />
 
               {booking.payment && <PaymentInfo payment={booking.payment} />}
 

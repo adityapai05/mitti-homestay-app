@@ -4,6 +4,21 @@ import * as React from "react";
 import { BasePdfLayout } from "../BasePdfLayout";
 import { BookingPdfData } from "../../types";
 
+function formatINR(value: unknown) {
+  const number =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : Number((value as { toString(): string }).toString());
+
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 2,
+  }).format(number);
+}
+
 export function BookingPdf({ data }: { data: BookingPdfData }) {
   return (
     <BasePdfLayout>
@@ -114,19 +129,17 @@ export function BookingPdf({ data }: { data: BookingPdfData }) {
                   <table style={{ width: "100%", fontSize: 12 }}>
                     <tbody>
                       <tr>
-                        <td>
-                          Stay base ({data.pricing.nights} nights)
-                        </td>
+                        <td>Stay base ({data.pricing.nights} nights)</td>
                         <td style={{ textAlign: "right" }}>
-                          â‚¹{data.pricing.stayBase.toString()}
+                          {formatINR(data.pricing.stayBase)}
                         </td>
                       </tr>
 
-                      {data.pricing.guideFee.toString() !== "0" && (
+                      {Number(data.pricing.guideFee) > 0 && (
                         <tr>
                           <td>Guide fee</td>
                           <td style={{ textAlign: "right" }}>
-                            â‚¹{data.pricing.guideFee.toString()}
+                            {formatINR(data.pricing.guideFee)}
                           </td>
                         </tr>
                       )}
@@ -134,21 +147,21 @@ export function BookingPdf({ data }: { data: BookingPdfData }) {
                       <tr>
                         <td>Platform fee</td>
                         <td style={{ textAlign: "right" }}>
-                          â‚¹{data.pricing.platformFee.toString()}
+                          {formatINR(data.pricing.platformFee)}
                         </td>
                       </tr>
 
                       <tr>
                         <td>GST</td>
                         <td style={{ textAlign: "right" }}>
-                          â‚¹{data.pricing.gst.toString()}
+                          {formatINR(data.pricing.gst)}
                         </td>
                       </tr>
 
                       <tr>
                         <td>Subtotal</td>
                         <td style={{ textAlign: "right" }}>
-                          â‚¹{data.pricing.subtotal.toString()}
+                          {formatINR(data.pricing.subtotal)}
                         </td>
                       </tr>
 
@@ -162,10 +175,8 @@ export function BookingPdf({ data }: { data: BookingPdfData }) {
                         <td>
                           <strong>Total paid</strong>
                         </td>
-                        <td
-                          style={{ textAlign: "right", fontWeight: 700 }}
-                        >
-                          â‚¹{data.pricing.total.toString()}
+                        <td style={{ textAlign: "right", fontWeight: 700 }}>
+                          {formatINR(data.pricing.total)}
                         </td>
                       </tr>
                     </tbody>
