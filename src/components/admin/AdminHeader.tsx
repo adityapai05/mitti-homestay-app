@@ -13,6 +13,7 @@ export default function AdminHeader({ admin }: { admin: User }) {
     try {
       await logout();
       toast.success("Logged out successfully");
+      router.refresh();
       router.replace("/");
     } catch {
       toast.error("Failed to logout");

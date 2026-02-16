@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { serverCalculateBookingPrice } from "@/lib/pricing/serverCalculateBookingPrice";
 import z from "zod";
 import { Prisma } from "@prisma/client";
+import { adminAuth } from "@/lib/firebase/admin";
 
 const createBookingSchema = z
   .object({
@@ -29,6 +30,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "Authentication required." },
         { status: 401 },
+      );
+    }
+
+    const firebaseUser = await adminAuth.getUser(user.firebaseUid);
+    if (!firebaseUser.emailVerified) {
+      return NextResponse.json(
+        {
+          error: "Please verify your email before requesting a booking.",
+          code: "EMAIL_NOT_VERIFIED",
+        },
+        { status: 403 },
       );
     }
 

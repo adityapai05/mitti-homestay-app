@@ -12,7 +12,7 @@ type User = {
   image: string | null;
 
   role: UserRole;
-  provider: "password" | "google" | "phone";
+  provider: "password" | "google";
 };
 
 interface UserStore {

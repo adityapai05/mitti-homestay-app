@@ -34,6 +34,7 @@ const bookingErrorMessages: Record<string, string> = {
   MAX_GUESTS_EXCEEDED: "The number of guests exceeds the allowed limit.",
   DATES_NOT_AVAILABLE:
     "These dates were just booked. Please choose different dates.",
+  EMAIL_NOT_VERIFIED: "Please verify your email before requesting a booking.",
 };
 
 export default function BookingForm({
@@ -87,7 +88,7 @@ export default function BookingForm({
       if (res.status === 401) {
         toast.error("Please log in to continue.");
 
-        onAuthRequired?.(); 
+        onAuthRequired?.();
         openModal("login");
 
         return;
@@ -95,11 +96,18 @@ export default function BookingForm({
 
       if (!res.ok) {
         const data = await res.json();
-        const key =
-          typeof data.error === "string" ? data.error : data.error?.message;
+
+        const code = data.code || data.error;
+
+        if (code === "EMAIL_NOT_VERIFIED") {
+          toast.error("Please verify your email before requesting a booking.");
+          return;
+        }
 
         toast.error(
-          bookingErrorMessages[key] || "Booking could not be completed.",
+          bookingErrorMessages[code] ||
+            data.error ||
+            "Booking could not be completed.",
         );
         return;
       }

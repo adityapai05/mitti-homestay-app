@@ -5,9 +5,11 @@ import { useUserStore } from "@/stores/useUserStore";
 import { LogIn, LogOut } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { auth } from "@/lib/firebase/client";
+import { sendEmailVerification } from "firebase/auth";
 
 import {
   Avatar,
@@ -31,8 +33,13 @@ const baseNavLinks: NavLink[] = [
 ];
 
 const Navbar = () => {
+  const router = useRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
+  const [isVerificationBannerDismissed, setIsVerificationBannerDismissed] =
+    useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(true);
   const { openModal } = useAuthModal();
   const user = useUserStore((state) => state.user);
 
@@ -47,6 +54,15 @@ const Navbar = () => {
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
+      setIsEmailVerified(firebaseUser?.emailVerified ?? true);
+      setIsVerificationBannerDismissed(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const hostLink: NavLink =
     user?.role === "HOST"
       ? { href: "/host/homestays", label: "Host Dashboard" }
@@ -59,8 +75,76 @@ const Navbar = () => {
     return pathname.startsWith(href);
   };
 
+  const shouldShowVerificationBanner =
+    !!user && !isEmailVerified && !isVerificationBannerDismissed;
+
+  useEffect(() => {
+    if (!shouldShowVerificationBanner) return;
+
+    const interval = setInterval(async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      await user.reload();
+      if (user.emailVerified) {
+        setIsEmailVerified(true);
+        router.refresh();
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [shouldShowVerificationBanner, router]);
+
   return (
     <nav className="w-full sticky top-0 z-50 bg-mitti-cream text-mitti-dark-brown shadow-sm">
+      {shouldShowVerificationBanner && (
+        <div className="border-b border-amber-300 bg-amber-100/80">
+          <div className="mx-auto flex max-w-full items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8">
+            <p className="text-sm font-medium text-amber-900 leading-snug">
+              Verify your email to enable booking. We sent a verification link
+              to your inbox.
+              <br className="hidden sm:block" />
+              Check your Inbox and Spam/Junk folder. After verifying, come back
+              and reload this page.
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={isResendingVerification}
+                onClick={async () => {
+                  const currentUser = auth.currentUser;
+                  if (!currentUser) {
+                    toast.error("Please sign in again to continue.");
+                    return;
+                  }
+
+                  setIsResendingVerification(true);
+                  try {
+                    await sendEmailVerification(currentUser);
+                    toast.success(
+                      "Email sent again. Please wait a minute and check Spam/Junk if you don’t see it.",
+                    );
+                  } catch {
+                    toast.error("Unable to resend verification email.");
+                  } finally {
+                    setIsResendingVerification(false);
+                  }
+                }}
+                className="rounded-md border border-amber-800 px-3 py-1 text-xs font-medium text-amber-900 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isResendingVerification ? "Sending..." : "Resend email"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsVerificationBannerDismissed(true)}
+                className="rounded-md px-2 py-1 text-xs font-medium text-amber-900 transition hover:bg-amber-200"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -242,8 +326,13 @@ const Navbar = () => {
                     variant="ghost"
                     className="text-mitti-error active:scale-[0.97]"
                     onClick={async () => {
-                      await logout();
-                      toast.success("Logged out successfully");
+                      try {
+                        await logout();
+                        toast.success("Logged out successfully");
+                        router.refresh();
+                      } catch {
+                        toast.error("Failed to logout");
+                      }
                       closeMenu();
                     }}
                   >

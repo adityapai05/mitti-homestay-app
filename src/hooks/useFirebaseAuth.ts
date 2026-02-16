@@ -38,12 +38,7 @@ const useFirebaseAuth = () => {
             image: user.image,
 
             role: user.role,
-            provider:
-              providerId === "google.com"
-                ? "google"
-                : providerId === "phone"
-                ? "phone"
-                : "password",
+            provider: providerId === "google.com" ? "google" : "password",
           });
         } catch (err) {
           console.error("[AUTH_SYNC_ERROR]", err);
