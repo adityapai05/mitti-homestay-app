@@ -114,6 +114,12 @@ model Booking {
   checkIn    DateTime
   checkOut   DateTime
   guests     Int
+  nights     Int         @default(0)
+  stayBase   Decimal     @default(0)
+  guideFee   Decimal     @default(0)
+  platformFee Decimal    @default(0)
+  gst        Decimal     @default(0)
+  subtotal   Decimal     @default(0)
   totalPrice Decimal
   status     BookingStatus @default(PENDING_HOST_APPROVAL)
   createdAt  DateTime      @default(now())

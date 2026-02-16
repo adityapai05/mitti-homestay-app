@@ -38,6 +38,14 @@ export async function sendBookingEmail(
     .join(", ");
 
   const pdfUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/bookings/${booking.id}/pdf`;
+  const pricing = {
+    stayBase: booking.stayBase.toString(),
+    guideFee: booking.guideFee.toString(),
+    platformFee: booking.platformFee.toString(),
+    gst: booking.gst.toString(),
+    subtotal: booking.subtotal.toString(),
+    total: booking.totalPrice.toString(),
+  };
 
   /* ---------------- BOOKING REQUESTED ---------------- */
 
@@ -78,6 +86,8 @@ export async function sendBookingEmail(
       react: BookingApprovedEmail({
         recipientName: booking.user.name,
         homestayName: booking.homestay.name,
+        pricing,
+        pdfUrl,
       }),
     });
   }
@@ -95,6 +105,7 @@ export async function sendBookingEmail(
           location,
           checkIn: booking.checkIn.toDateString(),
           checkOut: booking.checkOut.toDateString(),
+          pricing,
           pdfUrl,
         }),
       });
@@ -110,6 +121,7 @@ export async function sendBookingEmail(
           location,
           checkIn: booking.checkIn.toDateString(),
           checkOut: booking.checkOut.toDateString(),
+          pricing,
           pdfUrl,
         }),
       });

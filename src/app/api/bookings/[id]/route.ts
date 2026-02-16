@@ -69,10 +69,6 @@ export async function GET(
     const checkIn = new Date(booking.checkIn);
     const checkOut = new Date(booking.checkOut);
 
-    const nights = Math.ceil(
-      (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
-    );
-
     const bookingStatus = {
       isGuest,
 
@@ -95,7 +91,16 @@ export async function GET(
 
     return NextResponse.json({
       ...booking,
-      nights,
+      nights: booking.nights,
+      pricing: {
+        nights: booking.nights,
+        stayBase: booking.stayBase,
+        guideFee: booking.guideFee,
+        platformFee: booking.platformFee,
+        gst: booking.gst,
+        subtotal: booking.subtotal,
+        total: booking.totalPrice,
+      },
       bookingStatus,
     });
   } catch (error) {

@@ -2,6 +2,7 @@
 
 import { differenceInDays } from "date-fns";
 import type { HomestayDetailsDTO } from "../../types";
+import { calculateBookingPrice } from "@/lib/pricing/calculateBookingPrice";
 
 interface PriceBreakdownProps {
   homestay: HomestayDetailsDTO;
@@ -22,52 +23,47 @@ export default function PriceBreakdown({
   const nights = differenceInDays(dateRange.to, dateRange.from);
   if (nights < 1) return null;
 
-  const gstRate = 0.18; // 18% GST
-  const platformFeeRate = 0.05; // 5% convenience
-
-  const pricePerNight = Number(homestay.pricing.pricePerNight);
-  const stayTotal = nights * pricePerNight;
-
-  const guideFeePerNight =
-    homestay.pricing.guideAvailable && homestay.pricing.guideFee
+  const price = calculateBookingPrice({
+    pricePerNight: Number(homestay.pricing.pricePerNight),
+    nights,
+    guests: 1,
+    includeGuide,
+    guideFeePerNight: homestay.pricing.guideFee
       ? Number(homestay.pricing.guideFee)
-      : 0;
+      : 0,
+  });
 
-  const guideTotal = includeGuide ? nights * guideFeePerNight : 0;
-
-  const gstAmount = Math.round(stayTotal * gstRate);
-  const platformFeeAmount = Math.round(stayTotal * platformFeeRate);
-  const grandTotal = stayTotal + guideTotal + gstAmount + platformFeeAmount;
+  const { breakdown } = price;
 
   return (
     <div className="space-y-2 border-t border-mitti-khaki pt-4 text-sm text-mitti-dark-brown">
       <div className="flex justify-between">
         <span>
-          ₹{pricePerNight} × {nights} nights
+          ₹{homestay.pricing.pricePerNight} × {breakdown.nights} nights
         </span>
-        <span>₹{stayTotal}</span>
+        <span>₹{breakdown.stayBase}</span>
       </div>
 
-      {includeGuide && guideFeePerNight > 0 && (
+      {includeGuide && breakdown.guideFee > 0 && (
         <div className="flex justify-between">
           <span>Local guide</span>
-          <span>₹{guideTotal}</span>
+          <span>₹{breakdown.guideFee}</span>
         </div>
       )}
 
       <div className="flex justify-between">
-        <span>GST (18%)</span>
-        <span>₹{gstAmount}</span>
+        <span>Platform fee</span>
+        <span>₹{breakdown.platformFee}</span>
       </div>
 
       <div className="flex justify-between">
-        <span>Platform fee (5%)</span>
-        <span>₹{platformFeeAmount}</span>
+        <span>GST</span>
+        <span>₹{breakdown.gst}</span>
       </div>
 
       <div className="flex justify-between font-semibold border-t border-mitti-khaki pt-4">
         <span>Total</span>
-        <span>₹{grandTotal}</span>
+        <span>₹{breakdown.total}</span>
       </div>
     </div>
   );
