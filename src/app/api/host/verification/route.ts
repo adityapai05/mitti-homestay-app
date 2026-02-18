@@ -1,26 +1,17 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth/getCurrentUser";
+import { getHostVerificationStatus } from "@/lib/server/host/getHostVerificationStatus";
 
 export async function GET() {
   try {
-    const user = await getCurrentUser();
-
-    if (!user || user.role !== "HOST") {
+    const verificationStatus = await getHostVerificationStatus();
+    if (!verificationStatus) {
       return NextResponse.json(
         { error: "Authentication required." },
         { status: 401 }
       );
     }
 
-    const hostProfile = await prisma.hostProfile.findUnique({
-      where: { userId: user.id },
-      select: { verificationStatus: true },
-    });
-
-    return NextResponse.json({
-      verificationStatus: hostProfile?.verificationStatus ?? "PENDING",
-    });
+    return NextResponse.json({ verificationStatus });
   } catch (error) {
     console.error("[GET /api/host/verification]", error);
     return NextResponse.json(

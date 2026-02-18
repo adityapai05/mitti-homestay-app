@@ -1,49 +1,15 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { redirect } from "next/navigation";
 
 import VerificationHeader from "./_components/VerificationHeader";
 import VerificationStatusCard from "./_components/VerificationStatusCard";
 import VerificationFooter from "./_components/VerificationFooter";
+import { getHostVerificationStatus } from "@/lib/server/host/getHostVerificationStatus";
 
-type VerificationStatus = "PENDING" | "VERIFIED" | "REJECTED";
+export const dynamic = "force-dynamic";
 
-export default function VerificationPage() {
-  const [status, setStatus] = useState<VerificationStatus | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadStatus() {
-      try {
-        const res = await fetch("/api/host/verification");
-
-        if (!res.ok) {
-          throw new Error();
-        }
-
-        const data = await res.json();
-        setStatus(data.verificationStatus);
-      } catch {
-        toast.error("Failed to load verification status");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadStatus();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="h-6 w-48 bg-mitti-khaki/30 rounded" />
-        <div className="h-32 bg-mitti-khaki/20 rounded-xl" />
-      </div>
-    );
-  }
-
-  if (!status) return null;
+export default async function VerificationPage() {
+  const status = await getHostVerificationStatus();
+  if (!status) redirect("/login");
 
   return (
     <div className="space-y-6">

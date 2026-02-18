@@ -8,6 +8,8 @@ import AuthProvider from "@/components/shared/AuthProvider";
 import GlobalModals from "@/components/auth/GlobalModals";
 import ClientBoot from "@/components/system/ClientBoot";
 import RouteProgressBar from "@/components/system/RouteProgressBar";
+import { getCurrentUser } from "@/lib/auth/getCurrentUser";
+import UserHydrator from "@/components/system/UserHydrator";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -34,15 +36,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const user = await getCurrentUser();
   return (
     <html lang="en">
       <body className={poppins.className} suppressHydrationWarning>
         <ClientBoot />
+        <UserHydrator user={user} />
         <RouteProgressBar />
         <Providers>
           <AuthProvider />

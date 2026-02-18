@@ -124,8 +124,41 @@ async function establishServerSession(): Promise<void> {
     method: "POST",
     headers: { Authorization: `Bearer ${idToken}` },
   });
+  await fetch("/api/auth/user", {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
   if (!syncRes.ok) {
     throw new Error("Failed to sync account.");
+  }
+}
+
+async function resolveRoleAndRedirect(router: ReturnType<typeof useRouter>) {
+  const res = await fetch("/api/auth/user", {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    router.push("/");
+    return;
+  }
+
+  const user = await res.json();
+
+  switch (user.role) {
+    case "ADMIN":
+      router.replace("/admin");
+      return;
+
+    case "HOST":
+      router.replace("/host");
+      return;
+
+    default:
+      router.replace("/");
   }
 }
 
@@ -313,8 +346,8 @@ export default function AuthForm({ setModalBusy }: AuthFormProps) {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       await establishServerSession();
+      await resolveRoleAndRedirect(router);
       closeModal();
-      router.refresh();
       toast.success("Signed in successfully");
     } catch (error: unknown) {
       const authError = error as AuthError;
@@ -351,9 +384,8 @@ export default function AuthForm({ setModalBusy }: AuthFormProps) {
         await updateProfile(credential.user, { displayName: fullName.trim() });
         await sendEmailVerification(credential.user);
         await establishServerSession();
-
+        await resolveRoleAndRedirect(router);
         closeModal();
-        router.refresh();
         toast.success("Verification email sent to your inbox");
       } catch (error: unknown) {
         const authError = error as AuthError;
@@ -384,9 +416,8 @@ export default function AuthForm({ setModalBusy }: AuthFormProps) {
 
       await signInWithPopup(auth, googleProvider);
       await establishServerSession();
-
+      await resolveRoleAndRedirect(router);
       closeModal();
-      router.refresh();
       toast.success("Signed in successfully");
     } catch (error: unknown) {
       const authError = error as AuthError;

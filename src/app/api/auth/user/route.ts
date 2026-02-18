@@ -1,9 +1,9 @@
 export const dynamic = "force-dynamic";
 
-import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { adminAuth } from "@/lib/firebase/admin";
 import { prisma } from "@/lib/prisma";
 import { validateFile, uploadImage } from "@/lib/cloudinary";
+import { getCurrentUserProfileData } from "@/lib/server/profile/getCurrentUserProfileData";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { z, ZodError } from "zod";
@@ -17,7 +17,7 @@ const userUpdateSchema = z.object({
 });
 
 export async function GET() {
-  const user = await getCurrentUser();
+  const user = await getCurrentUserProfileData();
 
   if (!user) {
     return NextResponse.json(

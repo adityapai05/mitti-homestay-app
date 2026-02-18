@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import SmartLink from "@/components/shared/SmartLink";
 import { motion, cubicBezier } from "framer-motion";
 
 const EASE_OUT = cubicBezier(0.16, 1, 0.3, 1);
@@ -32,7 +32,7 @@ const CategoryCard = ({
       whileHover={{ y: -6 }}
       transition={{ duration: 0.25 }}
     >
-      <Link
+      <SmartLink
         href={`/explore?category=${categoryKey}`}
         className="group relative block w-full overflow-hidden rounded-3xl aspect-[4/5]"
       >
@@ -55,9 +55,10 @@ const CategoryCard = ({
 
           <div className="mt-4 h-px w-8 bg-white/60 transition-all duration-300 group-hover:w-14" />
         </div>
-      </Link>
+      </SmartLink>
     </motion.div>
   );
 };
 
 export default CategoryCard;
+

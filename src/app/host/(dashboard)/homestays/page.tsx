@@ -1,46 +1,12 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { Plus, ShieldCheck, Clock } from "lucide-react";
+import { getHostHomestays } from "@/lib/server/host/getHostHomestays";
+import SmartLink from "@/components/shared/SmartLink";
 
-type Homestay = {
-  id: string;
-  name: string;
-  imageUrl: string[];
-  pricePerNight: string;
-  isVerified: boolean;
-  category: string;
-  type: "ROOM" | "HOME";
-  village?: string | null;
-  state?: string | null;
-};
+export const dynamic = "force-dynamic";
 
-const HostHomestaysPage = () => {
-  const [homestays, setHomestays] = useState<Homestay[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchHomestays = async () => {
-      try {
-        const res = await fetch("/api/host/homestays", {
-          cache: "no-store",
-        });
-
-        if (!res.ok) throw new Error("Failed to fetch homestays");
-
-        const data = await res.json();
-        setHomestays(data.homestays || []);
-      } catch (err) {
-        console.error("[HOST_HOMESTAYS_FETCH]", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHomestays();
-  }, []);
+const HostHomestaysPage = async () => {
+  const homestays = await getHostHomestays();
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-mitti-beige px-4 sm:px-6 py-2">
@@ -52,72 +18,52 @@ const HostHomestaysPage = () => {
               Your homestays
             </h1>
             <p className="mt-1 text-sm text-mitti-dark-brown/80">
-              Manage and track the homestays you’ve listed on MITTI.
+              Manage and track the homestays you&apos;ve listed on MITTI.
             </p>
           </div>
 
-          <Link
+          <SmartLink
             href="/host/homestays/create"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-mitti-brown text-white font-medium hover:bg-mitti-brown/90 cursor-pointer"
           >
             <Plus size={18} />
             Create homestay
-          </Link>
+          </SmartLink>
         </div>
 
-        {/* Loading */}
-        {loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="bg-white border border-mitti-khaki rounded-2xl overflow-hidden animate-pulse"
-              >
-                <div className="h-52 bg-mitti-khaki/40" />
-                <div className="p-4 space-y-3">
-                  <div className="h-4 w-3/4 bg-mitti-khaki/40 rounded" />
-                  <div className="h-3 w-full bg-mitti-khaki/30 rounded" />
-                  <div className="h-4 w-1/2 bg-mitti-khaki/40 rounded" />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* Empty state */}
-        {!loading && homestays.length === 0 && (
+        {homestays.length === 0 && (
           <div className="flex flex-col items-center justify-center text-center bg-mitti-cream border border-mitti-khaki rounded-2xl p-10">
             <h2 className="text-xl font-semibold text-mitti-dark-brown">
-              You haven’t listed any homestays yet
+              You haven&apos;t listed any homestays yet
             </h2>
             <p className="mt-2 text-sm text-mitti-dark-brown/80 max-w-md">
               Create your first homestay to start hosting guests and accepting
               bookings on MITTI.
             </p>
 
-            <Link
+            <SmartLink
               href="/host/homestays/create"
               className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-mitti-brown text-white font-medium hover:bg-mitti-brown/90 cursor-pointer"
             >
               <Plus size={18} />
               Create your first homestay
-            </Link>
+            </SmartLink>
           </div>
         )}
 
         {/* Homestay grid */}
-        {!loading && homestays.length > 0 && (
+        {homestays.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {homestays.map((stay) => {
-              const coverImage =
-                stay.imageUrl?.[0] || "/mitti-placeholder.jpg";
+              const coverImage = stay.imageUrl?.[0] || "/mitti-placeholder.jpg";
 
               const location =
                 [stay.village, stay.state].filter(Boolean).join(", ") ||
                 "Location not set";
 
               return (
-                <Link
+                <SmartLink
                   key={stay.id}
                   href={`/host/homestays/${stay.id}`}
                   className="group bg-white border border-mitti-khaki rounded-2xl overflow-hidden shadow-sm
@@ -147,7 +93,7 @@ const HostHomestaysPage = () => {
 
                     <div className="flex items-center justify-between mt-2">
                       <p className="text-base font-semibold text-mitti-dark-brown">
-                        ₹{Number(stay.pricePerNight).toLocaleString()}{" "}
+                        &#8377;{Number(stay.pricePerNight).toLocaleString()}{" "}
                         <span className="font-normal text-mitti-dark-brown/70">
                           / night
                         </span>
@@ -172,7 +118,7 @@ const HostHomestaysPage = () => {
                         : "Not bookable until verified"}
                     </p>
                   </div>
-                </Link>
+                </SmartLink>
               );
             })}
           </div>

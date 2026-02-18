@@ -63,12 +63,24 @@ const Navbar = () => {
     return () => unsubscribe();
   }, []);
 
-  const hostLink: NavLink =
-    user?.role === "HOST"
-      ? { href: "/host/homestays", label: "Host Dashboard" }
-      : { href: "/host/start", label: "Become a Host" };
+  const roleLink: NavLink | null = (() => {
+    if (!user) return { href: "/host/start", label: "Become a Host" };
 
-  const navLinks: NavLink[] = [...baseNavLinks, hostLink];
+    switch (user.role) {
+      case "ADMIN":
+        return { href: "/admin", label: "Admin Dashboard" };
+
+      case "HOST":
+        return { href: "/host/homestays", label: "Host Dashboard" };
+
+      default:
+        return { href: "/host/start", label: "Become a Host" };
+    }
+  })();
+
+  const navLinks: NavLink[] = roleLink
+    ? [...baseNavLinks, roleLink]
+    : baseNavLinks;
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";

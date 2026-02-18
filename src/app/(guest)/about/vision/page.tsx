@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import SmartLink from "@/components/shared/SmartLink";
 import { motion, cubicBezier } from "framer-motion";
 
 const EASE_OUT = cubicBezier(0.16, 1, 0.3, 1);
@@ -64,13 +64,13 @@ export default function VisionPage() {
                 { href: "/about/who-we-are", label: "Who We Are" },
                 { href: "/about/mission", label: "Mission" },
               ].map((link) => (
-                <Link
+                <SmartLink
                   key={link.href}
                   href={link.href}
                   className="relative after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-full after:scale-x-0 after:origin-left after:bg-mitti-brown after:transition-transform hover:after:scale-x-100"
                 >
                   {link.label}
-                </Link>
+                </SmartLink>
               ))}
             </div>
           </motion.div>
@@ -79,3 +79,4 @@ export default function VisionPage() {
     </main>
   );
 }
+

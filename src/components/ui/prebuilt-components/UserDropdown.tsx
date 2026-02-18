@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/prebuilt-components/dropdown-menu";
 
 import Image from "next/image";
-import Link from "next/link";
+import SmartLink from "@/components/shared/SmartLink";
 import { useUserStore } from "@/stores/useUserStore";
 import { toast } from "sonner";
 import { logout } from "@/lib/firebase/authActions";
@@ -91,22 +91,22 @@ export default function UserDropdown() {
 
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link
+            <SmartLink
               href="/bookings"
               className="flex items-center gap-2 cursor-pointer"
             >
               <BookOpenIcon size={16} className="opacity-60" />
               <span>My Bookings</span>
-            </Link>
+            </SmartLink>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link
+            <SmartLink
               href="/settings"
               className="flex items-center gap-2 cursor-pointer"
             >
               <UserPenIcon size={16} className="opacity-60" />
               <span>Account Settings</span>
-            </Link>
+            </SmartLink>
           </DropdownMenuItem>
         </DropdownMenuGroup>
 

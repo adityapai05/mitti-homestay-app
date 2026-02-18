@@ -1,7 +1,7 @@
 import { Users, Home, BadgeCheck, Wallet, UserCheck } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
+import SmartLink from "@/components/shared/SmartLink";
 
 export default async function AdminOverviewPage() {
   const [
@@ -126,14 +126,14 @@ function StatCard({
 
   if (href) {
     return (
-      <Link
+      <SmartLink
         href={href}
         className="rounded-lg border border-mitti-khaki bg-mitti-cream p-6
           flex flex-col justify-between
           hover:border-mitti-olive transition cursor-pointer"
       >
         {content}
-      </Link>
+      </SmartLink>
     );
   }
 

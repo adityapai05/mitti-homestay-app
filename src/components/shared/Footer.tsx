@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import SmartLink from "@/components/shared/SmartLink";
 import { motion, cubicBezier } from "framer-motion";
 
 const EASE_OUT = cubicBezier(0.16, 1, 0.3, 1);
@@ -51,7 +51,7 @@ const Footer = () => {
             variants={columnVariants}
             className="lg:col-span-2 space-y-6"
           >
-            <Link href="/" className="inline-block">
+            <SmartLink href="/" className="inline-block">
               <div className="inline-flex items-center rounded-2xl bg-mitti-beige/95 px-4 py-3">
                 <Image
                   src="/mitti-logo.png"
@@ -62,7 +62,7 @@ const Footer = () => {
                   priority
                 />
               </div>
-            </Link>
+            </SmartLink>
 
             <p className="max-w-md text-base leading-relaxed text-mitti-beige/90">
               MITTI is a rural homestay platform focused on helping travelers
@@ -78,24 +78,24 @@ const Footer = () => {
             </h4>
             <ul className="space-y-3 text-base">
               <li>
-                <Link href="/about" className={linkHover}>
+                <SmartLink href="/about" className={linkHover}>
                   About MITTI
-                </Link>
+                </SmartLink>
               </li>
               <li>
-                <Link href="/about/who-we-are" className={linkHover}>
+                <SmartLink href="/about/who-we-are" className={linkHover}>
                   Who We Are
-                </Link>
+                </SmartLink>
               </li>
               <li>
-                <Link href="/about/mission" className={linkHover}>
+                <SmartLink href="/about/mission" className={linkHover}>
                   Mission
-                </Link>
+                </SmartLink>
               </li>
               <li>
-                <Link href="/about/vision" className={linkHover}>
+                <SmartLink href="/about/vision" className={linkHover}>
                   Vision
-                </Link>
+                </SmartLink>
               </li>
             </ul>
           </motion.div>
@@ -107,14 +107,14 @@ const Footer = () => {
             </h4>
             <ul className="space-y-3 text-base">
               <li>
-                <Link href="/explore" className={linkHover}>
+                <SmartLink href="/explore" className={linkHover}>
                   Homestays
-                </Link>
+                </SmartLink>
               </li>
               <li>
-                <Link href="/host/start" className={linkHover}>
+                <SmartLink href="/host/start" className={linkHover}>
                   Become a Host
-                </Link>
+                </SmartLink>
               </li>
             </ul>
           </motion.div>
@@ -126,24 +126,24 @@ const Footer = () => {
             </h4>
             <ul className="space-y-3 text-base">
               <li>
-                <Link href="/contact" className={linkHover}>
+                <SmartLink href="/contact" className={linkHover}>
                   Contact
-                </Link>
+                </SmartLink>
               </li>
               <li>
-                <Link href="/cancellation-policy" className={linkHover}>
+                <SmartLink href="/cancellation-policy" className={linkHover}>
                   Cancellation Policy
-                </Link>
+                </SmartLink>
               </li>
               <li>
-                <Link href="/terms-of-service" className={linkHover}>
+                <SmartLink href="/terms-of-service" className={linkHover}>
                   Terms of Service
-                </Link>
+                </SmartLink>
               </li>
               <li>
-                <Link href="/privacy-policy" className={linkHover}>
+                <SmartLink href="/privacy-policy" className={linkHover}>
                   Privacy Policy
-                </Link>
+                </SmartLink>
               </li>
             </ul>
           </motion.div>
@@ -163,3 +163,4 @@ const Footer = () => {
 };
 
 export default Footer;
+

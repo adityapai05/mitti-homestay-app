@@ -1,25 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
+import { getHostPayoutAccount } from "@/lib/server/host/getHostPayoutAccount";
 
 export async function GET() {
   try {
-    const user = await getCurrentUser();
-
-    if (!user || user.role !== "HOST") {
+    const account = await getHostPayoutAccount();
+    if (account === null) {
       return NextResponse.json(
         { error: "Authentication required." },
         { status: 401 }
       );
     }
 
-    const account = await prisma.hostPayoutAccount.findUnique({
-      where: {
-        userId: user.id,
-      },
-    });
-
-    return NextResponse.json(account);
+    return NextResponse.json(account ?? null);
   } catch (error) {
     console.error("[GET /api/host/payouts/account]", error);
     return NextResponse.json(

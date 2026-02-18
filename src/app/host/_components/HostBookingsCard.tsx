@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import SmartLink from "@/components/shared/SmartLink";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -105,12 +105,12 @@ export default function HostBookingCard({ booking }: HostBookingCardProps) {
 
       {/* Actions */}
       <div className="flex flex-col justify-between items-end gap-2">
-        <Link
+        <SmartLink
           href={`/host/bookings/${booking.id}`}
           className="text-sm font-medium text-mitti-olive hover:underline cursor-pointer"
         >
           View details
-        </Link>
+        </SmartLink>
 
         {booking.status === "PENDING_HOST_APPROVAL" && (
           <div className="flex gap-2">

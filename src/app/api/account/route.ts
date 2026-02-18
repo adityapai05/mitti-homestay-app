@@ -1,25 +1,20 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth/getCurrentUser";
+import { getAccountData } from "@/lib/server/account/getAccountData";
 
 export async function GET() {
   try {
-    const user = await getCurrentUser();
+    const accountData = await getAccountData();
 
-    if (!user) {
+    if (!accountData) {
       return NextResponse.json(
         { error: "Unauthorized", code: "UNAUTHORIZED" },
         { status: 401 }
       );
     }
 
-    return NextResponse.json({
-      email: user.email,
-      emailVerified: user.isVerified,
-      phone: user.phone,
-      isActive: user.isActive,
-    });
+    return NextResponse.json(accountData);
   } catch (error) {
     console.error("[GET /api/account]", error);
     return NextResponse.json(

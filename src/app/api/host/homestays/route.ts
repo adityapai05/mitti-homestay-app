@@ -1,36 +1,9 @@
-import { requireRole } from "@/lib/auth/requireRole";
-import { prisma } from "@/lib/prisma";
+import { getHostHomestays } from "@/lib/server/host/getHostHomestays";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const host = await requireRole("HOST");
-
-    const homestays = await prisma.homestay.findMany({
-      where: {
-        ownerId: host.id, 
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      select: {
-        id: true,
-        name: true,
-        imageUrl: true,
-        pricePerNight: true,
-        isVerified: true,
-        category: true,
-        type: true,
-        village: true,
-        state: true,
-        createdAt: true,
-      },
-    });
-
-    const formattedHomestays = homestays.map((stay) => ({
-      ...stay,
-      pricePerNight: stay.pricePerNight.toString(),
-    }));
+    const formattedHomestays = await getHostHomestays();
 
     return NextResponse.json({
       homestays: formattedHomestays,
