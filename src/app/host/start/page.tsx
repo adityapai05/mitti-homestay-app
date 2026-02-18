@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
+  ArrowLeft,
   Home,
   Image as ImageIcon,
   CheckCircle,
@@ -24,9 +25,29 @@ export default function BecomeHostStartPage() {
     router.push("/host/homestays/create");
   };
 
+  const handleGoBack = () => {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/");
+    }
+  };
+
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-mitti-beige">
       <div className="mx-auto max-w-6xl px-5 sm:px-6 py-20 sm:py-52">
+        {/* BACK BUTTON */}
+        <motion.button
+          onClick={handleGoBack}
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="mb-10 inline-flex items-center gap-2 text-sm font-medium text-mitti-dark-brown hover:text-mitti-brown transition-colors cursor-pointer"
+        >
+          <ArrowLeft size={18} />
+          Go back
+        </motion.button>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           {/* LEFT CONTENT */}
           <motion.div
@@ -73,7 +94,7 @@ export default function BecomeHostStartPage() {
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, ease: "easeOut", delay: 0.05 }}
-            className="w-full flex justify-center items-center  lg:justify-end"
+            className="w-full flex justify-center items-center lg:justify-end"
           >
             <div className="w-full max-w-md bg-mitti-cream border border-mitti-khaki rounded-3xl p-8 shadow-md">
               <h2 className="text-xl font-semibold text-mitti-dark-brown">
@@ -86,7 +107,7 @@ export default function BecomeHostStartPage() {
 
               <button
                 onClick={handleGetStarted}
-                className="mt-7 w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-mitti-brown text-white font-medium transition-all hover:bg-mitti-brown/90 cursor-pointer over:shadow-lg active:scale-[0.98]"
+                className="mt-7 w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-mitti-brown text-white font-medium transition-all hover:bg-mitti-brown/90 cursor-pointer hover:shadow-lg active:scale-[0.98]"
               >
                 Get started
                 <ArrowRight size={18} />
