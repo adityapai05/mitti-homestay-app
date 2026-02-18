@@ -1,6 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { MessageCircle } from "lucide-react";
+
+import ReviewsModal from "@/app/(guest)/homestays/[id]/_components/reviews/ReviewsModal";
 
 type Review = {
   id: string;
@@ -13,11 +17,14 @@ type Review = {
 
 interface Props {
   reviews: Review[];
+  hostId: string;
 }
 
-export default function ReviewsPreview({ reviews }: Props) {
+export default function ReviewsPreview({ reviews, hostId }: Props) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <div className="border-t border-mitti-khaki pt-8 space-y-4 max-w-3xl">
+    <div className="border-t border-mitti-khaki pt-8 space-y-6 max-w-full">
       <h2 className="text-xl font-semibold text-mitti-dark-brown flex items-center gap-2">
         <MessageCircle size={18} />
         What guests say
@@ -47,12 +54,20 @@ export default function ReviewsPreview({ reviews }: Props) {
         ))}
       </div>
 
-      <Link
-        href="#"
-        className="text-sm text-mitti-olive hover:underline inline-flex items-center gap-1"
+      <button
+        onClick={() => setOpen(true)}
+        className="text-sm text-mitti-olive hover:underline"
       >
-        View all reviews
-      </Link>
+        Read all guest stories
+      </button>
+
+      <ReviewsModal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        entityType="host"
+        entityId={hostId}
+        initialTotalReviews={reviews.length}
+      />
     </div>
   );
 }

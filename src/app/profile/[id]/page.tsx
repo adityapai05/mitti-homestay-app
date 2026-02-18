@@ -22,6 +22,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       hostProfile: true,
       homestays: {
         select: {
+          id: true,
           rating: true,
           reviews: {
             take: 2,
@@ -36,10 +37,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             },
           },
         },
-      },
-      bookings: {
-        where: { status: "COMPLETED" },
-        select: { id: true },
       },
     },
   });
@@ -72,11 +69,20 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     const ratings = user.homestays.map((h) => h.rating || 0);
     const totalRating = ratings.reduce((a, b) => a + b, 0);
 
+    const completedBookingsCount = await prisma.booking.count({
+      where: {
+        status: "COMPLETED",
+        homestay: {
+          ownerId: user.id,
+        },
+      },
+    });
+
     hostData = {
       verificationStatus: user.hostProfile?.verificationStatus ?? "PENDING",
       hostingSince: user.createdAt.getFullYear(),
       homestaysCount,
-      guestsHosted: user.bookings.length,
+      guestsHosted: completedBookingsCount,
       averageRating:
         homestaysCount > 0
           ? Number((totalRating / homestaysCount).toFixed(2))
@@ -101,7 +107,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       {isHost && hostData && <HostHighlights hostData={hostData} />}
 
       {isHost && recentReviews.length > 0 && (
-        <ReviewsPreview reviews={recentReviews} />
+        <ReviewsPreview reviews={recentReviews} hostId={user.id} />
       )}
     </section>
   );

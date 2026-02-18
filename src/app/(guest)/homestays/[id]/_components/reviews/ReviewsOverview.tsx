@@ -169,8 +169,9 @@ export default function ReviewsOverview({ homestay }: ReviewsOverviewProps) {
         <ReviewsModal
           isOpen={openModal}
           onClose={() => setOpenModal(false)}
-          homestayId={homestay.id}
-          initialStats={data!.stats}
+          entityType="homestay"
+          entityId={homestay.id}
+          initialTotalReviews={data!.stats.totalReviews}
         />
       )}
     </section>

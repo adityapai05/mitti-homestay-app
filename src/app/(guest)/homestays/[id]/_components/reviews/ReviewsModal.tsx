@@ -19,11 +19,14 @@ import {
   SelectValue,
 } from "@/components/ui/prebuilt-components/select";
 
+type EntityType = "homestay" | "host";
+
 interface ReviewsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  homestayId: string;
-  initialStats: ReviewsResponseDTO["stats"];
+  entityType: EntityType;
+  entityId: string;
+  initialTotalReviews: number;
 }
 
 const PAGE_SIZE = 6;
@@ -31,8 +34,9 @@ const PAGE_SIZE = 6;
 export default function ReviewsModal({
   isOpen,
   onClose,
-  homestayId,
-  initialStats,
+  entityType,
+  entityId,
+  initialTotalReviews,
 }: ReviewsModalProps) {
   const [reviews, setReviews] = useState<ReviewDTO[]>([]);
   const [page, setPage] = useState(1);
@@ -78,13 +82,18 @@ export default function ReviewsModal({
           limit: String(PAGE_SIZE),
           sortBy,
           rating,
-          search: query,
         });
 
-        const res = await fetch(
-          `/api/reviews/${homestayId}?${params.toString()}`,
-        );
+        if (entityType === "homestay") {
+          params.set("search", query);
+        }
 
+        const baseUrl =
+          entityType === "homestay"
+            ? `/api/reviews/${entityId}`
+            : `/api/users/${entityId}/reviews`;
+
+        const res = await fetch(`${baseUrl}?${params.toString()}`);
         const json: ReviewsResponseDTO = await res.json();
 
         setReviews(json.reviews);
@@ -95,7 +104,7 @@ export default function ReviewsModal({
     };
 
     fetchReviews();
-  }, [isOpen, page, query, rating, sortBy, homestayId]);
+  }, [isOpen, page, query, rating, sortBy, entityId, entityType]);
 
   return (
     <AnimatePresence>
@@ -118,10 +127,12 @@ export default function ReviewsModal({
             <div className="flex items-center justify-between px-6 py-4 border-b border-mitti-khaki">
               <div>
                 <h3 className="text-lg font-semibold text-mitti-dark-brown">
-                  Guest experiences
+                  {entityType === "host"
+                    ? "Guest experiences with this host"
+                    : "Guest experiences"}
                 </h3>
                 <p className="text-xs text-mitti-dark-brown/70">
-                  {initialStats.totalReviews} verified stays
+                  {initialTotalReviews} verified stays
                 </p>
               </div>
 
@@ -136,15 +147,17 @@ export default function ReviewsModal({
             </div>
 
             <div className="px-6 py-4 border-b border-mitti-khaki space-y-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-mitti-dark-brown/60" />
-                <Input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search guest reviews"
-                  className="pl-9 bg-white text-mitti-dark-brown"
-                />
-              </div>
+              {entityType === "homestay" && (
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-mitti-dark-brown/60" />
+                  <Input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search guest reviews"
+                    className="pl-9 bg-white text-mitti-dark-brown"
+                  />
+                </div>
+              )}
 
               <div className="flex gap-2 flex-wrap">
                 <Select value={sortBy} onValueChange={setSortBy}>
@@ -176,13 +189,10 @@ export default function ReviewsModal({
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-              {loading && (
-                <>
-                  {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                    <ReviewCardSkeleton key={i} />
-                  ))}
-                </>
-              )}
+              {loading &&
+                Array.from({ length: PAGE_SIZE }).map((_, i) => (
+                  <ReviewCardSkeleton key={i} />
+                ))}
 
               {!loading && reviews.length === 0 && (
                 <div className="py-16 text-center text-sm text-mitti-dark-brown/70">
