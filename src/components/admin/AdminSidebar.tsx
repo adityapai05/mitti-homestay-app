@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
+import SmartLink from "@/components/shared/SmartLink";
 import {
   LayoutDashboard,
   BadgeCheck,
@@ -67,7 +67,7 @@ export default function AdminSidebar() {
           const isActive = pathname === item.href;
 
           return (
-            <Link
+            <SmartLink
               key={item.href}
               href={item.href}
               className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition
@@ -79,7 +79,7 @@ export default function AdminSidebar() {
             >
               <Icon size={18} />
               <span>{item.label}</span>
-            </Link>
+            </SmartLink>
           );
         })}
       </nav>

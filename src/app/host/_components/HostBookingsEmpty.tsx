@@ -1,5 +1,5 @@
 import { BookOpen } from "lucide-react";
-import Link from "next/link";
+import SmartLink from "@/components/shared/SmartLink";
 
 export default function HostBookingsEmpty() {
   return (
@@ -17,12 +17,12 @@ export default function HostBookingsEmpty() {
         here.
       </p>
 
-      <Link
+      <SmartLink
         href="/host/homestays"
         className="mt-6 inline-flex items-center rounded-lg bg-mitti-brown px-6 py-3 text-sm font-medium text-white hover:bg-mitti-brown/90 cursor-pointer"
       >
         View your homestays
-      </Link>
+      </SmartLink>
     </div>
   );
 }

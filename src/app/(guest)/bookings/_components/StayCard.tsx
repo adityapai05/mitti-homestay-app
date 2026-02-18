@@ -1,13 +1,13 @@
 import Image from "next/image";
-import Link from "next/link";
 import StayStatusPill from "./StayStatusPill";
 import { Stay } from "./types";
+import SmartLink from "@/components/shared/SmartLink";
 
 export default function StayCard({ stay }: { stay: Stay }) {
   const image = stay.homestay.imageUrl[0];
 
   return (
-    <Link
+    <SmartLink
       href={`/bookings/${stay.id}`}
       className="block rounded-xl border border-mitti-khaki bg-white hover:bg-mitti-cream transition cursor-pointer"
     >
@@ -41,6 +41,6 @@ export default function StayCard({ stay }: { stay: Stay }) {
 
         <StayStatusPill stay={stay} />
       </div>
-    </Link>
+    </SmartLink>
   );
 }

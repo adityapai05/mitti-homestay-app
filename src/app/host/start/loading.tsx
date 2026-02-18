@@ -4,6 +4,7 @@ export default function HostStartLoading() {
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-mitti-beige">
       <div className="mx-auto max-w-6xl px-5 sm:px-6 py-20 sm:py-52">
+        <Skeleton className="mb-10 h-5 w-24" />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <div className="space-y-6">
             <Skeleton className="h-12 w-5/6" />

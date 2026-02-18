@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
+import SmartLink from "@/components/shared/SmartLink";
 
 const tabs = [
   { label: "Homestays", href: "/host/homestays" },
@@ -18,7 +18,7 @@ export default function HostDashboardTabs() {
         const active = pathname.startsWith(tab.href);
 
         return (
-          <Link
+          <SmartLink
             key={tab.href}
             href={tab.href}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors
@@ -29,7 +29,7 @@ export default function HostDashboardTabs() {
               }`}
           >
             {tab.label}
-          </Link>
+          </SmartLink>
         );
       })}
     </div>

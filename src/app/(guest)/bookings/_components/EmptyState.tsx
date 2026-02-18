@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { Home } from "lucide-react";
+import SmartLink from "@/components/shared/SmartLink";
 
 export default function EmptyState({ type }: { type: "upcoming" | "past" }) {
   return (
@@ -20,12 +20,12 @@ export default function EmptyState({ type }: { type: "upcoming" | "past" }) {
         rural India.
       </p>
 
-      <Link
+      <SmartLink
         href="/explore"
         className="inline-block rounded-lg bg-mitti-brown px-5 py-2.5 text-sm font-medium text-white hover:bg-mitti-brown/90 cursor-pointer"
       >
         Explore homestays
-      </Link>
+      </SmartLink>
     </div>
   );
 }

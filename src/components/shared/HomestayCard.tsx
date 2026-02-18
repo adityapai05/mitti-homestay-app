@@ -1,7 +1,7 @@
 import Image from "next/image";
-import Link from "next/link";
 import { Star } from "lucide-react";
 import clsx from "clsx";
+import SmartLink from "@/components/shared/SmartLink";
 
 interface HomestayCardProps {
   id: string;
@@ -31,7 +31,7 @@ const HomestayCard = ({
     imageSrc && imageSrc.length > 0 ? imageSrc[0] : "/mitti-logo.png";
 
   return (
-    <Link
+    <SmartLink
       href={href}
       target="_blank"
       className={clsx(
@@ -98,7 +98,7 @@ const HomestayCard = ({
           </div>
         )}
       </div>
-    </Link>
+    </SmartLink>
   );
 };
 

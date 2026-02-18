@@ -4,7 +4,7 @@ import { useAuthModal } from "@/hooks/useAuthModal";
 import { useUserStore } from "@/stores/useUserStore";
 import { LogIn, LogOut } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import SmartLink from "@/components/shared/SmartLink";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -148,7 +148,7 @@ const Navbar = () => {
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link
+          <SmartLink
             href="/"
             className="flex items-center gap-2 transition-transform duration-300 hover:scale-[1.04]"
           >
@@ -160,12 +160,16 @@ const Navbar = () => {
               className="object-contain md:ml-5"
               priority
             />
-          </Link>
+          </SmartLink>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex gap-8">
             {navLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="relative group">
+              <SmartLink
+                key={link.href}
+                href={link.href}
+                className="relative group"
+              >
                 <span
                   className={`block transition-all duration-200 ${
                     isActive(link.href)
@@ -184,7 +188,7 @@ const Navbar = () => {
                       : "scale-x-0 group-hover:scale-x-100"
                   }`}
                 />
-              </Link>
+              </SmartLink>
             ))}
           </div>
 
@@ -257,7 +261,7 @@ const Navbar = () => {
                         duration: 0.25,
                       }}
                     >
-                      <Link
+                      <SmartLink
                         href={link.href}
                         onClick={closeMenu}
                         className={`relative block rounded-md px-3 py-2 transition-colors ${
@@ -275,7 +279,7 @@ const Navbar = () => {
                         )}
 
                         <span className="pl-2">{link.label}</span>
-                      </Link>
+                      </SmartLink>
                     </motion.div>
                   );
                 })}
@@ -289,7 +293,7 @@ const Navbar = () => {
                       duration: 0.25,
                     }}
                   >
-                    <Link
+                    <SmartLink
                       href="/bookings"
                       onClick={closeMenu}
                       className={`block rounded-md px-3 py-2 font-medium ${
@@ -299,7 +303,7 @@ const Navbar = () => {
                       }`}
                     >
                       My Bookings
-                    </Link>
+                    </SmartLink>
                   </motion.div>
                 )}
               </div>

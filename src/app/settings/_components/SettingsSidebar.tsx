@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { User, Shield, BadgeCheck, Wallet, X } from "lucide-react";
+import SmartLink from "@/components/shared/SmartLink";
 
 type Props = {
   open: boolean;
@@ -32,7 +32,7 @@ export default function SettingsSidebar({ open, onClose }: Props) {
     const isActive = pathname === item.href;
 
     return (
-      <Link
+      <SmartLink
         key={item.href}
         href={item.href}
         onClick={onClose}
@@ -45,7 +45,7 @@ export default function SettingsSidebar({ open, onClose }: Props) {
       >
         <Icon size={18} />
         <span>{item.label}</span>
-      </Link>
+      </SmartLink>
     );
   };
 
