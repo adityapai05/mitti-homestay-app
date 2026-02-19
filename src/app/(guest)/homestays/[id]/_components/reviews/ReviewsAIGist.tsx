@@ -3,6 +3,8 @@ import { Sparkles } from "lucide-react";
 
 interface ReviewsAIGistProps {
   summary: string | null;
+  positives: string[] | null;
+  negatives: string[] | null;
   loading: boolean;
   reviewCount: number;
   minRequired: number;
@@ -10,6 +12,8 @@ interface ReviewsAIGistProps {
 
 export default function ReviewsAIGist({
   summary,
+  positives,
+  negatives,
   loading,
   reviewCount,
   minRequired,
@@ -41,9 +45,37 @@ export default function ReviewsAIGist({
       )}
 
       {!loading && summary && (
-        <p className="text-sm text-mitti-dark-brown/80 leading-relaxed">
-          {summary}
-        </p>
+        <div className="space-y-3">
+          <p className="text-sm text-mitti-dark-brown/80 leading-relaxed">
+            {summary}
+          </p>
+
+          {Array.isArray(positives) && positives.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {positives.map((item, index) => (
+                <span
+                  key={`pos-${index}-${item}`}
+                  className="text-xs rounded-full px-2.5 py-1 bg-mitti-beige text-mitti-dark-brown/90"
+                >
+                  • {item}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {Array.isArray(negatives) && negatives.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {negatives.map((item, index) => (
+                <span
+                  key={`neg-${index}-${item}`}
+                  className="text-xs rounded-full px-2.5 py-1 bg-mitti-khaki/40 text-mitti-dark-brown/65"
+                >
+                  • {item}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

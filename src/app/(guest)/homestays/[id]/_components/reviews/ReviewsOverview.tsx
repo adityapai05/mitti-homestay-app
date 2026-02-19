@@ -21,12 +21,20 @@ interface ReviewsOverviewProps {
   homestay: HomestayDetailsDTO;
 }
 
+type ReviewsAiResponse = {
+  summary: string | null;
+  positives: string[] | null;
+  negatives: string[] | null;
+};
+
 export default function ReviewsOverview({ homestay }: ReviewsOverviewProps) {
   const [data, setData] = useState<ReviewsResponseDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
 
   const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiPositives, setAiPositives] = useState<string[] | null>(null);
+  const [aiNegatives, setAiNegatives] = useState<string[] | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
@@ -63,10 +71,14 @@ export default function ReviewsOverview({ homestay }: ReviewsOverviewProps) {
           }),
         });
 
-        const json = await res.json();
-        setAiSummary(json.summary ?? null);
+        const json = (await res.json()) as Partial<ReviewsAiResponse>;
+        setAiSummary(typeof json.summary === "string" ? json.summary : null);
+        setAiPositives(Array.isArray(json.positives) ? json.positives : null);
+        setAiNegatives(Array.isArray(json.negatives) ? json.negatives : null);
       } catch {
         setAiSummary(null);
+        setAiPositives(null);
+        setAiNegatives(null);
       } finally {
         setAiLoading(false);
       }
@@ -123,6 +135,8 @@ export default function ReviewsOverview({ homestay }: ReviewsOverviewProps) {
             <ReviewsAIGist
               loading={aiLoading}
               summary={aiSummary}
+              positives={aiPositives}
+              negatives={aiNegatives}
               reviewCount={data?.stats.totalReviews ?? 0}
               minRequired={MIN_REVIEWS_FOR_AI}
             />

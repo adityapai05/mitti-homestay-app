@@ -110,7 +110,7 @@ export default function ReviewsModal({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 bg-black/40 flex items-end md:items-center justify-center"
+          className="fixed inset-0 z-[100] bg-black/40 flex items-end md:items-center justify-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
