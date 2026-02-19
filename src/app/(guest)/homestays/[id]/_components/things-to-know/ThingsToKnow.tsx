@@ -1,6 +1,7 @@
 import { HomestayDetailsDTO } from "../../types";
 import CancellationInfo from "./CancellationInfo";
 import HouseRules from "./HouseRules";
+import TripPlanGenerator from "./TripPlanGenerator";
 
 export default function ThingsToKnow({
   homestay,
@@ -21,6 +22,16 @@ export default function ThingsToKnow({
             checkIn={homestay.policies.checkInTime}
             checkOut={homestay.policies.checkOutTime}
             maxGuests={homestay.capacity.maxGuests}
+          />
+        </div>
+
+        <div className="mt-6">
+          <TripPlanGenerator
+            homestayName={homestay.name}
+            village={homestay.location.village ?? ""}
+            district={homestay.location.district ?? ""}
+            state={homestay.location.state ?? ""}
+            category={homestay.category}
           />
         </div>
       </div>
