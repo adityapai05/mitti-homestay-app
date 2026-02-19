@@ -143,6 +143,10 @@ const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
               {activeSection === "description" && (
                 <DescriptionEditor
                   value={draft.description}
+                  category={draft.category}
+                  location={[draft.village, draft.district, draft.state]
+                    .filter(Boolean)
+                    .join(", ")}
                   onChange={(description) =>
                     setDraft((p) => ({ ...p, description }))
                   }
@@ -151,6 +155,14 @@ const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
               {activeSection === "pricing" && (
                 <PricingEditor
                   value={draft.pricePerNight}
+                  location={[draft.village, draft.district, draft.state]
+                    .filter(Boolean)
+                    .join(", ")}
+                  category={draft.category}
+                  beds={draft.beds}
+                  maxGuests={draft.maxGuests}
+                  amenities={draft.amenities}
+                  averageLocalPrice={draft.pricePerNight}
                   onChange={(pricePerNight) =>
                     setDraft((p) => ({ ...p, pricePerNight }))
                   }

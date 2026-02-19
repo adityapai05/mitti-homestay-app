@@ -142,7 +142,6 @@ async function resolveRoleAndRedirect(router: ReturnType<typeof useRouter>) {
   });
 
   if (!res.ok) {
-    router.push("/");
     return;
   }
 
@@ -158,7 +157,7 @@ async function resolveRoleAndRedirect(router: ReturnType<typeof useRouter>) {
       return;
 
     default:
-      router.replace("/");
+      return;
   }
 }
 

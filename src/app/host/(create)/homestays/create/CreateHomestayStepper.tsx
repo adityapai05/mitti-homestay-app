@@ -204,6 +204,14 @@ const CreateHomestayStepper = () => {
           <StepAbout
             title={formData.name}
             description={formData.description}
+            category={formData.category}
+            location={[
+              formData.address?.village,
+              formData.address?.district,
+              formData.address?.state,
+            ]
+              .filter(Boolean)
+              .join(", ")}
             onChange={({ title, description }) =>
               setFormData((p) => ({ ...p, name: title, description }))
             }
@@ -214,6 +222,18 @@ const CreateHomestayStepper = () => {
         return (
           <StepPricing
             value={formData.pricePerNight}
+            location={[
+              formData.address?.village,
+              formData.address?.district,
+              formData.address?.state,
+            ]
+              .filter(Boolean)
+              .join(", ")}
+            category={formData.category}
+            beds={formData.basics?.beds}
+            maxGuests={formData.basics?.guests}
+            amenities={formData.amenities}
+            averageLocalPrice={formData.pricePerNight ?? null}
             onChange={(v) => setFormData((p) => ({ ...p, pricePerNight: v }))}
           />
         );
