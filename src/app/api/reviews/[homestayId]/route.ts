@@ -2,7 +2,17 @@ import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
-import z from "zod";
+import {
+  createSchema as reviewCreateSchema,
+  querySchema as reviewQuerySchema,
+  routeParamSchema as reviewRouteParamSchema,
+  updateSchema as reviewUpdateSchema,
+} from "@/lib/validation/reviewSchemas";
+import {
+  parseJsonBody,
+  parseParams,
+  parseQueryParams,
+} from "@/lib/validation/commonSchemas";
 
 type ReviewOrderByInput =
   | { createdAt: "asc" | "desc" }
@@ -13,8 +23,17 @@ export async function GET(
   context: { params: Promise<{ homestayId: string }> },
 ) {
   try {
-    const { homestayId } = await context.params;
+    const parsedParams = parseParams(await context.params, reviewRouteParamSchema);
+    if (!parsedParams.success) {
+      return parsedParams.response;
+    }
 
+    const parsedQuery = parseQueryParams(req, reviewQuerySchema);
+    if (!parsedQuery.success) {
+      return parsedQuery.response;
+    }
+
+    const { homestayId } = parsedParams.data;
     const user = await getCurrentUser();
 
     const homestay = await prisma.homestay.findFirst({
@@ -30,17 +49,13 @@ export async function GET(
     });
 
     if (!homestay) {
-      return NextResponse.json(
-        { error: "Homestay not found." },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Homestay not found." }, { status: 404 });
     }
 
-    const { searchParams } = new URL(req.url);
-    const limit = Number(searchParams.get("limit") ?? 20);
-    const page = Number(searchParams.get("page") ?? 1);
-    const rating = searchParams.get("rating");
-    const sortBy = searchParams.get("sortBy") ?? "newest";
+    const limit = parsedQuery.data.limit ?? 20;
+    const page = parsedQuery.data.page ?? 1;
+    const rating = parsedQuery.data.rating;
+    const sortBy = parsedQuery.data.sortBy ?? "newest";
 
     const where: Prisma.ReviewWhereInput = { homestayId };
     if (rating && rating !== "all") where.rating = Number(rating);
@@ -96,18 +111,9 @@ export async function GET(
     });
   } catch (error) {
     console.error("[GET /reviews]", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
-
-const createReviewSchema = z.object({
-  bookingId: z.string().uuid(),
-  rating: z.number().int().min(1).max(5),
-  comment: z.string().min(10).max(1000).optional(),
-});
 
 export async function POST(
   req: NextRequest,
@@ -119,23 +125,31 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { homestayId } = await context.params;
-    const body = createReviewSchema.parse(await req.json());
+    const parsedParams = parseParams(await context.params, reviewRouteParamSchema);
+    if (!parsedParams.success) {
+      return parsedParams.response;
+    }
+
+    const parsedBody = await parseJsonBody(req, reviewCreateSchema);
+    if (!parsedBody.success) {
+      return parsedBody.response;
+    }
+
+    const { homestayId } = parsedParams.data;
+    const body = parsedBody.data;
 
     const booking = await prisma.booking.findUnique({
       where: { id: body.bookingId },
-    });
-    console.log({
-      bookingHomestayId: booking?.homestayId,
-      paramHomestayId: homestayId,
-      match: booking?.homestayId === homestayId,
+      select: {
+        id: true,
+        homestayId: true,
+        userId: true,
+        status: true,
+      },
     });
 
     if (!booking) {
-      return NextResponse.json(
-        { error: "Booking not found." },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Booking not found." }, { status: 404 });
     }
 
     if (booking.homestayId !== homestayId) {
@@ -159,18 +173,16 @@ export async function POST(
       );
     }
 
-    const existing = await prisma.review.findUnique({
-      where: { bookingId: body.bookingId },
-    });
-
-    if (existing) {
-      return NextResponse.json(
-        { error: "Review already exists." },
-        { status: 400 },
-      );
-    }
-
     const review = await prisma.$transaction(async (tx) => {
+      const existing = await tx.review.findUnique({
+        where: { bookingId: body.bookingId },
+        select: { id: true },
+      });
+
+      if (existing) {
+        throw new Error("REVIEW_ALREADY_EXISTS");
+      }
+
       const created = await tx.review.create({
         data: {
           userId: user.id,
@@ -198,11 +210,12 @@ export async function POST(
 
     return NextResponse.json({ review }, { status: 201 });
   } catch (error) {
+    if ((error as Error).message === "REVIEW_ALREADY_EXISTS") {
+      return NextResponse.json({ error: "Review already exists." }, { status: 400 });
+    }
+
     console.error("[POST /reviews]", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
@@ -216,17 +229,55 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { homestayId } = await context.params;
-    const body = createReviewSchema.parse(await req.json());
+    const parsedParams = parseParams(await context.params, reviewRouteParamSchema);
+    if (!parsedParams.success) {
+      return parsedParams.response;
+    }
+
+    const parsedBody = await parseJsonBody(req, reviewUpdateSchema);
+    if (!parsedBody.success) {
+      return parsedBody.response;
+    }
+
+    const { homestayId } = parsedParams.data;
+    const body = parsedBody.data;
 
     const review = await prisma.review.findUnique({
       where: { bookingId: body.bookingId },
+      select: {
+        bookingId: true,
+        userId: true,
+        homestayId: true,
+      },
     });
 
     if (!review || review.userId !== user.id) {
       return NextResponse.json(
         { error: "Review not found or forbidden." },
         { status: 403 },
+      );
+    }
+
+    if (review.homestayId !== homestayId) {
+      return NextResponse.json(
+        { error: "Review does not belong to this homestay." },
+        { status: 400 },
+      );
+    }
+
+    const booking = await prisma.booking.findUnique({
+      where: { id: body.bookingId },
+      select: { id: true, status: true, homestayId: true, userId: true },
+    });
+
+    if (!booking || booking.userId !== user.id || booking.homestayId !== homestayId) {
+      return NextResponse.json({ error: "Invalid booking." }, { status: 400 });
+    }
+
+    if (booking.status !== "COMPLETED") {
+      return NextResponse.json(
+        { error: "Only completed stays can be reviewed." },
+        { status: 400 },
       );
     }
 
@@ -249,10 +300,8 @@ export async function PATCH(
     });
 
     return NextResponse.json({ review: updated });
-  } catch {
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+  } catch (error) {
+    console.error("[PATCH /reviews]", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

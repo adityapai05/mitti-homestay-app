@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { revalidatePath } from "next/cache";
 import { logAdminAction } from "@/lib/admin/logAdminAction";
+import { routeParamSchema } from "@/lib/validation/adminSchemas";
 
 export async function processRefund(bookingId: string) {
   const admin = await getCurrentUser();
@@ -11,8 +12,11 @@ export async function processRefund(bookingId: string) {
     throw new Error("Unauthorized");
   }
 
+  const parsedId = routeParamSchema.safeParse({ id: bookingId });
+  if (!parsedId.success) throw new Error("Invalid booking id");
+
   const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
+    where: { id: parsedId.data.id },
     select: {
       refundStatus: true,
       refundAmount: true,
@@ -28,7 +32,7 @@ export async function processRefund(bookingId: string) {
   }
 
   await prisma.booking.update({
-    where: { id: bookingId },
+    where: { id: parsedId.data.id },
     data: {
       refundStatus: "PROCESSED",
       refundProcessedAt: new Date(),
@@ -39,7 +43,7 @@ export async function processRefund(bookingId: string) {
     adminId: admin.id,
     action: "REFUND_PROCESSED",
     entity: "BOOKING",
-    entityId: bookingId,
+    entityId: parsedId.data.id,
     meta: {
       refundAmount: booking.refundAmount,
     },

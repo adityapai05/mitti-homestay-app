@@ -3,9 +3,15 @@ export const dynamic = "force-dynamic";
 import { adminAuth } from "@/lib/firebase/admin";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody } from "@/lib/validation/commonSchemas";
+import { createSchema as authCreateSchema } from "@/lib/validation/authSchemas";
 export async function POST(req: NextRequest) {
   try {
-    const { idToken } = await req.json();
+    const parsedBody = await parseJsonBody(req, authCreateSchema);
+    if (!parsedBody.success) {
+      return parsedBody.response;
+    }
+    const { idToken } = parsedBody.data;
 
     const expiresIn = 60 * 60 * 24 * 7 * 1000;
 

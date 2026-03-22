@@ -1,8 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { format, differenceInDays, isBefore } from "date-fns";
 import { toast } from "sonner";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 import type { HomestayDetailsDTO } from "../../types";
 
@@ -37,6 +40,12 @@ const bookingErrorMessages: Record<string, string> = {
   EMAIL_NOT_VERIFIED: "Please verify your email before requesting a booking.",
 };
 
+type BookingFormValues = {
+  dateRange: { from?: Date; to?: Date };
+  guests: number;
+  includeGuide: boolean;
+};
+
 export default function BookingForm({
   homestay,
   dateVariant = "popover",
@@ -47,41 +56,90 @@ export default function BookingForm({
   onAuthRequired,
 }: BookingFormProps) {
   const { openModal } = useAuthModal();
-  const [includeGuide, setIncludeGuide] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+
+  const bookingFormSchema = useMemo(
+    () =>
+      z
+        .object({
+          dateRange: z.object({
+            from: z.date().optional(),
+            to: z.date().optional(),
+          }),
+          guests: z.number().int().min(1).max(homestay.capacity.maxGuests),
+          includeGuide: z.boolean(),
+        })
+        .superRefine((value, ctx) => {
+          if (!value.dateRange.from || !value.dateRange.to) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["dateRange"],
+              message: "Please select check-in and check-out dates.",
+            });
+            return;
+          }
+
+          if (
+            isBefore(value.dateRange.to, value.dateRange.from) ||
+            differenceInDays(value.dateRange.to, value.dateRange.from) < 1
+          ) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["dateRange"],
+              message: "Minimum stay is 1 night.",
+            });
+          }
+        }),
+    [homestay.capacity.maxGuests],
+  );
+
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { isSubmitting, isValid },
+  } = useForm<BookingFormValues>({
+    resolver: zodResolver(bookingFormSchema),
+    mode: "onChange",
+    reValidateMode: "onChange",
+    defaultValues: {
+      dateRange,
+      guests,
+      includeGuide: false,
+    },
+  });
+
+  const selectedDateRange = watch("dateRange");
+  const selectedGuests = watch("guests");
+  const includeGuide = watch("includeGuide");
+
+  useEffect(() => {
+    setDateRange(selectedDateRange);
+  }, [selectedDateRange, setDateRange]);
+
+  useEffect(() => {
+    setGuests(selectedGuests);
+  }, [selectedGuests, setGuests]);
 
   const nights = useMemo(() => {
-    if (!dateRange.from || !dateRange.to) return 0;
-    return differenceInDays(dateRange.to, dateRange.from);
-  }, [dateRange]);
+    if (!selectedDateRange.from || !selectedDateRange.to) return 0;
+    return differenceInDays(selectedDateRange.to, selectedDateRange.from);
+  }, [selectedDateRange]);
 
-  const handleReserve = async () => {
-    if (!dateRange.from || !dateRange.to) {
+  const handleReserve = handleSubmit(async (values) => {
+    if (!values.dateRange.from || !values.dateRange.to) {
       toast.error("Please select check-in and check-out dates.");
       return;
     }
 
-    if (isBefore(dateRange.to, dateRange.from) || nights < 1) {
-      toast.error("Minimum stay is 1 night.");
-      return;
-    }
-
-    if (guests < 1 || guests > homestay.capacity.maxGuests) {
-      toast.error(`Maximum ${homestay.capacity.maxGuests} guests allowed.`);
-      return;
-    }
-
     try {
-      setSubmitting(true);
-
       const res = await fetch("/api/bookings/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           homestayId: homestay.id,
-          checkIn: format(dateRange.from, "yyyy-MM-dd"),
-          checkOut: format(dateRange.to, "yyyy-MM-dd"),
-          guests,
+          checkIn: format(values.dateRange.from, "yyyy-MM-dd"),
+          checkOut: format(values.dateRange.to, "yyyy-MM-dd"),
+          guests: values.guests,
         }),
       });
 
@@ -117,55 +175,71 @@ export default function BookingForm({
       window.location.href = `/bookings/${data.booking.id}`;
     } catch {
       toast.error("Something went wrong. Please try again.");
-    } finally {
-      setSubmitting(false);
     }
-  };
+  });
 
   return (
     <div className="space-y-6">
       {/* Dates */}
-      <DateSelector
-        homestayId={homestay.id}
-        value={dateRange}
-        onChange={setDateRange}
-        variant={dateVariant}
+      <Controller
+        control={control}
+        name="dateRange"
+        render={({ field }) => (
+          <DateSelector
+            homestayId={homestay.id}
+            value={field.value}
+            onChange={field.onChange}
+            variant={dateVariant}
+          />
+        )}
       />
 
       {/* Guests */}
-      <GuestSelector
-        value={guests}
-        maxGuests={homestay.capacity.maxGuests}
-        onChange={setGuests}
+      <Controller
+        control={control}
+        name="guests"
+        render={({ field }) => (
+          <GuestSelector
+            value={field.value}
+            maxGuests={homestay.capacity.maxGuests}
+            onChange={field.onChange}
+          />
+        )}
       />
 
       {/* Guide option */}
       {homestay.pricing.guideAvailable && (
-        <label className="flex items-center gap-3 text-sm text-mitti-dark-brown">
-          <Input
-            type="checkbox"
-            checked={includeGuide}
-            onChange={(e) => setIncludeGuide(e.target.checked)}
-            className="h-4 w-4 accent-mitti-olive"
-          />
-          Include local guide ( ₹{homestay.pricing.guideFee}/night)
-        </label>
+        <Controller
+          control={control}
+          name="includeGuide"
+          render={({ field }) => (
+            <label className="flex items-center gap-3 text-sm text-mitti-dark-brown">
+              <Input
+                type="checkbox"
+                checked={field.value}
+                onChange={(e) => field.onChange(e.target.checked)}
+                className="h-4 w-4 accent-mitti-olive"
+              />
+              Include local guide ( Rs.{homestay.pricing.guideFee}/night)
+            </label>
+          )}
+        />
       )}
 
       {/* Price */}
       <PriceBreakdown
         homestay={homestay}
-        dateRange={dateRange}
+        dateRange={selectedDateRange}
         includeGuide={includeGuide}
       />
 
       {/* CTA */}
       <Button
         onClick={handleReserve}
-        disabled={submitting || nights < 1}
+        disabled={isSubmitting || !isValid || nights < 1}
         className="w-full rounded-xl bg-mitti-brown text-white hover:bg-mitti-brown/90 cursor-pointer"
       >
-        {submitting ? "Booking…" : "Reserve"}
+        {isSubmitting ? "Booking..." : "Reserve"}
       </Button>
 
       <p className="text-center text-xs text-mitti-dark-brown/60">

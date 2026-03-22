@@ -1,19 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { z } from "zod";
 import { sendContactEmail } from "@/lib/notifications/email/sendContactEmail";
-
-const contactSchema = z.object({
-  name: z.string().min(2),
-  email: z.email(),
-  subject: z.string().min(3),
-  message: z.string().min(10),
-});
+import { contactMessageCreateSchema } from "@/lib/validation/adminSchemas";
+import { parseJsonBody } from "@/lib/validation/commonSchemas";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const data = contactSchema.parse(body);
+    const parsedBody = await parseJsonBody(req, contactMessageCreateSchema);
+    if (!parsedBody.success) {
+      return parsedBody.response;
+    }
+    const data = parsedBody.data;
 
     await prisma.contactMessage.create({
       data,
@@ -30,10 +27,11 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
-  } catch {
+  } catch (error) {
+    console.error("[POST /api/contact]", error);
     return NextResponse.json(
-      { success: false, error: "Invalid request" },
-      { status: 400 }
+      { success: false, error: "Internal Server Error" },
+      { status: 500 }
     );
   }
 }

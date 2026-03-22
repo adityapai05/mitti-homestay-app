@@ -20,6 +20,7 @@ import { loadRazorpay } from "@/lib/razorpay/loadRazorpay";
 import ReviewModal from "./ReviewModal";
 import { toast } from "sonner";
 import { Download } from "lucide-react";
+import { routeParamSchema } from "@/lib/validation/adminSchemas";
 
 /* ---------- Razorpay global typing ---------- */
 
@@ -86,12 +87,16 @@ export default function BookingActionZone({
 
   const [openReview, setOpenReview] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const parsedBookingId = routeParamSchema.safeParse({ id: bookingId });
+  const safeBookingId = parsedBookingId.success ? parsedBookingId.data.id : null;
 
   async function handleCancel() {
+    if (!safeBookingId || cancelling) return;
     try {
       setCancelling(true);
 
-      const res = await fetch(`/api/bookings/${bookingId}/cancel`, {
+      const res = await fetch(`/api/bookings/${safeBookingId}/cancel`, {
         method: "POST",
       });
 
@@ -150,53 +155,65 @@ export default function BookingActionZone({
       {ui.showPayment && (
         <Button
           onClick={async () => {
-            const loaded = await loadRazorpay();
-            if (!loaded) {
-              toast.error("Failed to load payment gateway");
+            if (!safeBookingId || paying) {
               return;
             }
+            try {
+              setPaying(true);
+              const loaded = await loadRazorpay();
+              if (!loaded) {
+                toast.error("Failed to load payment gateway");
+                setPaying(false);
+                return;
+              }
 
-            const res = await fetch("/api/payments/razorpay/order", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ bookingId }),
-            });
+              const res = await fetch("/api/payments/razorpay/order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ bookingId: safeBookingId }),
+              });
 
-            const data = await res.json();
-            if (!res.ok) {
-              toast.error(data.error || "Payment initiation failed");
-              return;
+              const data = await res.json();
+              if (!res.ok) {
+                toast.error(data.error || "Payment initiation failed");
+                setPaying(false);
+                return;
+              }
+
+              const rzp = new window.Razorpay({
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+                amount: data.amount,
+                currency: data.currency,
+                name: "MITTI",
+                description: "Homestay booking payment",
+                order_id: data.orderId,
+                handler: async (response: RazorpayResponse) => {
+                  await fetch("/api/payments/razorpay/verify", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      bookingId: safeBookingId,
+                      razorpay_order_id: response.razorpay_order_id,
+                      razorpay_payment_id: response.razorpay_payment_id,
+                      razorpay_signature: response.razorpay_signature,
+                    }),
+                  });
+
+                  window.location.href = `/bookings/${safeBookingId}`;
+                },
+                theme: { color: "#8B4513" },
+              });
+
+              rzp.open();
+              setPaying(false);
+            } catch {
+              setPaying(false);
             }
-
-            const rzp = new window.Razorpay({
-              key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-              amount: data.amount,
-              currency: data.currency,
-              name: "MITTI",
-              description: "Homestay booking payment",
-              order_id: data.orderId,
-              handler: async (response: RazorpayResponse) => {
-                await fetch("/api/payments/razorpay/verify", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    bookingId,
-                    razorpay_order_id: response.razorpay_order_id,
-                    razorpay_payment_id: response.razorpay_payment_id,
-                    razorpay_signature: response.razorpay_signature,
-                  }),
-                });
-
-                window.location.href = `/bookings/${bookingId}`;
-              },
-              theme: { color: "#8B4513" },
-            });
-
-            rzp.open();
           }}
+          disabled={paying || !safeBookingId}
           className="w-full bg-mitti-brown text-white hover:bg-mitti-brown/80 cursor-pointer"
         >
-          Complete payment
+          {paying ? "Processing..." : "Complete payment"}
         </Button>
       )}
 

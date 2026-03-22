@@ -28,6 +28,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Role, HostVerificationStatus } from "@prisma/client";
+import { routeParamSchema } from "@/lib/validation/adminSchemas";
 
 /* ---------- Types ---------- */
 
@@ -72,9 +73,11 @@ export default function UserReviewModal({
   user: AdminUser;
   onClose: () => void;
 }) {
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
 
   const isHost = user.role === "HOST";
+  const parsedUserId = routeParamSchema.safeParse({ id: user.id });
+  const safeUserId = parsedUserId.success ? parsedUserId.data.id : null;
   const isDisabled = !user.isActive;
   const isHostVerified = user.hostProfile?.verificationStatus === "VERIFIED";
   const payoutConfigured = Boolean(user.payoutAccount);
@@ -212,7 +215,10 @@ export default function UserReviewModal({
           {isDisabled ? (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button className="bg-[#6B8E23] hover:bg-[#5F7F1F] text-white cursor-pointer">
+                <Button
+                  disabled={!safeUserId || isPending}
+                  className="bg-[#6B8E23] hover:bg-[#5F7F1F] text-white cursor-pointer"
+                >
                   Enable account
                 </Button>
               </AlertDialogTrigger>
@@ -227,7 +233,11 @@ export default function UserReviewModal({
                     className="cursor-pointer bg-[#6B8E23]"
                     onClick={() =>
                       startTransition(async () => {
-                        await enableUser(user.id);
+                        if (!safeUserId) {
+                          toast.error("Invalid user identifier.");
+                          return;
+                        }
+                        await enableUser(safeUserId);
                         toast.success("User account enabled");
                         onClose();
                       })
@@ -241,7 +251,10 @@ export default function UserReviewModal({
           ) : (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button className="bg-[#C0392B] hover:bg-[#A93226] text-white cursor-pointer">
+                <Button
+                  disabled={!safeUserId || isPending}
+                  className="bg-[#C0392B] hover:bg-[#A93226] text-white cursor-pointer"
+                >
                   Disable account
                 </Button>
               </AlertDialogTrigger>
@@ -256,7 +269,11 @@ export default function UserReviewModal({
                     className="cursor-pointer bg-[#C0392B]"
                     onClick={() =>
                       startTransition(async () => {
-                        await disableUser(user.id);
+                        if (!safeUserId) {
+                          toast.error("Invalid user identifier.");
+                          return;
+                        }
+                        await disableUser(safeUserId);
                         toast.success("User account disabled");
                         onClose();
                       })

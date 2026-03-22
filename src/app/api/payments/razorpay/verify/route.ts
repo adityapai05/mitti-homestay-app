@@ -3,6 +3,8 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { sendBookingEmail } from "@/lib/notifications/email/sendBookingEmail";
+import { parseJsonBody } from "@/lib/validation/commonSchemas";
+import { paymentVerifySchema } from "@/lib/validation/bookingSchemas";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,14 +13,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const parsedBody = await parseJsonBody(req, paymentVerifySchema);
+    if (!parsedBody.success) {
+      return parsedBody.response;
+    }
     const {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
       bookingId,
-    } = await req.json();
+    } = parsedBody.data;
 
-    // 1️⃣ Verify Razorpay signature
     const body = `${razorpay_order_id}|${razorpay_payment_id}`;
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
@@ -28,11 +33,10 @@ export async function POST(req: NextRequest) {
     if (expectedSignature !== razorpay_signature) {
       return NextResponse.json(
         { error: "Invalid payment signature" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // 2️⃣ Fetch booking (source of truth)
     const booking = await prisma.booking.findFirst({
       where: {
         id: bookingId,
@@ -44,11 +48,22 @@ export async function POST(req: NextRequest) {
     if (!booking) {
       return NextResponse.json(
         { error: "Booking not found or already paid" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
-    // 3️⃣ Atomic DB transaction
+    const existingPayment = await prisma.payment.findUnique({
+      where: { bookingId: booking.id },
+      select: { id: true },
+    });
+
+    if (existingPayment) {
+      return NextResponse.json(
+        { error: "Payment already recorded for booking" },
+        { status: 400 },
+      );
+    }
+
     await prisma.$transaction([
       prisma.payment.create({
         data: {
@@ -78,7 +93,7 @@ export async function POST(req: NextRequest) {
     console.error("[RAZORPAY_VERIFY]", error);
     return NextResponse.json(
       { error: "Payment verification failed" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

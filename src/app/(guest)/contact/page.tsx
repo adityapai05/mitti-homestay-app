@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/prebuilt-components/input";
 import { Textarea } from "@/components/ui/prebuilt-components/textarea";
 import { useState } from "react";
 import { motion, cubicBezier } from "framer-motion";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 const EASE_OUT = cubicBezier(0.16, 1, 0.3, 1);
 
@@ -22,43 +25,56 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.12 } },
 };
 
+const contactSchema = z
+  .object({
+    name: z.string().trim().min(2).max(100),
+    email: z.string().trim().email(),
+    subject: z.string().trim().min(3).max(150),
+    message: z.string().trim().min(10).max(3000),
+  })
+  .strict();
+
+type ContactFormValues = z.infer<typeof contactSchema>;
+
 export default function ContactPage() {
-  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting, isValid },
+  } = useForm<ContactFormValues>({
+    resolver: zodResolver(contactSchema),
+    mode: "onChange",
+    reValidateMode: "onChange",
+    defaultValues: {
+      name: "",
+      email: "",
+      subject: "",
+      message: "",
+    },
+  });
+
+  const onSubmit = handleSubmit(async (values) => {
     setError(null);
-
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-
-    const payload = {
-      name: formData.get("name"),
-      email: formData.get("email"),
-      subject: formData.get("subject"),
-      message: formData.get("message"),
-    };
 
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(values),
       });
 
       if (!res.ok) throw new Error("Failed");
 
       setSuccess(true);
-      form.reset();
+      reset();
     } catch {
       setError("Something went wrong. Please try again later.");
-    } finally {
-      setLoading(false);
     }
-  }
+  });
 
   return (
     <main className="bg-mitti-beige w-full">
@@ -120,7 +136,7 @@ export default function ContactPage() {
             </motion.div>
           ) : (
             <motion.form
-              onSubmit={handleSubmit}
+              onSubmit={onSubmit}
               className="space-y-5"
               variants={stagger}
             >
@@ -149,12 +165,18 @@ export default function ContactPage() {
                     {field.label}
                   </label>
                   <Input
-                    name={field.name}
                     type={field.type}
                     placeholder={field.placeholder}
-                    required
+                    {...register(
+                      field.name as keyof ContactFormValues,
+                    )}
                     className="h-12 bg-white/70 border border-mitti-dark-brown/25 rounded-xl focus-visible:ring-2 focus-visible:ring-mitti-brown transition-shadow"
                   />
+                  {errors[field.name as keyof ContactFormValues] && (
+                    <p className="text-sm text-red-600 mt-2">
+                      {errors[field.name as keyof ContactFormValues]?.message}
+                    </p>
+                  )}
                 </motion.div>
               ))}
 
@@ -163,12 +185,16 @@ export default function ContactPage() {
                   Message
                 </label>
                 <Textarea
-                  name="message"
                   rows={5}
                   placeholder="Write your message here..."
-                  required
+                  {...register("message")}
                   className="bg-white/70 border border-mitti-dark-brown/25 rounded-xl focus-visible:ring-2 focus-visible:ring-mitti-brown transition-shadow"
                 />
+                {errors.message && (
+                  <p className="text-sm text-red-600 mt-2">
+                    {errors.message.message}
+                  </p>
+                )}
               </motion.div>
 
               {error && (
@@ -178,10 +204,10 @@ export default function ContactPage() {
               <motion.div variants={fadeUp} className="pt-6">
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={isSubmitting || !isValid}
                   className="w-full bg-mitti-brown text-mitti-beige hover:bg-mitti-dark-brown cursor-pointer rounded-xl py-3 text-base transition-transform active:scale-[0.98]"
                 >
-                  {loading ? "Sending..." : "Send message"}
+                  {isSubmitting ? "Sending..." : "Send message"}
                 </Button>
               </motion.div>
             </motion.form>

@@ -1,6 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { createSchema as payoutCreateSchema } from "@/lib/validation/payoutSchemas";
 
 type PayoutMethodType = "UPI" | "BANK";
 
@@ -20,69 +24,75 @@ interface Props {
   onSuccess: (account: HostPayoutAccount) => void;
 }
 
+const formSchema = z
+  .object({
+    accountHolderName: z.string().trim().min(2).max(100),
+    upiId: z.string().trim().optional(),
+    bankName: z.string().trim().optional(),
+    accountNo: z.string().trim().optional(),
+    ifsc: z.string().trim().optional(),
+  })
+  .strict();
+
+type FormValues = z.infer<typeof formSchema>;
+
 export default function PayoutDetailsForm({
   method,
   initialValues,
   onCancel,
   onSuccess,
 }: Props) {
-  const [form, setForm] = useState({
-    accountHolderName: initialValues?.accountHolderName ?? "",
-    upiId: initialValues?.upiId ?? "",
-    bankName: initialValues?.bankName ?? "",
-    accountNo: initialValues?.accountNo ?? "",
-    ifsc: initialValues?.ifsc ?? "",
-  });
-
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function update<K extends keyof typeof form>(key: K, value: string) {
-    setForm((f) => ({ ...f, [key]: value }));
-  }
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting, isValid, errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    mode: "onChange",
+    defaultValues: {
+      accountHolderName: initialValues?.accountHolderName ?? "",
+      upiId: initialValues?.upiId ?? "",
+      bankName: initialValues?.bankName ?? "",
+      accountNo: initialValues?.accountNo ?? "",
+      ifsc: initialValues?.ifsc ?? "",
+    },
+  });
 
-  function validate() {
-    if (!form.accountHolderName.trim()) {
-      return "Account holder name is required";
-    }
+  const onSubmit = handleSubmit(async (values) => {
+    setError(null);
 
-    if (method === "UPI") {
-      if (!form.upiId.includes("@")) {
-        return "Enter a valid UPI ID";
-      }
-    }
+    const payload =
+      method === "UPI"
+        ? {
+            method,
+            accountHolderName: values.accountHolderName,
+            upiId: values.upiId || null,
+            bankName: null,
+            accountNo: null,
+            ifsc: null,
+          }
+        : {
+            method,
+            accountHolderName: values.accountHolderName,
+            upiId: null,
+            bankName: values.bankName || null,
+            accountNo: values.accountNo || null,
+            ifsc: values.ifsc || null,
+          };
 
-    if (method === "BANK") {
-      if (!form.bankName || !form.accountNo || !form.ifsc) {
-        return "All bank details are required";
-      }
-    }
-
-    return null;
-  }
-
-  async function handleSubmit() {
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
+    const parsedPayload = payoutCreateSchema.safeParse(payload);
+    if (!parsedPayload.success) {
+      setError(parsedPayload.error.issues[0]?.message ?? "Invalid payout details");
       return;
     }
-
-    setSaving(true);
-    setError(null);
 
     try {
       const res = await fetch("/api/host/payouts/account", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          method,
-          accountHolderName: form.accountHolderName,
-          upiId: method === "UPI" ? form.upiId : undefined,
-          bankName: method === "BANK" ? form.bankName : undefined,
-          accountNo: method === "BANK" ? form.accountNo : undefined,
-          ifsc: method === "BANK" ? form.ifsc : undefined,
-        }),
+        body: JSON.stringify(parsedPayload.data),
       });
 
       if (!res.ok) {
@@ -93,10 +103,8 @@ export default function PayoutDetailsForm({
       onSuccess(updated);
     } catch {
       setError("Failed to save payout details");
-    } finally {
-      setSaving(false);
     }
-  }
+  });
 
   return (
     <section className="space-y-4">
@@ -107,39 +115,45 @@ export default function PayoutDetailsForm({
       <div className="rounded-xl border border-mitti-khaki bg-mitti-cream px-5 py-5 space-y-5">
         <Field
           label="Account holder name"
-          value={form.accountHolderName}
-          onChange={(v) => update("accountHolderName", v)}
-          placeholder="As per bank records"
-        />
+          error={errors.accountHolderName?.message}
+        >
+          <input
+            {...register("accountHolderName")}
+            className="rounded-lg border border-mitti-khaki bg-white px-3 py-2 text-sm text-mitti-dark-brown focus:outline-none focus:ring-2 focus:ring-mitti-brown/20"
+          />
+        </Field>
 
         {method === "UPI" && (
-          <Field
-            label="UPI ID"
-            value={form.upiId}
-            onChange={(v) => update("upiId", v)}
-            placeholder="example@upi"
-          />
+          <Field label="UPI ID" error={errors.upiId?.message}>
+            <input
+              {...register("upiId")}
+              className="rounded-lg border border-mitti-khaki bg-white px-3 py-2 text-sm text-mitti-dark-brown focus:outline-none focus:ring-2 focus:ring-mitti-brown/20"
+            />
+          </Field>
         )}
 
         {method === "BANK" && (
           <>
-            <Field
-              label="Bank name"
-              value={form.bankName}
-              onChange={(v) => update("bankName", v)}
-            />
+            <Field label="Bank name" error={errors.bankName?.message}>
+              <input
+                {...register("bankName")}
+                className="rounded-lg border border-mitti-khaki bg-white px-3 py-2 text-sm text-mitti-dark-brown focus:outline-none focus:ring-2 focus:ring-mitti-brown/20"
+              />
+            </Field>
 
-            <Field
-              label="Account number"
-              value={form.accountNo}
-              onChange={(v) => update("accountNo", v)}
-            />
+            <Field label="Account number" error={errors.accountNo?.message}>
+              <input
+                {...register("accountNo")}
+                className="rounded-lg border border-mitti-khaki bg-white px-3 py-2 text-sm text-mitti-dark-brown focus:outline-none focus:ring-2 focus:ring-mitti-brown/20"
+              />
+            </Field>
 
-            <Field
-              label="IFSC code"
-              value={form.ifsc}
-              onChange={(v) => update("ifsc", v)}
-            />
+            <Field label="IFSC code" error={errors.ifsc?.message}>
+              <input
+                {...register("ifsc")}
+                className="rounded-lg border border-mitti-khaki bg-white px-3 py-2 text-sm text-mitti-dark-brown focus:outline-none focus:ring-2 focus:ring-mitti-brown/20"
+              />
+            </Field>
           </>
         )}
 
@@ -148,11 +162,11 @@ export default function PayoutDetailsForm({
         <div className="flex items-center gap-3 pt-2">
           <button
             type="button"
-            onClick={handleSubmit}
-            disabled={saving}
+            onClick={onSubmit}
+            disabled={isSubmitting || !isValid}
             className="rounded-lg bg-mitti-brown px-5 py-2 text-sm font-medium text-white hover:bg-mitti-dark-brown disabled:opacity-60 cursor-pointer"
           >
-            {saving ? "Saving…" : "Save payout details"}
+            {isSubmitting ? "Saving..." : "Save payout details"}
           </button>
 
           <button
@@ -168,28 +182,20 @@ export default function PayoutDetailsForm({
   );
 }
 
-/* ----------------------------- Field ----------------------------- */
-
 function Field({
   label,
-  value,
-  onChange,
-  placeholder,
+  children,
+  error,
 }: {
   label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
+  children: React.ReactNode;
+  error?: string;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
       <label className="text-xs text-mitti-dark-brown/90">{label}</label>
-      <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="rounded-lg border border-mitti-khaki bg-white px-3 py-2 text-sm text-mitti-dark-brown focus:outline-none focus:ring-2 focus:ring-mitti-brown/20"
-      />
+      {children}
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
 }

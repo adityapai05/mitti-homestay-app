@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import {
+  parseParams,
+  parseQueryParams,
+} from "@/lib/validation/commonSchemas";
+import { routeParamSchema as profileRouteParamSchema } from "@/lib/validation/profileSchemas";
+import { querySchema as reviewQuerySchema } from "@/lib/validation/reviewSchemas";
 
 type SortBy = "newest" | "oldest" | "highest" | "lowest";
 
@@ -27,26 +33,6 @@ type HostReviewDTO = {
   };
 };
 
-function parsePositiveInt(value: string | null, fallback: number): number {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 1) return fallback;
-  return Math.floor(parsed);
-}
-
-function parseRating(value: string | null): number | undefined {
-  if (!value) return undefined;
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 5) return undefined;
-  return parsed;
-}
-
-function parseSortBy(value: string | null): SortBy {
-  if (value === "oldest") return "oldest";
-  if (value === "highest") return "highest";
-  if (value === "lowest") return "lowest";
-  return "newest";
-}
-
 function getOrderBy(sortBy: SortBy): Prisma.ReviewOrderByWithRelationInput {
   if (sortBy === "oldest") return { createdAt: "asc" };
   if (sortBy === "highest") return { rating: "desc" };
@@ -59,13 +45,24 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id: userId } = await context.params;
-    const { searchParams } = new URL(req.url);
+    const parsedParams = parseParams(await context.params, profileRouteParamSchema);
+    if (!parsedParams.success) {
+      return parsedParams.response;
+    }
 
-    const requestedPage = parsePositiveInt(searchParams.get("page"), 1);
-    const limit = parsePositiveInt(searchParams.get("limit"), 10);
-    const rating = parseRating(searchParams.get("rating"));
-    const sortBy = parseSortBy(searchParams.get("sortBy"));
+    const parsedQuery = parseQueryParams(req, reviewQuerySchema);
+    if (!parsedQuery.success) {
+      return parsedQuery.response;
+    }
+
+    const userId = parsedParams.data.id;
+    const requestedPage = parsedQuery.data.page ?? 1;
+    const limit = parsedQuery.data.limit ?? 10;
+    const rating =
+      parsedQuery.data.rating && parsedQuery.data.rating !== "all"
+        ? Number(parsedQuery.data.rating)
+        : undefined;
+    const sortBy = (parsedQuery.data.sortBy ?? "newest") as SortBy;
 
     const host = await prisma.user.findFirst({
       where: {

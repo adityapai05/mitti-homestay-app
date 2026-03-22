@@ -2,6 +2,11 @@ import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { prisma } from "@/lib/prisma";
 import { sendBookingEmail } from "@/lib/notifications/email/sendBookingEmail";
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody, parseParams } from "@/lib/validation/commonSchemas";
+import {
+  routeParamSchema as bookingRouteParamSchema,
+  updateSchema as bookingUpdateSchema,
+} from "@/lib/validation/bookingSchemas";
 
 export async function GET(
   req: NextRequest,
@@ -24,7 +29,11 @@ export async function GET(
       );
     }
 
-    const { id } = await context.params;
+    const parsedParams = parseParams(await context.params, bookingRouteParamSchema);
+    if (!parsedParams.success) {
+      return parsedParams.response;
+    }
+    const { id } = parsedParams.data;
 
     const booking = await prisma.booking.findFirst({
       where: {
@@ -136,13 +145,17 @@ export async function PATCH(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { id } = await context.params;
-    const body = await req.json();
-    const { action } = body;
-
-    if (action !== "approve" && action !== "reject") {
-      return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    const parsedParams = parseParams(await context.params, bookingRouteParamSchema);
+    if (!parsedParams.success) {
+      return parsedParams.response;
     }
+    const { id } = parsedParams.data;
+
+    const parsedBody = await parseJsonBody(req, bookingUpdateSchema);
+    if (!parsedBody.success) {
+      return parsedBody.response;
+    }
+    const { action } = parsedBody.data;
 
     const booking = await prisma.booking.findFirst({
       where: {

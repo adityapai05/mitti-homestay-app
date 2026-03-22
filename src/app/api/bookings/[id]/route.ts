@@ -1,6 +1,8 @@
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { parseParams } from "@/lib/validation/commonSchemas";
+import { routeParamSchema as bookingRouteParamSchema } from "@/lib/validation/bookingSchemas";
 
 export async function GET(
   _req: NextRequest,
@@ -15,7 +17,11 @@ export async function GET(
       );
     }
 
-    const { id: bookingId } = await context.params;
+    const parsedParams = parseParams(await context.params, bookingRouteParamSchema);
+    if (!parsedParams.success) {
+      return parsedParams.response;
+    }
+    const { id: bookingId } = parsedParams.data;
 
     const booking = await prisma.booking.findFirst({
       where: {

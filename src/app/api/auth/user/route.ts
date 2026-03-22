@@ -6,15 +6,8 @@ import { validateFile, uploadImage } from "@/lib/cloudinary";
 import { getCurrentUserProfileData } from "@/lib/server/profile/getCurrentUserProfileData";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { z, ZodError } from "zod";
-
-const userUpdateSchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters").optional(),
-  phoneNumber: z
-    .string()
-    .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format")
-    .optional(),
-});
+import { ZodError } from "zod";
+import { updateSchema as authUpdateSchema } from "@/lib/validation/authSchemas";
 
 export async function GET() {
   const user = await getCurrentUserProfileData();
@@ -115,11 +108,28 @@ export async function PATCH(req: NextRequest) {
     const uid = decoded.uid;
 
     const formData = await req.formData();
+    const allowedKeys = new Set(["image", "name", "phoneNumber"]);
+    for (const key of formData.keys()) {
+      if (!allowedKeys.has(key)) {
+        return NextResponse.json(
+          {
+            error: "Validation failed",
+            code: "VALIDATION_ERROR",
+            details: [{ path: key, message: `Unknown field: ${key}` }],
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     const imageFile = formData.get("image") as File | null;
     const name = formData.get("name") as string | null;
     const phoneNumber = formData.get("phoneNumber") as string | null;
 
-    const parsed = userUpdateSchema.safeParse({ name, phoneNumber });
+    const parsed = authUpdateSchema.safeParse({
+      name: name ?? undefined,
+      phoneNumber: phoneNumber ?? undefined,
+    });
     if (!parsed.success) {
       return NextResponse.json(
         {

@@ -1,20 +1,11 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { prisma } from "@/lib/prisma";
 import { uploadImage, validateFile } from "@/lib/cloudinary";
-
-const profileSchema = z.object({
-  name: z.string().min(2).optional(),
-  about: z.string().max(500).optional(),
-  languages: z.array(z.string()).optional(),
-  contactPhone: z
-    .string()
-    .regex(/^\+?[0-9\s\-()]{7,20}$/, "Invalid phone number")
-    .optional(),
-});
+import { updateSchema as profileUpdateSchema } from "@/lib/validation/profileSchemas";
+import { validationErrorResponse } from "@/lib/validation/commonSchemas";
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -28,6 +19,25 @@ export async function PATCH(req: NextRequest) {
     }
 
     const formData = await req.formData();
+    const allowedKeys = new Set([
+      "image",
+      "name",
+      "about",
+      "languages",
+      "contactPhone",
+    ]);
+
+    for (const key of formData.keys()) {
+      if (!allowedKeys.has(key)) {
+        return NextResponse.json(
+          {
+            error: "VALIDATION_ERROR",
+            details: { formErrors: [`Unknown field: ${key}`], fieldErrors: {} },
+          },
+          { status: 400 },
+        );
+      }
+    }
 
     const imageFile = formData.get("image") as File | null;
     const name = formData.get("name") as string | null;
@@ -35,21 +45,31 @@ export async function PATCH(req: NextRequest) {
     const languagesRaw = formData.get("languages") as string | null;
     const contactPhone = formData.get("contactPhone") as string | null;
 
-    const parsed = profileSchema.safeParse({
+    let languages: string[] | undefined;
+    if (languagesRaw) {
+      try {
+        const parsedLanguages = JSON.parse(languagesRaw);
+        languages = Array.isArray(parsedLanguages) ? parsedLanguages : undefined;
+      } catch {
+        return NextResponse.json(
+          {
+            error: "INVALID_JSON",
+            message: "languages must be valid JSON array.",
+          },
+          { status: 400 },
+        );
+      }
+    }
+
+    const parsed = profileUpdateSchema.safeParse({
       name: name ?? undefined,
       about: about ?? undefined,
-      languages: languagesRaw ? JSON.parse(languagesRaw) : undefined,
+      languages,
       contactPhone: contactPhone ?? undefined,
     });
 
     if (!parsed.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid profile data",
-          details: parsed.error.flatten(),
-        },
-        { status: 400 }
-      );
+      return validationErrorResponse(parsed.error);
     }
 
     let imageUrl: string | undefined;

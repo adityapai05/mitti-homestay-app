@@ -5,6 +5,8 @@ import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { BookingPdf } from "@/lib/documents/pdf/templates/booking/BookingPdf";
 import { generatePdf } from "@/lib/documents/pdf/generatePdf";
 import { CancellationPolicy } from "@prisma/client";
+import { parseParams } from "@/lib/validation/commonSchemas";
+import { routeParamSchema as bookingRouteParamSchema } from "@/lib/validation/bookingSchemas";
 
 export const runtime = "nodejs";
 
@@ -35,38 +37,43 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  const user = await getCurrentUser();
+  try {
+    const parsedParams = parseParams(await params, bookingRouteParamSchema);
+    if (!parsedParams.success) {
+      return parsedParams.response;
+    }
+    const { id } = parsedParams.data;
+    const user = await getCurrentUser();
 
-  if (!user) {
-    return new NextResponse("Authentication required", { status: 401 });
-  }
+    if (!user) {
+      return new NextResponse("Authentication required", { status: 401 });
+    }
 
-  const booking = await prisma.booking.findFirst({
-    where: {
-      id,
-      OR: [{ userId: user.id }, { homestay: { ownerId: user.id } }],
-    },
-    include: {
-      user: true,
-      homestay: {
-        include: {
-          owner: true,
-        },
+    const booking = await prisma.booking.findFirst({
+      where: {
+        id,
+        OR: [{ userId: user.id }, { homestay: { ownerId: user.id } }],
       },
-      payment: true,
-    },
-  });
+      include: {
+        user: true,
+        homestay: {
+          include: {
+            owner: true,
+          },
+        },
+        payment: true,
+      },
+    });
 
-  if (!booking) {
-    return new NextResponse("Not found", { status: 404 });
-  }
+    if (!booking) {
+      return new NextResponse("Not found", { status: 404 });
+    }
 
-  const { renderToStaticMarkup } = await import("react-dom/server");
+    const { renderToStaticMarkup } = await import("react-dom/server");
 
-  const html = renderToStaticMarkup(
-    React.createElement(BookingPdf, {
-      data: {
+    const html = renderToStaticMarkup(
+      React.createElement(BookingPdf, {
+        data: {
         bookingId: booking.id,
         status: booking.status,
         createdAt: booking.createdAt,
@@ -128,16 +135,23 @@ export async function GET(
               paidAt: booking.payment.createdAt,
             }
           : null,
+        },
+      })
+    );
+
+    const pdfBuffer = await generatePdf(html);
+
+    return new NextResponse(Buffer.from(pdfBuffer), {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `inline; filename="MITTI-Booking-${booking.id}.pdf"`,
       },
-    })
-  );
-
-  const pdfBuffer = await generatePdf(html);
-
-  return new NextResponse(Buffer.from(pdfBuffer), {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="MITTI-Booking-${booking.id}.pdf"`,
-    },
-  });
+    });
+  } catch (error) {
+    console.error("[GET /api/bookings/[id]/pdf]", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
+  }
 }

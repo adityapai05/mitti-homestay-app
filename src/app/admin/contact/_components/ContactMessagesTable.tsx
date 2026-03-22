@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import { Mail, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { routeParamSchema } from "@/lib/validation/adminSchemas";
 
 import {
   AlertDialog,
@@ -39,9 +40,11 @@ export default function ContactMessagesTable({
 
   async function openMessage(m: AdminContactMessage) {
     onSelect(m);
+    const parsedId = routeParamSchema.safeParse({ id: m.id });
+    if (!parsedId.success) return;
 
     if (!m.isRead) {
-      await fetch(`/api/admin/contact/${m.id}/read`, {
+      await fetch(`/api/admin/contact/${parsedId.data.id}/read`, {
         method: "PATCH",
       });
       m.isRead = true;
@@ -49,9 +52,13 @@ export default function ContactMessagesTable({
   }
 
   async function deleteMessage(id: string) {
+    const parsedId = routeParamSchema.safeParse({ id });
+    if (!parsedId.success) return;
+    if (deleting) return;
+
     setDeleting(true);
 
-    await fetch(`/api/admin/contact/${id}`, {
+    await fetch(`/api/admin/contact/${parsedId.data.id}`, {
       method: "DELETE",
     });
 

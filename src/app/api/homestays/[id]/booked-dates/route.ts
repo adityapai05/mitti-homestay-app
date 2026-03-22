@@ -1,13 +1,19 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { parseParams } from "@/lib/validation/commonSchemas";
+import { routeParamSchema as homestayRouteParamSchema } from "@/lib/validation/homestaySchemas";
 
 export async function GET(
   _req: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { id: homestayId } = await context.params;
-
   try {
+    const parsedParams = parseParams(await context.params, homestayRouteParamSchema);
+    if (!parsedParams.success) {
+      return parsedParams.response;
+    }
+    const homestayId = parsedParams.data.id;
+
     const homestayExists = await prisma.homestay.findUnique({
       where: { id: homestayId },
       select: { id: true },

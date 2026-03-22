@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { getHostPayoutAccount } from "@/lib/server/host/getHostPayoutAccount";
+import {
+  parseJsonBody,
+  validationErrorResponse,
+} from "@/lib/validation/commonSchemas";
+import { createSchema as payoutCreateSchema } from "@/lib/validation/payoutSchemas";
+import { z } from "zod";
 
 export async function GET() {
   try {
@@ -34,14 +40,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json();
-
-    if (!body.method || !body.accountHolderName) {
-      return NextResponse.json(
-        { error: "Invalid payout details." },
-        { status: 400 }
-      );
+    const parsedBody = await parseJsonBody(req, payoutCreateSchema);
+    if (!parsedBody.success) {
+      return parsedBody.response;
     }
+    const body = parsedBody.data;
 
     const account = await prisma.hostPayoutAccount.upsert({
       where: {
@@ -68,6 +71,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(account);
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return validationErrorResponse(error);
+    }
     console.error("[POST /api/host/payouts/account]", error);
     return NextResponse.json(
       { error: "Internal Server Error" },

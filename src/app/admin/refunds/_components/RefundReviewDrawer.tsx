@@ -11,6 +11,7 @@ import { X, IndianRupee, Home } from "lucide-react";
 import { toast } from "sonner";
 import { processRefund } from "../actions";
 import type { RefundRowItem } from "./RefundRow";
+import { routeParamSchema } from "@/lib/validation/adminSchemas";
 
 export default function RefundReviewDrawer({
   refund,
@@ -20,6 +21,8 @@ export default function RefundReviewDrawer({
   onClose: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
+  const parsedBookingId = routeParamSchema.safeParse({ id: refund.bookingId });
+  const safeBookingId = parsedBookingId.success ? parsedBookingId.data.id : null;
 
   const daysBeforeCheckIn = Math.ceil(
     (new Date(refund.checkIn).getTime() -
@@ -98,10 +101,14 @@ export default function RefundReviewDrawer({
 
         <div className="px-6 py-5 border-t border-mitti-khaki">
           <Button
-            disabled={isPending}
+            disabled={isPending || !safeBookingId}
             onClick={() =>
               startTransition(async () => {
-                await processRefund(refund.bookingId);
+                if (!safeBookingId) {
+                  toast.error("Invalid booking identifier.");
+                  return;
+                }
+                await processRefund(safeBookingId);
                 toast.success("Refund marked as processed");
                 onClose();
               })

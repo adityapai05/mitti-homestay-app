@@ -72,7 +72,7 @@ const StepPricing = ({
         typeof json?.suggestedPrice === "number" &&
         Number.isFinite(json.suggestedPrice)
       ) {
-        onChange(Math.round(json.suggestedPrice));
+        onChange(Math.max(MIN_PRICE, Math.min(MAX_PRICE, Math.round(json.suggestedPrice))));
         setAiState("success");
       } else {
         setAiState("error");
@@ -127,7 +127,11 @@ const StepPricing = ({
               min={MIN_PRICE}
               max={MAX_PRICE}
               value={value ?? ""}
-              onChange={(e) => onChange(Number(e.target.value))}
+              onChange={(e) => {
+                const nextValue = Number(e.target.value);
+                if (!Number.isFinite(nextValue)) return;
+                onChange(Math.max(1, Math.min(100000, Math.trunc(nextValue))));
+              }}
               placeholder="e.g. 2500"
               className="w-full px-4 py-3 rounded-xl bg-mitti-beige border border-mitti-khaki text-lg text-mitti-dark-brown outline-none focus:border-mitti-brown"
             />

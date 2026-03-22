@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { calculateRefund } from "@/lib/cancellation/calculateRefund";
 import { sendBookingEmail } from "@/lib/notifications/email/sendBookingEmail";
+import { parseParams } from "@/lib/validation/commonSchemas";
+import { routeParamSchema as bookingRouteParamSchema } from "@/lib/validation/bookingSchemas";
 
 export const POST = async (
   req: NextRequest,
@@ -10,7 +12,11 @@ export const POST = async (
 ) => {
   try {
     const user = await getCurrentUser();
-    const { id } = await params;
+    const parsedParams = parseParams(await params, bookingRouteParamSchema);
+    if (!parsedParams.success) {
+      return parsedParams.response;
+    }
+    const { id } = parsedParams.data;
 
     if (!user) {
       return NextResponse.json(

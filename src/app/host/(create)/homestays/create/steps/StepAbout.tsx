@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
+import { sanitizedString } from "@/lib/validation/commonSchemas";
 
 type Props = {
   title?: string;
@@ -13,6 +14,7 @@ type Props = {
 
 const TITLE_MAX = 50;
 const DESCRIPTION_MAX = 900;
+const descriptionSchema = sanitizedString(20, 500, "Description");
 
 const StepAbout = ({
   title = "",
@@ -26,7 +28,7 @@ const StepAbout = ({
     "idle" | "generating" | "success" | "error" | "quota"
   >("idle");
 
-  const canEnhance = description.trim().length >= 20 && !enhancing;
+  const canEnhance = descriptionSchema.safeParse(description).success && !enhancing;
 
   const handleEnhance = async () => {
     if (!canEnhance) return;
@@ -135,8 +137,8 @@ const StepAbout = ({
 
           <div className="flex justify-between mt-1 text-sm text-mitti-dark-brown">
             <span>
-              {description.trim().length < 20 &&
-                "Enter at least 20 characters to enable AI enhancement."}
+              {!descriptionSchema.safeParse(description).success &&
+                "Enter at least 20 valid characters to enable AI enhancement."}
             </span>
             <span>
               {description.length}/{DESCRIPTION_MAX}

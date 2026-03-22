@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -11,6 +12,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from "@/components/ui/prebuilt-components/alert-dialog";
+import { routeParamSchema } from "@/lib/validation/adminSchemas";
 
 export default function HostBookingActionZone({
   bookingId,
@@ -24,19 +26,30 @@ export default function HostBookingActionZone({
     canReject: boolean;
   };
 }) {
+  const [submitting, setSubmitting] = useState(false);
+  const parsedBookingId = routeParamSchema.safeParse({ id: bookingId });
+  const safeBookingId = parsedBookingId.success ? parsedBookingId.data.id : null;
+
   async function act(action: "approve" | "reject") {
-    const res = await fetch(`/api/host/bookings/${bookingId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
-    });
+    if (!safeBookingId || submitting) return;
 
-    if (!res.ok) {
-      alert("Action failed");
-      return;
+    try {
+      setSubmitting(true);
+      const res = await fetch(`/api/host/bookings/${safeBookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+
+      if (!res.ok) {
+        alert("Action failed");
+        return;
+      }
+
+      window.location.reload();
+    } finally {
+      setSubmitting(false);
     }
-
-    window.location.reload();
   }
 
   // Host actions only make sense while pending approval
@@ -76,6 +89,7 @@ export default function HostBookingActionZone({
                 </AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => act("approve")}
+                  disabled={submitting || !safeBookingId}
                   className="bg-mitti-olive text-white hover:opacity-90 cursor-pointer"
                 >
                   Approve booking
@@ -107,6 +121,7 @@ export default function HostBookingActionZone({
                 </AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => act("reject")}
+                  disabled={submitting || !safeBookingId}
                   className="bg-red-600 text-white hover:bg-red-600/90 cursor-pointer"
                 >
                   Reject booking

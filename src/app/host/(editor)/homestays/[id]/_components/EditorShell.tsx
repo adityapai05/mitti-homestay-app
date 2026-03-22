@@ -18,6 +18,7 @@ import LocationEditor from "./editors/LocationEditor";
 import ListingSettingsEditor from "./editors/ListingSettingsEditor";
 
 import DeleteListingDialog from "@/components/host/DeleteListingDialog";
+import { routeParamSchema, updateSchema as homestayUpdateSchema } from "@/lib/validation/homestaySchemas";
 
 type EditorSection =
   | "photos"
@@ -30,6 +31,9 @@ type EditorSection =
   | "settings";
 
 const AUTOSAVE_DELAY = 1200;
+const MAX_AMENITIES = 40;
+const MAX_IMAGES = 25;
+const sanitizeText = (value: string) => value.replace(/\s+/g, " ").trim();
 
 const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
   const router = useRouter();
@@ -41,6 +45,7 @@ const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
 
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -50,25 +55,73 @@ const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
     [draft],
   );
 
+  const updatePayload = useMemo(
+    () => ({
+      name: sanitizeText(draft.name),
+      description: sanitizeText(draft.description),
+      imageUrl: draft.imageUrl.slice(0, MAX_IMAGES),
+      category: draft.category,
+      type: draft.type,
+      pricePerNight: draft.pricePerNight ?? undefined,
+      maxGuests: Math.min(50, Math.max(1, Math.trunc(draft.maxGuests))),
+      beds: Math.min(50, Math.max(1, Math.trunc(draft.beds))),
+      bedrooms: Math.min(50, Math.max(0, Math.trunc(draft.bedrooms))),
+      bathrooms: Math.min(50, Math.max(0, Math.trunc(draft.bathrooms))),
+      amenities: Array.from(
+        new Set(draft.amenities.map((item) => sanitizeText(item)).filter(Boolean)),
+      ).slice(0, MAX_AMENITIES),
+      flatno: sanitizeText(draft.flatno),
+      street: sanitizeText(draft.street),
+      landmark: sanitizeText(draft.landmark ?? ""),
+      village: sanitizeText(draft.village),
+      district: sanitizeText(draft.district ?? ""),
+      state: sanitizeText(draft.state),
+      pincode: draft.pincode.replace(/\D/g, "").slice(0, 6),
+      latitude: draft.latitude,
+      longitude: draft.longitude,
+      guideAvailable: draft.guideAvailable,
+      guideFee:
+        draft.guideAvailable && draft.guideFee !== null
+          ? Math.min(100000, Math.max(1, Math.trunc(draft.guideFee)))
+          : null,
+      checkInTime: draft.checkInTime ?? "14:00",
+      checkOutTime: draft.checkOutTime ?? "11:00",
+      cancellationPolicy: draft.cancellationPolicy,
+    }),
+    [draft],
+  );
+
   const handleSave = useCallback(async () => {
     if (!isDirty || isSaving) return;
+    const parsedPayload = homestayUpdateSchema.safeParse(updatePayload);
+    if (!parsedPayload.success) {
+      const errorMessage =
+        parsedPayload.error.issues[0]?.message ??
+        "Please fix validation errors before saving.";
+      setValidationError(errorMessage);
+      return;
+    }
 
     try {
       setIsSaving(true);
+      setValidationError(null);
       const res = await fetch(`/api/host/homestays/${draft.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(draft),
+        body: JSON.stringify(parsedPayload.data),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "Failed to save");
+      }
       initialRef.current = draft;
       setLastSavedAt(new Date());
-    } catch {
-      toast.error("Failed to save changes");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to save changes");
     } finally {
       setIsSaving(false);
     }
-  }, [draft, isDirty, isSaving]);
+  }, [draft, isDirty, isSaving, updatePayload]);
 
   useEffect(() => {
     if (!isDirty) return;
@@ -83,9 +136,29 @@ const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
         onOpenChange={setDeleteOpen}
         loading={deleting}
         onConfirm={async () => {
-          setDeleting(true);
-          await fetch(`/api/host/homestays/${draft.id}`, { method: "DELETE" });
-          router.push("/host/homestays");
+          const parsedId = routeParamSchema.safeParse({ id: draft.id });
+          if (!parsedId.success) {
+            toast.error("Invalid listing identifier.");
+            return;
+          }
+
+          try {
+            setDeleting(true);
+            const res = await fetch(`/api/host/homestays/${parsedId.data.id}`, {
+              method: "DELETE",
+            });
+            if (!res.ok) {
+              const data = await res.json().catch(() => null);
+              throw new Error(data?.error ?? "Failed to delete listing");
+            }
+            router.push("/host/homestays");
+          } catch (error) {
+            toast.error(
+              error instanceof Error ? error.message : "Failed to delete listing",
+            );
+          } finally {
+            setDeleting(false);
+          }
         }}
       />
 
@@ -128,6 +201,9 @@ const EditorShell = ({ homestay }: { homestay: HomestayEditorData }) => {
 
           <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
             <div className="mx-auto max-w-4xl space-y-10">
+              {validationError && (
+                <p className="text-sm text-red-600">{validationError}</p>
+              )}
               {activeSection === "photos" && (
                 <PhotosEditor
                   images={draft.imageUrl}

@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/prebuilt-components/button";
 import { X } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { sanitizedString } from "@/lib/validation/commonSchemas";
 
 interface ReviewModalProps {
   bookingId: string;
@@ -14,6 +18,18 @@ interface ReviewModalProps {
   onClose: () => void;
 }
 
+type ReviewValues = {
+  rating: number;
+  comment?: string;
+};
+
+const reviewFormSchema = z
+  .object({
+    rating: z.number().int().min(1).max(5),
+    comment: sanitizedString(10, 1000, "Comment").optional(),
+  })
+  .strict();
+
 export default function ReviewModal({
   bookingId,
   homestayId,
@@ -23,36 +39,49 @@ export default function ReviewModal({
   onSuccess,
   onClose,
 }: ReviewModalProps) {
-  const [rating, setRating] = useState<number>(5);
   const [hoverRating, setHoverRating] = useState<number | null>(null);
-  const [comment, setComment] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const method = mode === "edit" ? "PATCH" : "POST";
 
+  const {
+    setValue,
+    watch,
+    handleSubmit,
+    register,
+    formState: { isSubmitting, isValid },
+    reset,
+  } = useForm<ReviewValues>({
+    resolver: zodResolver(reviewFormSchema),
+    mode: "onChange",
+    defaultValues: {
+      rating: initialRating ?? 5,
+      comment: initialComment ?? "",
+    },
+  });
+
   useEffect(() => {
     if (mode === "edit") {
-      if (typeof initialRating === "number") {
-        setRating(initialRating);
-      }
-      if (typeof initialComment === "string") {
-        setComment(initialComment);
-      }
+      reset({
+        rating: typeof initialRating === "number" ? initialRating : 5,
+        comment: typeof initialComment === "string" ? initialComment : "",
+      });
     }
-  }, [mode, initialRating, initialComment]);
+  }, [mode, initialRating, initialComment, reset]);
 
-  async function submitReview() {
+  const rating = watch("rating") ?? 5;
+  const comment = watch("comment") ?? "";
+
+  const submitReview = handleSubmit(async (values) => {
     try {
-      setLoading(true);
       setError(null);
 
       const res = await fetch(`/api/reviews/${homestayId}`, {
-        method: method,
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bookingId,
-          rating,
-          comment,
+          rating: values.rating,
+          comment: values.comment,
         }),
       });
 
@@ -65,10 +94,8 @@ export default function ReviewModal({
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setLoading(false);
     }
-  }
+  });
 
   const activeRating = hoverRating ?? rating;
 
@@ -93,7 +120,7 @@ export default function ReviewModal({
             <button
               key={value}
               type="button"
-              onClick={() => setRating(value)}
+              onClick={() => setValue("rating", value, { shouldValidate: true })}
               onMouseEnter={() => setHoverRating(value)}
               onMouseLeave={() => setHoverRating(null)}
               className="cursor-pointer"
@@ -129,8 +156,9 @@ export default function ReviewModal({
         </label>
 
         <textarea
+          {...register("comment")}
           value={comment}
-          onChange={(e) => setComment(e.target.value)}
+          onChange={(e) => setValue("comment", e.target.value, { shouldValidate: true })}
           placeholder="What did you like? What could be improved?"
           rows={4}
           className="w-full resize-none rounded-lg border border-mitti-khaki bg-white px-3 py-2 text-sm text-mitti-dark-brown placeholder:text-mitti-dark-brown/40 focus:outline-none focus:ring-2 focus:ring-mitti-olive/40"
@@ -147,10 +175,10 @@ export default function ReviewModal({
       {/* Submit */}
       <Button
         onClick={submitReview}
-        disabled={loading}
+        disabled={isSubmitting || !isValid}
         className="w-full rounded-lg bg-mitti-olive px-4 py-3 text-sm font-semibold text-white hover:opacity-90 cursor-pointer"
       >
-        {loading ? "Submitting…" : "Submit review"}
+        {isSubmitting ? "Submitting..." : "Submit review"}
       </Button>
     </div>
   );

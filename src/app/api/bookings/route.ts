@@ -2,6 +2,8 @@ import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import { parseQueryParams } from "@/lib/validation/commonSchemas";
+import { querySchema as bookingQuerySchema } from "@/lib/validation/bookingSchemas";
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,13 +16,15 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const url = new URL(req.url);
-    const searchParams = url.searchParams;
+    const parsedQuery = parseQueryParams(req, bookingQuerySchema);
+    if (!parsedQuery.success) {
+      return parsedQuery.response;
+    }
 
-    const upcoming = searchParams.get("upcoming") === "true";
-    const past = searchParams.get("past") === "true";
-    const limit = Number(searchParams.get("limit") || 20);
-    const page = Number(searchParams.get("page") || 1);
+    const upcoming = parsedQuery.data.upcoming === "true";
+    const past = parsedQuery.data.past === "true";
+    const limit = parsedQuery.data.limit ?? 20;
+    const page = parsedQuery.data.page ?? 1;
 
     const now = new Date();
 

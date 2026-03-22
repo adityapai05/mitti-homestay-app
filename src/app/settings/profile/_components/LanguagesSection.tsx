@@ -1,61 +1,88 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { X } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { updateSchema as profileUpdateSchema } from "@/lib/validation/profileSchemas";
 
 interface Props {
   languages: string[];
   onUpdated: (languages: string[]) => void;
 }
 
+const languagesSchema = profileUpdateSchema.pick({ languages: true });
+type LanguageValues = z.infer<typeof languagesSchema>;
+
 export default function LanguagesSection({ languages, onUpdated }: Props) {
   const [editing, setEditing] = useState(false);
-  const [values, setValues] = useState<string[]>(languages);
   const [input, setInput] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const form = useForm<LanguageValues>({
+    resolver: zodResolver(languagesSchema),
+    mode: "onChange",
+    defaultValues: { languages },
+  });
+
+  const values = form.watch("languages") ?? [];
+
+  useEffect(() => {
+    form.reset({ languages });
+  }, [languages, form]);
 
   function addLanguage(value: string) {
     const trimmed = value.trim();
     if (!trimmed) return;
     if (values.includes(trimmed)) return;
 
-    setValues((prev) => [...prev, trimmed]);
+    form.setValue("languages", [...values, trimmed], { shouldValidate: true, shouldDirty: true });
     setInput("");
   }
 
   function removeLanguage(lang: string) {
-    setValues((prev) => prev.filter((l) => l !== lang));
+    form.setValue(
+      "languages",
+      values.filter((l) => l !== lang),
+      { shouldValidate: true, shouldDirty: true },
+    );
   }
 
   async function saveLanguages() {
-    try {
-      setSaving(true);
+    const execute = form.handleSubmit(async (data) => {
+      try {
+        if (saving) return;
+        setSaving(true);
 
-      const formData = new FormData();
-      formData.append("languages", JSON.stringify(values));
+        const formData = new FormData();
+        formData.append("languages", JSON.stringify(data.languages ?? []));
 
-      const res = await fetch("/api/profile", {
-        method: "PATCH",
-        body: formData,
-      });
+        const res = await fetch("/api/profile", {
+          method: "PATCH",
+          body: formData,
+        });
 
-      if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error();
 
-      const updated = await res.json();
-      onUpdated(updated.languages ?? []);
+        const updated = await res.json();
+        onUpdated(updated.languages ?? []);
 
-      toast.success("Languages updated");
-      setEditing(false);
-    } catch {
-      toast.error("Failed to update languages");
-    } finally {
-      setSaving(false);
-    }
+        toast.success("Languages updated");
+        setEditing(false);
+      } catch {
+        toast.error("Failed to update languages");
+      } finally {
+        setSaving(false);
+      }
+    });
+
+    await execute();
   }
 
   function cancelEdit() {
-    setValues(languages);
+    form.reset({ languages });
     setInput("");
     setEditing(false);
   }
@@ -124,6 +151,9 @@ export default function LanguagesSection({ languages, onUpdated }: Props) {
               placeholder="Type a language and press Enter"
               className="w-full rounded-lg border border-mitti-khaki px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-mitti-brown bg-white"
             />
+            {form.formState.errors.languages && (
+              <p className="text-sm text-red-600">{form.formState.errors.languages.message as string}</p>
+            )}
 
             <div className="flex items-center justify-between">
               <p className="text-xs text-mitti-dark-brown/60 max-w-sm">
@@ -133,7 +163,7 @@ export default function LanguagesSection({ languages, onUpdated }: Props) {
               <div className="flex gap-3">
                 <button
                   onClick={saveLanguages}
-                  disabled={saving}
+                  disabled={saving || !form.formState.isValid || form.formState.isSubmitting}
                   className="rounded-lg bg-mitti-brown text-white px-4 py-2 text-sm hover:bg-mitti-dark-brown cursor-pointer disabled:opacity-60"
                 >
                   Save

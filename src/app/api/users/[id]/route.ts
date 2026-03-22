@@ -1,12 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { parseParams } from "@/lib/validation/commonSchemas";
+import { routeParamSchema as profileRouteParamSchema } from "@/lib/validation/profileSchemas";
 
 export async function GET(
   _: Request,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await context.params;
+    const parsedParams = parseParams(await context.params, profileRouteParamSchema);
+    if (!parsedParams.success) {
+      return parsedParams.response;
+    }
+    const { id } = parsedParams.data;
 
     const user = await prisma.user.findUnique({
       where: { id },

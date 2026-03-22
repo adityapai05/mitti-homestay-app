@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import {
   Drawer,
   DrawerContent,
@@ -13,6 +13,19 @@ import { Home, Wallet, BadgeCheck, X } from "lucide-react";
 import { toast } from "sonner";
 
 import type { HostVerificationRowItem } from "./HostVerificationRow";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { routeParamSchema } from "@/lib/validation/adminSchemas";
+import { sanitizedString } from "@/lib/validation/commonSchemas";
+
+const reasonSchema = z
+  .object({
+    reason: sanitizedString(10, 500, "Rejection reason"),
+  })
+  .strict();
+
+type ReasonValues = z.infer<typeof reasonSchema>;
 
 export default function HostReviewDrawer({
   host,
@@ -28,8 +41,21 @@ export default function HostReviewDrawer({
 
   const user = host.user as typeof host.user & HostProfileExtras;
 
-  const [reason, setReason] = useState("");
   const [isPending, startTransition] = useTransition();
+
+  const {
+    register,
+    trigger,
+    getValues,
+    formState: { errors },
+  } = useForm<ReasonValues>({
+    resolver: zodResolver(reasonSchema),
+    mode: "onChange",
+    defaultValues: { reason: "" },
+  });
+
+  const parsedUserId = routeParamSchema.safeParse({ id: user.id });
+  const safeUserId = parsedUserId.success ? parsedUserId.data.id : null;
 
   return (
     <Drawer open onOpenChange={onClose} direction="right">
@@ -68,7 +94,7 @@ export default function HostReviewDrawer({
           <Section title="Basic information">
             <Key
               label="Email / Phone"
-              value={user.email || user.phone || "—"}
+              value={user.email || user.phone || "-"}
             />
             <Key
               label="Joined"
@@ -79,7 +105,7 @@ export default function HostReviewDrawer({
               value={
                 user.languages && user.languages.length > 0
                   ? user.languages.join(", ")
-                  : "—"
+                  : "-"
               }
             />
           </Section>
@@ -103,8 +129,7 @@ export default function HostReviewDrawer({
             <div className="flex items-center gap-3">
               <Wallet size={18} className="text-mitti-olive" />
               <span className="text-sm text-mitti-dark-brown">
-                Status:{" "}
-                <strong>{user.payoutAccount ? "Configured" : "Not set"}</strong>
+                Status: <strong>{user.payoutAccount ? "Configured" : "Not set"}</strong>
               </span>
             </div>
           </Section>
@@ -112,20 +137,24 @@ export default function HostReviewDrawer({
           <Section title="Rejection reason">
             <Textarea
               placeholder="Required if rejecting the host"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
+              {...register("reason")}
               className="bg-white"
             />
+            {errors.reason && <p className="text-sm text-red-600">{errors.reason.message}</p>}
           </Section>
         </div>
 
         {/* Footer actions */}
         <div className="px-6 py-5 border-t border-mitti-khaki flex gap-3">
           <Button
-            disabled={isPending}
+            disabled={isPending || !safeUserId}
             onClick={() =>
               startTransition(async () => {
-                await approveHost(user.id);
+                if (!safeUserId) {
+                  toast.error("Invalid host identifier.");
+                  return;
+                }
+                await approveHost(safeUserId);
                 toast.success("Host approved");
                 onClose();
               })
@@ -137,15 +166,21 @@ export default function HostReviewDrawer({
           </Button>
 
           <Button
-            disabled={isPending}
+            disabled={isPending || !safeUserId}
             onClick={() =>
               startTransition(async () => {
-                if (!reason.trim()) {
+                if (!safeUserId) {
+                  toast.error("Invalid host identifier.");
+                  return;
+                }
+
+                const valid = await trigger("reason");
+                if (!valid) {
                   toast.error("Rejection reason is required");
                   return;
                 }
 
-                await rejectHost(user.id, reason);
+                await rejectHost(safeUserId, getValues("reason"));
                 toast.success("Host rejected");
                 onClose();
               })

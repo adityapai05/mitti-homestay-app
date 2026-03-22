@@ -16,6 +16,7 @@ import { processPayout, failPayout } from "../actions";
 import { toast } from "sonner";
 import Link from "next/link";
 import { X } from "lucide-react";
+import { routeParamSchema } from "@/lib/validation/adminSchemas";
 
 /* ---------- Types ---------- */
 
@@ -81,6 +82,8 @@ export default function PayoutReviewModal({
   const [isPending, startTransition] = useTransition();
 
   const host = payout.user;
+  const parsedPayoutId = routeParamSchema.safeParse({ id: payout.id });
+  const safePayoutId = parsedPayoutId.success ? parsedPayoutId.data.id : null;
   const account = host.payoutAccount;
   const lastPayout = host.lastPayout;
   const isHostVerified = host.hostProfile?.verificationStatus === "VERIFIED";
@@ -215,7 +218,7 @@ export default function PayoutReviewModal({
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button
-                  disabled={isPending}
+                  disabled={isPending || !safePayoutId}
                   className="bg-[#C0392B] hover:bg-[#A93226] text-white cursor-pointer"
                 >
                   Mark as failed
@@ -237,7 +240,11 @@ export default function PayoutReviewModal({
                     className="cursor-pointer bg-[#C0392B] hover:bg-[#A93226]"
                     onClick={() =>
                       startTransition(async () => {
-                        await failPayout(payout.id);
+                        if (!safePayoutId) {
+                          toast.error("Invalid payout identifier.");
+                          return;
+                        }
+                        await failPayout(safePayoutId);
                         toast.success("Payout marked as failed");
                         onClose();
                       })
@@ -252,7 +259,7 @@ export default function PayoutReviewModal({
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button
-                  disabled={isPending}
+                  disabled={isPending || !safePayoutId}
                   className="bg-[#6B8E23] hover:bg-[#5F7F1F] text-white cursor-pointer"
                 >
                   Mark as processed
@@ -274,7 +281,11 @@ export default function PayoutReviewModal({
                     className="cursor-pointer bg-[#6B8E23] hover:bg-[#5F7F1F]"
                     onClick={() =>
                       startTransition(async () => {
-                        await processPayout(payout.id);
+                        if (!safePayoutId) {
+                          toast.error("Invalid payout identifier.");
+                          return;
+                        }
+                        await processPayout(safePayoutId);
                         toast.success("Payout marked as processed");
                         onClose();
                       })

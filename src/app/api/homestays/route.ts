@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { Category, Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { publicHomestayWhere } from "@/lib/visibility/homestayVisibility";
+import { parseQueryParams } from "@/lib/validation/commonSchemas";
+import { querySchema as homestayQuerySchema } from "@/lib/validation/homestaySchemas";
 
 const PAGE_SIZE = 8;
 const MAX_PAGE_SIZE = 20;
@@ -13,148 +15,36 @@ const SORT_MAP: Record<string, Prisma.HomestayOrderByWithRelationInput> = {
   "rating-desc": { rating: "desc" },
 };
 
-type NumberParamOptions = {
-  min?: number;
-  max?: number;
-  integer?: boolean;
-};
-
-function getNumberParam(
-  params: URLSearchParams,
-  key: string,
-  options: NumberParamOptions = {},
-): { value?: number; error?: string } {
-  const raw = params.get(key);
-  if (raw === null) return {};
-  const num = Number(raw);
-  if (!Number.isFinite(num)) {
-    return { error: `Invalid ${key}` };
-  }
-  if (options.integer && !Number.isInteger(num)) {
-    return { error: `Invalid ${key}` };
-  }
-  if (options.min !== undefined && num < options.min) {
-    return { error: `Invalid ${key}` };
-  }
-  if (options.max !== undefined && num > options.max) {
-    return { error: `Invalid ${key}` };
-  }
-  return { value: num };
-}
-
-function getBooleanParam(
-  params: URLSearchParams,
-  key: string,
-): { value?: boolean; error?: string } {
-  const raw = params.get(key);
-  if (raw === null) return {};
-  if (raw === "true") return { value: true };
-  if (raw === "false") return { value: false };
-  return { error: `Invalid ${key}` };
-}
-
-function getArrayParam(params: URLSearchParams, key: string): string[] {
-  const raw = params.get(key);
-  if (!raw) return [];
-  return raw
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
 export async function GET(req: NextRequest) {
   try {
-    const url = new URL(req.url);
-    const params = url.searchParams;
-
-    const pageResult = getNumberParam(params, "page", {
-      min: 1,
-      integer: true,
-    });
-    if (pageResult.error) {
-      return NextResponse.json({ error: pageResult.error }, { status: 400 });
+    const parsedQuery = parseQueryParams(req, homestayQuerySchema);
+    if (!parsedQuery.success) {
+      return parsedQuery.response;
     }
-    const page = pageResult.value ?? 1;
+
+    const query = parsedQuery.data;
+
+    const page = query.page ?? 1;
     const limit = PAGE_SIZE;
 
-    const destination = params.get("destination")?.trim() || undefined;
-    if (params.getAll("category").length > 1) {
-      return NextResponse.json(
-        { error: "Invalid category format" },
-        { status: 400 },
-      );
-    }
-    if (params.getAll("amenities").length > 1) {
-      return NextResponse.json(
-        { error: "Invalid amenities format" },
-        { status: 400 },
-      );
-    }
+    const destination = query.destination;
+    const categories = query.category
+      ? query.category
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+      : [];
+    const type = query.type;
+    const sort = query.sort || "createdAt-desc";
+    const amenities = query.amenities
+      ? query.amenities
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+      : [];
 
-    const categories = getArrayParam(params, "category");
-
-    const type = params.get("type");
-    const sort = params.get("sort") || "createdAt-desc";
-
-    if (params.get("sort") && !SORT_MAP[sort]) {
-      return NextResponse.json({ error: "Invalid sort" }, { status: 400 });
-    }
-
-    const minPriceResult = getNumberParam(params, "minPrice", { min: 0 });
-    const maxPriceResult = getNumberParam(params, "maxPrice", { min: 0 });
-    if (minPriceResult.error || maxPriceResult.error) {
-      return NextResponse.json(
-        { error: minPriceResult.error || maxPriceResult.error },
-        { status: 400 },
-      );
-    }
-
-    const minGuestsResult = getNumberParam(params, "minGuests", {
-      min: 1,
-      integer: true,
-    });
-    const minBedroomsResult = getNumberParam(params, "minBedrooms", {
-      min: 1,
-      integer: true,
-    });
-    const minBathroomsResult = getNumberParam(params, "minBathrooms", {
-      min: 1,
-      integer: true,
-    });
-    if (
-      minGuestsResult.error ||
-      minBedroomsResult.error ||
-      minBathroomsResult.error
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            minGuestsResult.error ||
-            minBedroomsResult.error ||
-            minBathroomsResult.error,
-        },
-        { status: 400 },
-      );
-    }
-
-    const guideAvailableResult = getBooleanParam(params, "guideAvailable");
-    const freeCancellationResult = getBooleanParam(params, "freeCancellation");
-    if (guideAvailableResult.error || freeCancellationResult.error) {
-      return NextResponse.json(
-        { error: guideAvailableResult.error || freeCancellationResult.error },
-        { status: 400 },
-      );
-    }
-
-    const ratingResult = getNumberParam(params, "rating", { min: 0, max: 5 });
-    if (ratingResult.error) {
-      return NextResponse.json({ error: ratingResult.error }, { status: 400 });
-    }
-
-    const amenities = getArrayParam(params, "amenities");
-
-    const checkIn = params.get("checkIn");
-    const checkOut = params.get("checkOut");
+    const checkIn = query.checkIn;
+    const checkOut = query.checkOut;
 
     const where: Prisma.HomestayWhereInput = {
       ...publicHomestayWhere(),
@@ -192,34 +82,31 @@ export async function GET(req: NextRequest) {
     }
 
     /* ---------- capacity ---------- */
-    if (minGuestsResult.value !== undefined) {
-      where.maxGuests = { gte: minGuestsResult.value };
+    if (query.minGuests !== undefined) {
+      where.maxGuests = { gte: query.minGuests };
     }
-    if (minBedroomsResult.value !== undefined) {
-      where.bedrooms = { gte: minBedroomsResult.value };
+    if (query.minBedrooms !== undefined) {
+      where.bedrooms = { gte: query.minBedrooms };
     }
-    if (minBathroomsResult.value !== undefined) {
-      where.bathrooms = { gte: minBathroomsResult.value };
+    if (query.minBathrooms !== undefined) {
+      where.bathrooms = { gte: query.minBathrooms };
     }
 
     /* ---------- price ---------- */
-    if (
-      minPriceResult.value !== undefined ||
-      maxPriceResult.value !== undefined
-    ) {
+    if (query.minPrice !== undefined || query.maxPrice !== undefined) {
       where.pricePerNight = {};
-      if (minPriceResult.value !== undefined) {
-        where.pricePerNight.gte = minPriceResult.value;
+      if (query.minPrice !== undefined) {
+        where.pricePerNight.gte = query.minPrice;
       }
-      if (maxPriceResult.value !== undefined) {
-        where.pricePerNight.lte = maxPriceResult.value;
+      if (query.maxPrice !== undefined) {
+        where.pricePerNight.lte = query.maxPrice;
       }
     }
 
     if (
-      minPriceResult.value !== undefined &&
-      maxPriceResult.value !== undefined &&
-      minPriceResult.value > maxPriceResult.value
+      query.minPrice !== undefined &&
+      query.maxPrice !== undefined &&
+      query.minPrice > query.maxPrice
     ) {
       return NextResponse.json(
         { error: "minPrice cannot exceed maxPrice" },
@@ -235,12 +122,12 @@ export async function GET(req: NextRequest) {
     }
 
     /* ---------- guide ---------- */
-    if (guideAvailableResult.value !== undefined) {
-      where.guideAvailable = guideAvailableResult.value;
+    if (query.guideAvailable !== undefined) {
+      where.guideAvailable = query.guideAvailable === "true";
     }
 
     /* ---------- cancellation ---------- */
-    if (freeCancellationResult.value === true) {
+    if (query.freeCancellation === "true") {
       where.cancellationPolicy = { not: "STRICT" };
     }
 
@@ -281,8 +168,8 @@ export async function GET(req: NextRequest) {
       };
     }
     /* ---------- rating ---------- */
-    if (ratingResult.value !== undefined) {
-      where.rating = { gte: ratingResult.value };
+    if (query.rating !== undefined) {
+      where.rating = { gte: query.rating };
     }
 
     /* ---------- sorting ---------- */

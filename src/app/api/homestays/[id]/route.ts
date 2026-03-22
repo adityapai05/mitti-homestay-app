@@ -1,14 +1,21 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { publicHomestayWhere } from "@/lib/visibility/homestayVisibility";
+import { parseParams } from "@/lib/validation/commonSchemas";
+import { routeParamSchema as homestayRouteParamSchema } from "@/lib/validation/homestaySchemas";
 
 export async function GET(
   _req: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await context.params;
-
   try {
+    const parsedParams = parseParams(await context.params, homestayRouteParamSchema);
+    if (!parsedParams.success) {
+      return parsedParams.response;
+    }
+
+    const { id } = parsedParams.data;
+
     const homestay = await prisma.homestay.findFirst({
       where: {
         id,

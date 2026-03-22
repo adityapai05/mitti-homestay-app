@@ -219,19 +219,19 @@ export default function AuthForm({ setModalBusy }: AuthFormProps) {
 
   const identityForm = useForm<IdentityValues>({
     resolver: zodResolver(emailSchema),
-    mode: "onBlur",
+    mode: "onChange",
     defaultValues: { email: "" },
   });
 
   const passwordForm = useForm<PasswordValues>({
     resolver: zodResolver(passwordSchema),
-    mode: "onBlur",
+    mode: "onChange",
     defaultValues: { password: "" },
   });
 
   const signupForm = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
-    mode: "onBlur",
+    mode: "onChange",
     defaultValues: { fullName: "", password: "", confirmPassword: "" },
   });
 
@@ -499,7 +499,7 @@ export default function AuthForm({ setModalBusy }: AuthFormProps) {
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !identityForm.formState.isValid}
             className="h-12 w-full rounded-md bg-mitti-brown font-medium text-mitti-beige transition-all duration-200 hover:bg-mitti-dark-brown hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer active:scale-[0.98]"
           >
             {isSubmitting ? "Checking..." : "Continue"}
@@ -593,7 +593,7 @@ export default function AuthForm({ setModalBusy }: AuthFormProps) {
           <div className="space-y-3">
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !passwordForm.formState.isValid}
               className="h-12 w-full rounded-md bg-mitti-brown font-medium text-mitti-beige transition-all duration-200 hover:bg-mitti-dark-brown hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
             >
               {isSubmitting ? "Signing in..." : "Continue"}
@@ -734,7 +734,7 @@ export default function AuthForm({ setModalBusy }: AuthFormProps) {
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !signupForm.formState.isValid}
             className="h-12 w-full rounded-md bg-mitti-brown font-medium text-mitti-beige transition-all duration-200 hover:bg-mitti-dark-brown hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
           >
             {isSubmitting ? "Creating account..." : "Create account"}

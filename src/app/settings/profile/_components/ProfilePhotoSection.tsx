@@ -18,6 +18,11 @@ export default function ProfilePhotoSection({ image, onUpdated }: Props) {
   const setUser = useUserStore((s) => s.setUser);
 
   async function handleFileChange(file: File) {
+    if (uploading) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file.");
+      return;
+    }
     const formData = new FormData();
     formData.append("image", file);
 

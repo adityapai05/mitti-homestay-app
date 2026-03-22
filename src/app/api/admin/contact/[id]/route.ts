@@ -1,14 +1,43 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { requireRole } from "@/lib/auth/requireRole";
+import {
+  parseParams,
+  validationErrorResponse,
+} from "@/lib/validation/commonSchemas";
+import { routeParamSchema } from "@/lib/validation/adminSchemas";
+import { z } from "zod";
 
 export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  await prisma.contactMessage.delete({
-    where: { id },
-  });
+  try {
+    await requireRole("ADMIN");
 
-  return NextResponse.json({ success: true });
+    const parsedParams = parseParams(await params, routeParamSchema);
+    if (!parsedParams.success) {
+      return parsedParams.response;
+    }
+
+    await prisma.contactMessage.delete({
+      where: { id: parsedParams.data.id },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return validationErrorResponse(error);
+    }
+
+    if ((error as Error).message.includes("Unauthorized")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    console.error("[DELETE /api/admin/contact/[id]]", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
+  }
 }

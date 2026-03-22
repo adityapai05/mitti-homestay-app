@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { Button } from "@/components/ui/prebuilt-components/button";
 import { Textarea } from "@/components/ui/prebuilt-components/textarea";
 import {
@@ -16,6 +16,19 @@ import {
 import { approveHomestay, rejectHomestay } from "../actions";
 import { toast } from "sonner";
 import type { AdminHomestayDetails } from "@/types";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { routeParamSchema } from "@/lib/validation/adminSchemas";
+import { sanitizedString } from "@/lib/validation/commonSchemas";
+
+const decisionSchema = z
+  .object({
+    reason: sanitizedString(10, 500, "Rejection reason"),
+  })
+  .strict();
+
+type DecisionValues = z.infer<typeof decisionSchema>;
 
 export default function DecisionSection({
   homestay,
@@ -24,8 +37,21 @@ export default function DecisionSection({
   homestay: AdminHomestayDetails;
   onClose: () => void;
 }) {
-  const [reason, setReason] = useState("");
   const [isPending, startTransition] = useTransition();
+
+  const {
+    register,
+    trigger,
+    getValues,
+    formState: { errors, isValid },
+  } = useForm<DecisionValues>({
+    resolver: zodResolver(decisionSchema),
+    mode: "onChange",
+    defaultValues: { reason: "" },
+  });
+
+  const homestayId = routeParamSchema.safeParse({ id: homestay.id });
+  const safeHomestayId = homestayId.success ? homestayId.data.id : null;
 
   return (
     <section className="space-y-6">
@@ -40,17 +66,17 @@ export default function DecisionSection({
 
       <Textarea
         placeholder="Rejection reason (required only if rejecting)"
-        value={reason}
-        onChange={(e) => setReason(e.target.value)}
+        {...register("reason")}
         className="bg-white border-mitti-khaki focus:border-mitti-olive"
       />
+      {errors.reason && <p className="text-sm text-red-600">{errors.reason.message}</p>}
 
       <div className="flex gap-4 pt-2">
         {/* APPROVE */}
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
-              disabled={isPending}
+              disabled={isPending || !safeHomestayId}
               className="flex-1 bg-mitti-olive hover:bg-mitti-olive/90 text-white"
             >
               Approve homestay
@@ -71,7 +97,11 @@ export default function DecisionSection({
                 className="bg-mitti-olive hover:bg-mitti-olive/90 text-white"
                 onClick={() =>
                   startTransition(async () => {
-                    await approveHomestay(homestay.id);
+                    if (!safeHomestayId) {
+                      toast.error("Invalid homestay identifier.");
+                      return;
+                    }
+                    await approveHomestay(safeHomestayId);
                     toast.success("Homestay approved");
                     onClose();
                   })
@@ -87,7 +117,7 @@ export default function DecisionSection({
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
-              disabled={isPending}
+              disabled={isPending || !safeHomestayId}
               className="flex-1 bg-[#C94A3F] hover:bg-[#B34238] text-white"
             >
               Reject homestay
@@ -108,11 +138,18 @@ export default function DecisionSection({
                 className="bg-[#C94A3F] hover:bg-[#B34238] text-white"
                 onClick={() =>
                   startTransition(async () => {
-                    if (!reason.trim()) {
-                      toast.error("Rejection reason is required");
+                    if (!safeHomestayId) {
+                      toast.error("Invalid homestay identifier.");
                       return;
                     }
-                    await rejectHomestay(homestay.id, reason);
+
+                    const valid = await trigger("reason");
+                    if (!valid || !isValid) {
+                      toast.error("A valid rejection reason is required.");
+                      return;
+                    }
+
+                    await rejectHomestay(safeHomestayId, getValues("reason"));
                     toast.success("Homestay rejected");
                     onClose();
                   })

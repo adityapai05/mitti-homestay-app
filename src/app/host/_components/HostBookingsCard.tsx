@@ -12,6 +12,8 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/prebuilt-components/alert-dialog";
 import { BookingStatus } from "@prisma/client";
+import { useState } from "react";
+import { routeParamSchema } from "@/lib/validation/adminSchemas";
 
 interface HostBookingCardProps {
   booking: {
@@ -44,9 +46,15 @@ interface HostBookingCardProps {
 }
 
 export default function HostBookingCard({ booking }: HostBookingCardProps) {
+  const [submitting, setSubmitting] = useState(false);
+  const parsedBookingId = routeParamSchema.safeParse({ id: booking.id });
+  const safeBookingId = parsedBookingId.success ? parsedBookingId.data.id : null;
+
   async function handleAction(action: "approve" | "reject") {
+    if (submitting || !safeBookingId) return;
     try {
-      const res = await fetch(`/api/host/bookings/${booking.id}`, {
+      setSubmitting(true);
+      const res = await fetch(`/api/host/bookings/${safeBookingId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),
@@ -60,6 +68,8 @@ export default function HostBookingCard({ booking }: HostBookingCardProps) {
       window.location.reload();
     } catch (err) {
       alert(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -137,6 +147,7 @@ export default function HostBookingCard({ booking }: HostBookingCardProps) {
                     </AlertDialogCancel>
                     <AlertDialogAction
                       onClick={() => handleAction("approve")}
+                      disabled={submitting || !safeBookingId}
                       className="bg-mitti-olive text-white hover:opacity-90 cursor-pointer"
                     >
                       Approve booking
@@ -169,6 +180,7 @@ export default function HostBookingCard({ booking }: HostBookingCardProps) {
                     </AlertDialogCancel>
                     <AlertDialogAction
                       onClick={() => handleAction("reject")}
+                      disabled={submitting || !safeBookingId}
                       className="bg-red-600 text-white hover:bg-red-600/90 cursor-pointer"
                     >
                       Reject booking

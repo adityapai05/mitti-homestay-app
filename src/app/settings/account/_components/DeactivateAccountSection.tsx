@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -15,8 +16,12 @@ import {
 } from "@/components/ui/prebuilt-components/alert-dialog";
 
 export default function DeactivateAccountSection() {
+  const [submitting, setSubmitting] = useState(false);
+
   async function handleDeactivate() {
     try {
+      if (submitting) return;
+      setSubmitting(true);
       const res = await fetch("/api/account/deactivate", {
         method: "POST",
       });
@@ -27,6 +32,8 @@ export default function DeactivateAccountSection() {
       window.location.href = "/";
     } catch {
       toast.error("Failed to deactivate account");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -68,9 +75,10 @@ export default function DeactivateAccountSection() {
 
               <AlertDialogAction
                 onClick={handleDeactivate}
+                disabled={submitting}
                 className="cursor-pointer bg-red-600 hover:bg-red-700 text-white"
               >
-                Deactivate
+                {submitting ? "Deactivating..." : "Deactivate"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

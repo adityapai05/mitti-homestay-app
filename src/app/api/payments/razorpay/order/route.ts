@@ -3,6 +3,8 @@ import Razorpay from "razorpay";
 
 import { getCurrentUser } from "@/lib/auth/getCurrentUser";
 import { prisma } from "@/lib/prisma";
+import { parseJsonBody } from "@/lib/validation/commonSchemas";
+import { paymentOrderCreateSchema } from "@/lib/validation/bookingSchemas";
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,7 +24,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { bookingId } = await req.json();
+    const parsedBody = await parseJsonBody(req, paymentOrderCreateSchema);
+    if (!parsedBody.success) {
+      return parsedBody.response;
+    }
+    const { bookingId } = parsedBody.data;
 
     const booking = await prisma.booking.findFirst({
       where: {
